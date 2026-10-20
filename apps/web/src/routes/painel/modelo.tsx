@@ -17,7 +17,9 @@ export default function EditTemplateRoute() {
                     <ArrowLeft className="size-4" /> Modelos
                 </Link>
                 <h1 className="mt-4 text-[28px] font-bold tracking-[-0.03em]">Editar modelo</h1>
-                <p className="mt-1.5 text-muted">Cada alteração salva gera uma nova versão. Envelopes já enviados não mudam.</p>
+                <p className="mt-1.5 text-muted">
+                    Cada alteração salva gera uma nova versão. Documentos já enviados não mudam.
+                </p>
             </div>
             <TemplateEditLoader id={id} />
         </div>

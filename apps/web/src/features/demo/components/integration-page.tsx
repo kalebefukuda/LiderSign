@@ -1,20 +1,10 @@
-import { Bot, Loader2 } from 'lucide-react'
-import * as React from 'react'
+import { Bot } from 'lucide-react'
 import { Link } from 'react-router'
-import { toast } from 'sonner'
 
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Kicker } from '@/components/ui/primitives'
 import { CopyButton } from '@/components/ui/states'
-import { Switch } from '@/components/ui/switch'
-import { LogoMark } from '@/features/brand'
-import { errorMessage } from '@/lib/http'
-import { useResource } from '@/lib/use-resource'
 
-import { demoApi, type DemoStatus } from '../api'
 import { CallLog } from './call-log'
-import { ZapSignDialog } from './zapsign-dialog'
 
 const STEPS = [
     {
@@ -34,7 +24,12 @@ const STEPS = [
     },
 ]
 
-const MCP_TOOLS = ['Listar modelos', 'Ver campos do modelo', 'Criar documento para assinar', 'Ver status do documento']
+const MCP_TOOLS = [
+    'Listar modelos',
+    'Ver campos do modelo',
+    'Criar documento para assinar',
+    'Ver status do documento',
+]
 
 const mcpCommand = (origin: string) => `claude mcp add lidersign \\
   -e LIDERSIGN_API_URL=${origin}/v1 \\
@@ -42,44 +37,26 @@ const mcpCommand = (origin: string) => `claude mcp add lidersign \\
   -e LIDERSIGN_TENANT_ID=escritorio-demo \\
   -- node packages/agent/dist/mcp-stdio.js`
 
-/** Como a LíderHub usa o LíderSign, com a ativação de verdade e o registro das chamadas. */
+/** Como a LíderHub usa o LíderSign: os três passos, o registro das chamadas e o MCP. */
 export function IntegrationPage() {
-    const status = useResource<DemoStatus>(demoApi.statusUrl)
-    const [busy, setBusy] = React.useState(false)
-    const [zapOpen, setZapOpen] = React.useState(false)
-    const active = Boolean(status.data?.active)
     const command = mcpCommand(window.location.origin)
-
-    async function toggle(next: boolean) {
-        setBusy(true)
-        try {
-            if (next) {
-                const result = await demoApi.activate()
-                toast.success(result.created ? 'Escritório criado no LíderSign, com os modelos de exemplo' : 'LíderSign reativado')
-            } else {
-                await demoApi.deactivate()
-                toast('LíderSign desativado neste escritório')
-            }
-            await status.reload()
-        } catch (error) {
-            toast.error(errorMessage(error))
-        } finally {
-            setBusy(false)
-        }
-    }
 
     return (
         <div className="space-y-14">
-
             <section aria-labelledby="como-funciona" className="space-y-4">
                 <Kicker id="como-funciona">Como funciona</Kicker>
                 <ol className="divide-y divide-line rounded-2xl border border-line">
                     {STEPS.map((step, index) => (
-                        <li key={step.title} className="grid gap-2 px-5 py-5 sm:grid-cols-[40px_160px_1fr] sm:gap-4">
+                        <li
+                            key={step.title}
+                            className="grid gap-2 px-5 py-5 sm:grid-cols-[40px_160px_1fr] sm:gap-4"
+                        >
                             <span className="font-mono text-sm text-subtle tabular">0{index + 1}</span>
                             <span>
                                 <span className="block font-semibold">{step.title}</span>
-                                <span className="mt-0.5 block font-mono text-[12px] text-brand">{step.route}</span>
+                                <span className="mt-0.5 block font-mono text-[12px] text-brand">
+                                    {step.route}
+                                </span>
                             </span>
                             <span className="text-[15px] leading-relaxed text-ink/80">{step.text}</span>
                         </li>
@@ -87,50 +64,16 @@ export function IntegrationPage() {
                 </ol>
             </section>
 
-            <section aria-labelledby="experimente" className="space-y-4">
-                <Kicker id="experimente">Experimente o passo 1</Kicker>
-                <div className="rounded-2xl border border-line p-5 sm:p-6">
-                    <div className="flex items-start gap-4">
-                        <LogoMark className="size-10 shrink-0" />
-                        <div className="min-w-0 flex-1">
-                            <div className="flex flex-wrap items-center gap-2">
-                                <label htmlFor="lidersign-switch" className="font-semibold">
-                                    Ativar LíderSign
-                                </label>
-                                {active ? (
-                                    <Badge tone="success" dot>
-                                        Ativo
-                                    </Badge>
-                                ) : (
-                                    <Badge>Desligado</Badge>
-                                )}
-                            </div>
-                            <p className="mt-1 text-sm leading-relaxed text-muted">
-                                É o switch que o escritório vê dentro da LíderHub. Ligar faz o passo 1 de verdade, e a chamada
-                                aparece no registro abaixo. O painel de demonstração liga sozinho quando é aberto.
-                            </p>
-                        </div>
-                        <div className="flex items-center gap-3 pt-1">
-                            {busy ? <Loader2 className="size-4 animate-spin text-muted" aria-hidden /> : null}
-                            <Switch
-                                id="lidersign-switch"
-                                checked={active}
-                                disabled={busy || !status.data}
-                                onCheckedChange={(next) => void toggle(next)}
-                            />
-                        </div>
-                    </div>
-                    <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-line pt-4 text-sm">
-                        <button type="button" onClick={() => setZapOpen(true)} className="font-medium text-brand hover:underline">
-                            Ver como é hoje com a ZapSign
-                        </button>
-                        {active ? (
-                            <Link to="/painel/enviar" className="font-medium text-brand hover:underline">
-                                Enviar um documento (passo 2)
-                            </Link>
-                        ) : null}
-                    </div>
-                </div>
+            <section aria-labelledby="experimente" className="space-y-3">
+                <Kicker id="experimente">Experimente</Kicker>
+                <p className="max-w-2xl text-[15px] leading-relaxed text-ink/80">
+                    A{' '}
+                    <Link to="/liderhub" className="font-medium text-brand hover:underline">
+                        simulação da LíderHub
+                    </Link>{' '}
+                    mostra os três passos do lado de quem usa: o switch em Integrações, o contrato saindo pela
+                    conversa e o status voltando. Cada chamada aparece no registro abaixo.
+                </p>
             </section>
 
             <section aria-labelledby="registro" className="space-y-4">
@@ -152,7 +95,9 @@ export function IntegrationPage() {
                         </p>
                     </div>
                     <div className="mt-4 flex items-start justify-between gap-3 rounded-xl bg-ink p-4">
-                        <pre className="overflow-x-auto font-mono text-[12px] leading-relaxed text-white/90">{command}</pre>
+                        <pre className="overflow-x-auto font-mono text-[12px] leading-relaxed text-white/90">
+                            {command}
+                        </pre>
                         <CopyButton
                             value={command}
                             label="Copiar comando"
@@ -161,8 +106,6 @@ export function IntegrationPage() {
                     </div>
                 </div>
             </section>
-
-            <ZapSignDialog open={zapOpen} onOpenChange={setZapOpen} />
         </div>
     )
 }

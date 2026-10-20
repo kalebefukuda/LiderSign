@@ -17,8 +17,8 @@ export default function NewTemplateRoute() {
                 </Link>
                 <h1 className="mt-4 text-[28px] font-bold tracking-[-0.03em]">Novo modelo</h1>
                 <p className="mt-1.5 max-w-[62ch] text-muted">
-                    Envie o contrato que o escritório já usa. Os dados do cliente viram campos, e o agente preenche tudo a
-                    partir da conversa.
+                    Envie o contrato que o escritório já usa. Os dados do cliente viram campos, e o agente
+                    preenche tudo a partir da conversa.
                 </p>
             </div>
             <TemplateImport />

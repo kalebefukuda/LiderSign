@@ -19,7 +19,15 @@ export function LogoMark({ className, inverted }: { className?: string; inverted
     )
 }
 
-export function Logo({ className, inverted, href = '/' }: { className?: string; inverted?: boolean; href?: string }) {
+export function Logo({
+    className,
+    inverted,
+    href = '/',
+}: {
+    className?: string
+    inverted?: boolean
+    href?: string
+}) {
     return (
         <Link
             to={href}

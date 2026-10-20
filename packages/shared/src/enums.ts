@@ -20,7 +20,7 @@ export type AssuranceLevel = (typeof ASSURANCE_LEVELS)[number]
 
 export const ASSURANCE_LEVEL_LABEL: Record<AssuranceLevel, string> = {
     PADRAO: 'Padrão',
-    REFORCADO: 'Reforçado',
+    REFORCADO: 'Com selfie',
 }
 
 export const TEMPLATE_KINDS = ['CONTRATO', 'PROCURACAO', 'DECLARACAO', 'OUTRO'] as const

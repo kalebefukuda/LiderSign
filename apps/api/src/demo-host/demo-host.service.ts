@@ -38,7 +38,7 @@ export type DemoHostStatus = {
     webPublicUrl: string
 }
 
-export const DEMO_OFFICE_NAME = 'Escritório Demo · Advocacia Previdenciária'
+export const DEMO_OFFICE_NAME = 'Souza Advocacia'
 
 @Injectable()
 export class DemoHostService {

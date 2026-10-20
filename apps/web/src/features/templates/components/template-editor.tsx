@@ -33,8 +33,9 @@ export type TemplateDraft = {
 }
 
 const ASSURANCE_HELP: Record<AssuranceLevel, string> = {
-    PADRAO: 'O cliente confirma o CPF e assina. Registra IP e dispositivo. Para contratos de honorários.',
-    REFORCADO: 'Padrão + código no WhatsApp e selfie do cliente. Indicado para procurações e ações de massa.',
+    PADRAO: 'O cliente confirma o CPF e assina. Para contratos de honorários.',
+    REFORCADO:
+        'Também pede um código no WhatsApp e uma selfie. Para procurações em ações de massa, em que juízes têm cobrado prova mais forte de quem assinou.',
 }
 
 export function TemplateEditor({
@@ -135,7 +136,7 @@ export function TemplateEditor({
                     </div>
 
                     <fieldset>
-                        <legend className="text-sm font-medium">Nível de garantia</legend>
+                        <legend className="text-sm font-medium">Como o cliente confirma quem é</legend>
                         <div className="mt-2 grid gap-3 sm:grid-cols-2">
                             {ASSURANCE_LEVELS.map((level) => (
                                 <label

@@ -1,15 +1,18 @@
 import { Link } from 'react-router'
 
 import { cn } from '@/lib/cn'
+import { isOfficeHost } from '@/lib/url'
 
 import { Logo } from './logo'
 
-const links = [
+const officeLinks = [
+    { href: '/liderhub', label: 'LíderHub (simulação)' },
     { href: '/painel', label: 'Painel' },
-    { href: '/v', label: 'Verificar documento' },
 ]
 
 export function SiteHeader({ className }: { className?: string }) {
+    // Para o cliente (endereço público), só a verificação
+    const links = [...(isOfficeHost() ? officeLinks : []), { href: '/v', label: 'Verificar documento' }]
     return (
         <header className={cn('border-b border-line bg-white/90 backdrop-blur-sm', className)}>
             <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-6 px-5 sm:px-8">
@@ -25,10 +28,10 @@ export function SiteHeader({ className }: { className?: string }) {
                         </Link>
                     ))}
                     <Link
-                        to="/painel"
+                        to="/v"
                         className="inline-flex rounded-lg px-3 py-2 text-sm font-medium text-brand sm:hidden"
                     >
-                        Painel
+                        Verificar
                     </Link>
                 </nav>
             </div>

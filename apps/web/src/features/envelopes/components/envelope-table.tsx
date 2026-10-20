@@ -9,7 +9,7 @@ import { formatDateTime } from '@/lib/format'
 import { useEnvelopes } from '../hooks'
 import { StatusPill } from './status-pill'
 
-export function EnvelopeTable() {
+export function EnvelopeTable({ limit }: { limit?: number } = {}) {
     const { data, error, loading, reload, live } = useEnvelopes()
 
     if (loading && !data) {
@@ -43,16 +43,18 @@ export function EnvelopeTable() {
         return (
             <EmptyState
                 icon={<FileSignature />}
-                title="Nenhum documento enviado ainda"
-                description="Envie um contrato para assinatura e ele aparece aqui, com o andamento ao vivo."
+                title="Nenhum documento ainda"
+                description="Os contratos enviados pelas conversas da LíderHub aparecem aqui, com o andamento ao vivo."
                 action={
-                    <Button asChild>
-                        <Link to="/painel/enviar">Enviar o primeiro documento</Link>
+                    <Button asChild variant="secondary">
+                        <Link to="/liderhub?aba=conversas">Enviar pela LíderHub (simulação)</Link>
                     </Button>
                 }
             />
         )
     }
+
+    const rows = limit ? data.slice(0, limit) : data
 
     return (
         <div className="space-y-3">
@@ -76,7 +78,7 @@ export function EnvelopeTable() {
                         </tr>
                     </thead>
                     <tbody>
-                        {data.map((envelope) => (
+                        {rows.map((envelope) => (
                             <tr
                                 key={envelope.id}
                                 className="group border-b border-line transition-colors last:border-0 hover:bg-surface/60"
@@ -109,7 +111,7 @@ export function EnvelopeTable() {
             </div>
 
             <ul className="divide-y divide-line overflow-hidden rounded-2xl border border-line md:hidden">
-                {data.map((envelope) => (
+                {rows.map((envelope) => (
                     <li key={envelope.id}>
                         <Link
                             to={`/painel/envelopes/${envelope.id}`}

@@ -73,6 +73,29 @@ export function SigningLinkCard({ envelopeId, signerFirstName, documentTitle, ph
         ? `Olá, ${signerFirstName}! ${office} enviou "${documentTitle}" para você assinar pelo celular. É rápido: ${url}`
         : ''
 
+    // Sem link guardado nesta aba: o envio foi pela LíderHub, na conversa. O painel só oferece um link novo.
+    if (!url) {
+        return (
+            <section
+                aria-labelledby="proximo-passo"
+                className="flex flex-col gap-4 rounded-2xl border border-line bg-surface/50 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6"
+            >
+                <div>
+                    <h2 id="proximo-passo" className="font-semibold">
+                        Link enviado na conversa da LíderHub
+                    </h2>
+                    <p className="mt-1 text-sm text-muted">
+                        {signerFirstName} recebeu o link no WhatsApp. Se ela perdeu, gere um novo (o anterior
+                        deixa de valer).
+                    </p>
+                </div>
+                <Button variant="secondary" loading={regenerating} onClick={() => void regenerate()}>
+                    <RefreshCw aria-hidden /> Gerar novo link
+                </Button>
+            </section>
+        )
+    }
+
     return (
         <section
             aria-labelledby="proximo-passo"
@@ -80,9 +103,13 @@ export function SigningLinkCard({ envelopeId, signerFirstName, documentTitle, ph
         >
             <div className="grid gap-6 p-5 sm:p-7 md:grid-cols-[1fr_auto] md:items-center">
                 <div className="min-w-0">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand">Próximo passo</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand">
+                        Próximo passo
+                    </p>
                     <h2 id="proximo-passo" className="mt-2 text-xl font-bold tracking-[-0.02em]">
-                        {sentByPlatform ? `Enviado no WhatsApp de ${signerFirstName}` : `Envie o link para ${signerFirstName}`}
+                        {sentByPlatform
+                            ? `Enviado no WhatsApp de ${signerFirstName}`
+                            : `Envie o link para ${signerFirstName}`}
                     </h2>
                     <p className="mt-2 max-w-[52ch] text-[15px] leading-relaxed text-ink/80">
                         {sentByPlatform
@@ -90,49 +117,39 @@ export function SigningLinkCard({ envelopeId, signerFirstName, documentTitle, ph
                             : `${signerFirstName} abre no celular, confere o contrato e assina. O andamento aparece aqui sozinho.`}
                     </p>
 
-                    {url ? (
-                        <div className="mt-5 flex flex-wrap gap-2">
-                            <Button asChild variant={sentByPlatform ? 'secondary' : 'primary'}>
-                                <a href={whatsappShareUrl(message, link?.phone)} target="_blank" rel="noreferrer">
-                                    <MessageCircle aria-hidden />
-                                    {sentByPlatform ? 'Mandar de novo pelo meu WhatsApp' : 'Enviar pelo WhatsApp'}
-                                </a>
-                            </Button>
-                            <Button variant="secondary" onClick={() => void copy()}>
-                                {copied ? <Check aria-hidden /> : <Copy aria-hidden />}
-                                {copied ? 'Link copiado' : 'Copiar link'}
-                            </Button>
-                        </div>
-                    ) : (
-                        <div className="mt-5 flex flex-wrap items-center gap-3">
-                            <Button loading={regenerating} onClick={() => void regenerate()}>
-                                <RefreshCw aria-hidden /> Gerar o link de novo
-                            </Button>
-                            <p className="text-sm text-muted">Por segurança, o link só fica disponível na tela em que foi criado.</p>
-                        </div>
-                    )}
-                    {url && isLocalUrl(url) ? (
+                    <div className="mt-5 flex flex-wrap gap-2">
+                        <Button asChild variant={sentByPlatform ? 'secondary' : 'primary'}>
+                            <a href={whatsappShareUrl(message, link?.phone)} target="_blank" rel="noreferrer">
+                                <MessageCircle aria-hidden />
+                                {sentByPlatform ? 'Mandar de novo pelo meu WhatsApp' : 'Enviar pelo WhatsApp'}
+                            </a>
+                        </Button>
+                        <Button variant="secondary" onClick={() => void copy()}>
+                            {copied ? <Check aria-hidden /> : <Copy aria-hidden />}
+                            {copied ? 'Link copiado' : 'Copiar link'}
+                        </Button>
+                    </div>
+                    {isLocalUrl(url) ? (
                         <p className="mt-4 text-[13px] text-amber-800">
-                            Este link só abre neste computador. Suba com o Docker para ter um endereço que abre no celular.
+                            Este link só abre neste computador. Suba com o Docker para ter um endereço que
+                            abre no celular.
                         </p>
                     ) : null}
                 </div>
 
-                {url ? (
-                    <div className="flex items-center gap-4 md:flex-col md:items-center md:gap-2">
-                        <div className="size-[132px] shrink-0 rounded-xl border border-line bg-white p-2 md:size-[150px]">
-                            {qr ? (
-                                <img src={qr} alt="QR code do link de assinatura" className="size-full" />
-                            ) : (
-                                <Skeleton className="size-full" />
-                            )}
-                        </div>
-                        <p className="flex max-w-[150px] items-start gap-1.5 text-[12px] leading-snug text-muted md:text-center">
-                            <Smartphone className="mt-px size-3.5 shrink-0 md:hidden" aria-hidden />
-                            Ou aponte a câmera do celular para abrir aqui
-                        </p>
+                <div className="flex items-center gap-4 md:flex-col md:items-center md:gap-2">
+                    <div className="size-[132px] shrink-0 rounded-xl border border-line bg-white p-2 md:size-[150px]">
+                        {qr ? (
+                            <img src={qr} alt="QR code do link de assinatura" className="size-full" />
+                        ) : (
+                            <Skeleton className="size-full" />
+                        )}
                     </div>
-                ) : null}
+                    <p className="flex max-w-[150px] items-start gap-1.5 text-[12px] leading-snug text-muted md:text-center">
+                        <Smartphone className="mt-px size-3.5 shrink-0 md:hidden" aria-hidden />
+                        Ou aponte a câmera do celular para abrir aqui
+                    </p>
+                </div>
             </div>
         </section>
     )

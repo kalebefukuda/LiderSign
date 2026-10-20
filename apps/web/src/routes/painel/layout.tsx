@@ -1,4 +1,4 @@
-import { RefreshCw, ServerCrash, ShieldCheck } from 'lucide-react'
+import { ArrowUpRight, PlugZap, RefreshCw, ServerCrash, ShieldCheck } from 'lucide-react'
 import * as React from 'react'
 import { Link, Outlet } from 'react-router'
 
@@ -7,50 +7,45 @@ import { Skeleton } from '@/components/ui/primitives'
 import { EmptyState } from '@/components/ui/states'
 import { Logo, PanelNav } from '@/features/brand'
 import { demoApi, onDemoStatusChange, type DemoStatus } from '@/features/demo'
-import { errorMessage } from '@/lib/http'
 import { useResource } from '@/lib/use-resource'
 
 /**
- * Painel do escritório. Na LíderHub ele vive dentro da plataforma e o escritório já chega com o
- * LíderSign ligado; aqui, na demonstração, o painel liga o escritório de exemplo sozinho.
+ * Painel do LíderSign: o bastidor do escritório (documentos, modelos, PDFs). O envio do dia a dia
+ * acontece na LíderHub; é ela também que ativa o LíderSign.
  */
 export default function PanelLayout() {
     const status = useResource<DemoStatus>(demoApi.statusUrl)
-    const [activationError, setActivationError] = React.useState<string | null>(null)
-    const activating = React.useRef(false)
-    const officeName = status.data?.tenant?.name ?? 'Seu escritório'
+    const officeName = status.data?.tenant?.name ?? 'Escritório'
     const { reload } = status
 
     React.useEffect(() => onDemoStatusChange(() => void reload()), [reload])
 
-    React.useEffect(() => {
-        if (!status.data || status.data.active || activating.current) return
-        activating.current = true
-        demoApi
-            .activate()
-            .catch((error) => setActivationError(errorMessage(error)))
-            .finally(() => {
-                activating.current = false
-            })
-    }, [status.data])
-
     let content: React.ReactNode
     if (status.data?.active) {
         content = <Outlet />
-    } else if ((status.error && !status.data) || activationError) {
+    } else if (status.data) {
+        content = (
+            <EmptyState
+                icon={<PlugZap />}
+                title="O LíderSign ainda não está ativo neste escritório"
+                description="Ele é ativado pela LíderHub, em Integrações: um clique, sem criar conta nem copiar token."
+                action={
+                    <Button asChild>
+                        <Link to="/liderhub?aba=integracoes">
+                            Ativar pela LíderHub (simulação) <ArrowUpRight aria-hidden />
+                        </Link>
+                    </Button>
+                }
+            />
+        )
+    } else if (status.error) {
         content = (
             <EmptyState
                 icon={<ServerCrash />}
                 title="Sem conexão com o LíderSign"
-                description={activationError ?? 'Não foi possível carregar o painel. Confira se o sistema está no ar.'}
+                description="Não foi possível carregar o painel. Confira se o sistema está no ar."
                 action={
-                    <Button
-                        variant="secondary"
-                        onClick={() => {
-                            setActivationError(null)
-                            void status.reload()
-                        }}
-                    >
+                    <Button variant="secondary" onClick={() => void status.reload()}>
                         <RefreshCw aria-hidden /> Tentar de novo
                     </Button>
                 }
@@ -67,24 +62,29 @@ export default function PanelLayout() {
     }
 
     return (
-        <div className="min-h-dvh bg-white lg:grid lg:grid-cols-[248px_1fr]">
+        <div className="min-h-dvh bg-white lg:grid lg:grid-cols-[232px_1fr]">
             <aside className="hidden border-r border-line lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col">
                 <div className="flex h-16 items-center px-5">
                     <Logo />
                 </div>
-                <div className="px-5 pb-6 pt-2">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-subtle">Escritório</p>
-                    <p className="mt-1 text-sm font-medium leading-snug">{officeName}</p>
-                </div>
+                <p className="truncate px-5 pb-5 text-sm text-muted" title={officeName}>
+                    {officeName}
+                </p>
                 <div className="px-3">
                     <PanelNav />
                 </div>
-                <div className="mt-auto px-5 py-6">
+                <div className="mt-auto space-y-3 px-5 py-6">
+                    <Link
+                        to="/liderhub"
+                        className="flex items-center gap-2 text-sm text-muted transition-colors hover:text-ink"
+                    >
+                        <ArrowUpRight className="size-4" aria-hidden /> Voltar para a LíderHub
+                    </Link>
                     <Link
                         to="/v"
-                        className="inline-flex items-center gap-2 text-sm text-muted transition-colors hover:text-ink"
+                        className="flex items-center gap-2 text-sm text-muted transition-colors hover:text-ink"
                     >
-                        <ShieldCheck className="size-4" aria-hidden /> Verificar um documento
+                        <ShieldCheck className="size-4" aria-hidden /> Verificar documento
                     </Link>
                 </div>
             </aside>
@@ -93,8 +93,8 @@ export default function PanelLayout() {
                 <header className="border-b border-line lg:hidden">
                     <div className="flex h-14 items-center justify-between px-4">
                         <Logo />
-                        <Link to="/v" className="text-sm text-muted">
-                            Verificar
+                        <Link to="/liderhub" className="text-sm text-muted">
+                            LíderHub
                         </Link>
                     </div>
                     <div className="px-3 pb-2">

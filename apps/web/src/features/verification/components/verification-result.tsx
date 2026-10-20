@@ -112,7 +112,7 @@ export function VerificationResult({ data, children }: { data: PublicVerificatio
                 <div className="space-y-8 border-t border-line px-6 py-6">
                     <dl className="grid gap-x-10 gap-y-6 sm:grid-cols-2">
                         <Item label="Código de verificação" value={data.code} mono />
-                        <Item label="Nível de garantia" value={ASSURANCE_LEVEL_LABEL[data.assuranceLevel]} />
+                        <Item label="Confirmação de identidade" value={ASSURANCE_LEVEL_LABEL[data.assuranceLevel]} />
                         <div>
                             <dt>
                                 <Kicker>Carimbo do tempo</Kicker>

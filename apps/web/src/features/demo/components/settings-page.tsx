@@ -140,7 +140,7 @@ export function SettingsPage() {
                             <p className="max-w-2xl text-[15px] leading-relaxed text-ink/80">
                                 Nenhuma mensagem sai daqui. Depois de enviar, o escritório manda o link pelo próprio
                                 WhatsApp, no botão "Enviar pelo WhatsApp". Na LíderHub, quem envia é o WhatsApp oficial
-                                dela. O código por WhatsApp só é pedido no nível Reforçado; sem a Meta configurada, ele
+                                dela. O código por WhatsApp só é pedido nos modelos com selfie; sem a Meta configurada, ele
                                 aparece na tela de assinatura.
                             </p>
                             <div className="space-y-2">

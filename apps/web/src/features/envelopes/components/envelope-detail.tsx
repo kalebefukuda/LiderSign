@@ -4,7 +4,7 @@ import {
     type MessageKind,
     type StreamEvent,
 } from '@lidersign/shared'
-import { ArrowLeft, CheckCircle2, ChevronDown, Download, ExternalLink, Loader2, RefreshCw, Send, XCircle } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, ChevronDown, Download, ExternalLink, Loader2, RefreshCw, XCircle } from 'lucide-react'
 import { Link } from 'react-router'
 import * as React from 'react'
 import { toast } from 'sonner'
@@ -96,7 +96,7 @@ export function EnvelopeDetail({ id }: { id: string }) {
                 description="Ele pode ter sido apagado ao reiniciar a demonstração."
                 action={
                     <Button asChild variant="secondary">
-                        <Link to="/painel/envelopes">Voltar para os envios</Link>
+                        <Link to="/painel/envelopes">Voltar para os documentos</Link>
                     </Button>
                 }
             />
@@ -123,7 +123,7 @@ export function EnvelopeDetail({ id }: { id: string }) {
                     to="/painel/envelopes"
                     className="inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-ink"
                 >
-                    <ArrowLeft className="size-4" /> Envios
+                    <ArrowLeft className="size-4" /> Documentos
                 </Link>
                 <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div className="min-w-0">
@@ -138,9 +138,6 @@ export function EnvelopeDetail({ id }: { id: string }) {
                     </div>
                     {canAct ? (
                         <div className="flex gap-2">
-                            <Button variant="secondary" size="sm" loading={busy === 'resend'} onClick={() => act('resend')}>
-                                <Send aria-hidden /> Gerar novo link
-                            </Button>
                             <Button variant="ghost" size="sm" onClick={() => setConfirmCancel(true)}>
                                 <XCircle aria-hidden /> Cancelar envio
                             </Button>
@@ -238,10 +235,9 @@ export function EnvelopeDetail({ id }: { id: string }) {
                             </p>
                         </div>
                         <p className="text-sm text-muted">
-                            Nível {ASSURANCE_LEVEL_LABEL[data.assuranceLevel]}:{' '}
                             {data.assuranceLevel === 'REFORCADO'
-                                ? 'confirma o CPF, o código no WhatsApp e tira uma selfie.'
-                                : 'confirma o CPF e assina.'}
+                                ? 'Com selfie: confirma o CPF, o código no WhatsApp e tira uma selfie.'
+                                : 'Confirma o CPF e assina.'}
                         </p>
                     </Card>
 

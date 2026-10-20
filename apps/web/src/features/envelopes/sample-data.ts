@@ -20,9 +20,9 @@ export function sampleValues(): Record<string, string> {
         nacionalidade: 'brasileira',
         estado_civil: 'viúva',
         profissao: 'do lar',
-        nome_escritorio: 'Escritório Demo Advocacia Previdenciária',
-        nome_advogado: 'Ana Ribeiro',
-        oab_advogado: 'OAB/SC 00.000',
+        nome_escritorio: 'Souza Advocacia Previdenciária',
+        nome_advogado: 'Dra. Ana Paula Souza',
+        oab_advogado: 'OAB/SC 00000',
         endereco_escritorio: 'Rua XV de Novembro, 500, sala 3, Joinville/SC',
         percentual_honorarios: '30%',
         finalidade:
