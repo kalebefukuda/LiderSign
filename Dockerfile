@@ -63,7 +63,9 @@ COPY --from=build --chown=node:node /out ./
 RUN prisma generate --schema prisma/schema.prisma
 
 COPY --chown=node:node infra/entrypoint.sh /usr/local/bin/lidersign-entrypoint
-RUN chmod +x /usr/local/bin/lidersign-entrypoint \
+# sed: garante LF mesmo se o arquivo vier com CRLF de um checkout no Windows
+RUN sed -i 's/\r$//' /usr/local/bin/lidersign-entrypoint \
+    && chmod +x /usr/local/bin/lidersign-entrypoint \
     && mkdir -p /data/storage /data/certs \
     && chown -R node:node /data /app
 

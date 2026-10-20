@@ -1,4 +1,5 @@
-import { Controller, Get } from '@nestjs/common'
+import { Controller, Get, Res } from '@nestjs/common'
+import type { Response } from 'express'
 import { SkipThrottle } from '@nestjs/throttler'
 import { env } from '../config/env'
 import { MessagingService } from '../messaging/messaging.service'
@@ -13,7 +14,7 @@ export class HealthController {
     ) {}
 
     @Get()
-    async health() {
+    async health(@Res({ passthrough: true }) res: Response) {
         let db = false
         try {
             await this.prisma.$queryRaw`SELECT 1`
@@ -21,6 +22,8 @@ export class HealthController {
         } catch {
             db = false
         }
+        // 503 sem banco: o healthcheck do Docker e o CI percebem a falha
+        if (!db) res.status(503)
         return {
             ok: db,
             db,
