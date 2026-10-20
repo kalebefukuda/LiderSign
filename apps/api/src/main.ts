@@ -7,6 +7,7 @@ import helmet from 'helmet'
 import { AppModule } from './app.module'
 import { HttpExceptionFilter } from './common/http-exception.filter'
 import { loadEnv } from './config/env'
+import { startTunnelDiscovery } from './config/public-url'
 import { createDemoHostProxy } from './demo-host/demo-host.proxy'
 
 function parseTrustProxy(value: string | undefined): number | string {
@@ -64,6 +65,7 @@ async function bootstrap() {
     app.useGlobalFilters(new HttpExceptionFilter())
     app.enableShutdownHooks()
     await app.listen(env.PORT, '0.0.0.0')
+    startTunnelDiscovery()
     Logger.log(
         `No ar em :${env.PORT} · WhatsApp: ${env.WHATSAPP_PROVIDER} · demo: ${env.DEMO_MODE ? 'sim' : 'não'}`,
         'LíderSign',

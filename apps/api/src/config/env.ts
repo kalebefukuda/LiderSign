@@ -19,6 +19,14 @@ const envSchema = z
         WEB_PUBLIC_URL: z
             .url('WEB_PUBLIC_URL precisa ser uma URL')
             .transform((value) => value.replace(/\/+$/, '')),
+        /** Servidor de métricas do cloudflared (docker compose). Com ele, os links usam a URL HTTPS do túnel. */
+        TUNNEL_METRICS_URL: z.preprocess(
+            emptyToUndefined,
+            z
+                .url()
+                .optional()
+                .transform((value) => value?.replace(/\/+$/, '')),
+        ),
         STORAGE_DIR: z.string().default('./data/storage'),
         CERT_DIR: z.string().default('./data/certs'),
         SEAL_CERT_PASSPHRASE: z.string().min(8, 'SEAL_CERT_PASSPHRASE precisa ter pelo menos 8 caracteres'),

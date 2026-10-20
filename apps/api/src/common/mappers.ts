@@ -19,7 +19,7 @@ import {
     type WebhookEvent,
 } from '@lidersign/shared'
 import type { Envelope, EnvelopeEvent, Message, Template, Tenant, WebhookDelivery } from '@prisma/client'
-import { env } from '../config/env'
+import { publicUrl } from '../config/public-url'
 
 const iso = (date: Date | null | undefined) => (date ? date.toISOString() : null)
 
@@ -58,11 +58,11 @@ export function toTemplateDto(template: Template): TemplateDto {
 }
 
 export function signingUrlFor(token: string): string {
-    return `${env().WEB_PUBLIC_URL}/s/${token}`
+    return `${publicUrl()}/s/${token}`
 }
 
 export function verificationUrlFor(code: string): string {
-    return `${env().WEB_PUBLIC_URL}/v/${code}`
+    return `${publicUrl()}/v/${code}`
 }
 
 /** signingUrl só existe quando o token acabou de ser gerado (criação e reenvio): no banco fica só o hash. */

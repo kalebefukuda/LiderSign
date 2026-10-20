@@ -10,6 +10,7 @@ import { createHmac, timingSafeEqual } from 'node:crypto'
 import { env } from '../config/env'
 import { MessagingService } from '../messaging/messaging.service'
 import { PrismaService } from '../prisma/prisma.service'
+import { isTunnelActive, publicUrl } from '../config/public-url'
 import { clearCalls, logCall } from './call-log'
 import { partnerHeaders } from './demo-host.proxy'
 
@@ -31,7 +32,9 @@ export type DemoHostStatus = {
     whatsappProvider: 'simulator' | 'cloud_api'
     /** Cloud API com Phone Number ID e token preenchidos */
     whatsappConfigured: boolean
-    /** Endereço que vai nos links (WEB_PUBLIC_URL) */
+    /** Túnel HTTPS do docker compose no ar (links abrem em qualquer celular) */
+    tunnel: boolean
+    /** Endereço que vai nos links (túnel ou WEB_PUBLIC_URL) */
     webPublicUrl: string
 }
 
@@ -115,7 +118,8 @@ export class DemoHostService {
                 config.WHATSAPP_PROVIDER === 'cloud_api' &&
                 Boolean(config.WHATSAPP_PHONE_NUMBER_ID) &&
                 Boolean(config.WHATSAPP_ACCESS_TOKEN),
-            webPublicUrl: config.WEB_PUBLIC_URL,
+            webPublicUrl: publicUrl(),
+            tunnel: isTunnelActive(),
         }
         const tenantRes = await this.call(`/v1/partner/tenants/${encodeURIComponent(config.DEMO_TENANT_ID)}`)
         if (!tenantRes.ok) return { active: false, tenant: null, templatesCount: 0, ...base }
