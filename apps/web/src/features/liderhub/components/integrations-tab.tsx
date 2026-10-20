@@ -9,6 +9,8 @@ import { LogoMark } from '@/features/brand'
 import { CallLog, demoApi, ZapSignDialog, type DemoStatus } from '@/features/demo'
 import { errorMessage } from '@/lib/http'
 
+import { PageHeader } from './page-header'
+
 /** Tela de Integrações da LíderHub: o LíderSign liga com um clique, ao lado da ZapSign que pede token. */
 export function IntegrationsTab({
     status,
@@ -40,16 +42,11 @@ export function IntegrationsTab({
     }
 
     return (
-        <div className="space-y-10">
-            <div>
-                <h1 className="text-2xl font-bold tracking-[-0.03em]">Integrações</h1>
-                <p className="mt-1.5 text-[15px] text-muted">
-                    Conecte as ferramentas que o seu escritório usa.
-                </p>
-            </div>
+        <div className="space-y-8">
+            <PageHeader title="Integrações" description="Conecte as ferramentas que o seu escritório usa." />
 
             <div className="grid gap-4 lg:grid-cols-2">
-                <article className="rounded-2xl border-2 border-brand/30 bg-white p-5 sm:p-6">
+                <article className="rounded-xl border-2 border-brand/30 bg-white p-5 sm:p-6">
                     <div className="flex items-start gap-4">
                         <LogoMark className="size-11 shrink-0" />
                         <div className="min-w-0 flex-1">
@@ -101,7 +98,7 @@ export function IntegrationsTab({
                     ) : null}
                 </article>
 
-                <article className="rounded-2xl border border-line bg-white p-5 sm:p-6">
+                <article className="rounded-xl border border-line bg-white p-5 sm:p-6">
                     <div className="flex items-start gap-4">
                         <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-surface text-sm font-bold text-muted">
                             ZS
@@ -123,7 +120,7 @@ export function IntegrationsTab({
                 </article>
             </div>
 
-            <section className="rounded-2xl border border-line bg-surface/50 p-5 sm:p-6">
+            <section className="rounded-xl border border-line bg-surface/50 p-5 sm:p-6">
                 <h2 className="text-sm font-semibold">O que o switch faz</h2>
                 <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-ink/80">
                     A LíderHub chama o LíderSign com a chave de parceiro dela, guardada no servidor, e envia
@@ -133,7 +130,7 @@ export function IntegrationsTab({
                 </p>
             </section>
 
-            <details className="group rounded-2xl border border-line" open>
+            <details className="group rounded-xl border border-line" open>
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 text-sm font-medium [&::-webkit-details-marker]:hidden">
                     Chamadas entre a LíderHub e o LíderSign, ao vivo
                     <ChevronDown

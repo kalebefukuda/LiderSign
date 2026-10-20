@@ -20,6 +20,9 @@ export default function PanelLayout() {
 
     React.useEffect(() => onDemoStatusChange(() => void reload()), [reload])
 
+    // Dentro da LíderHub (iframe na aba Contratos), só o conteúdo: o menu é o da LíderHub
+    const embedded = typeof window !== 'undefined' && window.self !== window.top
+
     let content: React.ReactNode
     if (status.data?.active) {
         content = <Outlet />
@@ -59,6 +62,10 @@ export default function PanelLayout() {
                 <Skeleton className="mt-6 h-64 w-full rounded-2xl" />
             </div>
         )
+    }
+
+    if (embedded) {
+        return <div className="min-h-dvh bg-white px-5 py-6 sm:px-8">{content}</div>
     }
 
     return (
