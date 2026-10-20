@@ -8,9 +8,13 @@ const base = (token: string) => `${SIGN_BASE}/${enc(token)}`
 export const signingApi = {
     session: (token: string) => fetchJson<SigningSessionDto>(base(token), { cache: 'no-store' }),
     sendOtp: (token: string) =>
-        fetchJson<{ sentTo: string; expiresInSeconds: number; resendInSeconds: number }>(`${base(token)}/otp`, {
-            method: 'POST',
-        }),
+        fetchJson<{
+            sentTo: string
+            expiresInSeconds: number
+            resendInSeconds: number
+            /** Só no modo demonstração sem WhatsApp: o código aparece na própria tela de quem assina. */
+            demoCode?: string
+        }>(`${base(token)}/otp`, { method: 'POST' }),
     verifyOtp: (token: string, code: string) =>
         fetchJson<{ verified: true }>(`${base(token)}/otp/verify`, {
             method: 'POST',

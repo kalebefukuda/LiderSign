@@ -5,7 +5,6 @@ import { cn } from '@/lib/cn'
 import { Logo } from './logo'
 
 const links = [
-    { href: '/demo', label: 'Demonstração' },
     { href: '/painel', label: 'Painel' },
     { href: '/v', label: 'Verificar documento' },
 ]
@@ -26,10 +25,10 @@ export function SiteHeader({ className }: { className?: string }) {
                         </Link>
                     ))}
                     <Link
-                        to="/demo"
+                        to="/painel"
                         className="inline-flex rounded-lg px-3 py-2 text-sm font-medium text-brand sm:hidden"
                     >
-                        Demonstração
+                        Painel
                     </Link>
                 </nav>
             </div>

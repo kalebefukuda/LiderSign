@@ -1,4 +1,4 @@
-import { MessageCircle } from 'lucide-react'
+import { FlaskConical, MessageCircle } from 'lucide-react'
 import * as React from 'react'
 
 import { Button } from '@/components/ui/button'
@@ -16,7 +16,7 @@ export function OtpStep({
     phoneMasked: string
     onVerified: () => void
 }) {
-    const [sent, setSent] = React.useState<{ sentTo: string } | null>(null)
+    const [sent, setSent] = React.useState<{ sentTo: string; demoCode?: string } | null>(null)
     const [code, setCode] = React.useState('')
     const [cooldown, setCooldown] = React.useState(0)
     const [sending, setSending] = React.useState(false)
@@ -36,7 +36,7 @@ export function OtpStep({
         setError(null)
         try {
             const result = await signingApi.sendOtp(token)
-            setSent({ sentTo: result.sentTo })
+            setSent({ sentTo: result.sentTo, demoCode: result.demoCode })
             setCooldown(result.resendInSeconds ?? 30)
             setCode('')
             submittedRef.current = ''
@@ -89,9 +89,43 @@ export function OtpStep({
 
     return (
         <div className="space-y-5">
+            {sent.demoCode ? (
+                <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-4 animate-enter">
+                    <p className="flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.12em] text-amber-800">
+                        <FlaskConical className="size-4" aria-hidden /> Modo demonstração
+                    </p>
+                    <p className="mt-2 text-[15px] leading-relaxed text-amber-950/80">
+                        Sem WhatsApp configurado, o código aparece aqui. Em produção, ele chega só pelo WhatsApp.
+                    </p>
+                    <div className="mt-3 flex items-center justify-between gap-3">
+                        <span className="font-mono text-2xl font-semibold tracking-[0.3em] text-amber-950 tabular">
+                            {sent.demoCode}
+                        </span>
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => {
+                                setCode(sent.demoCode ?? '')
+                                void verify(sent.demoCode ?? '')
+                            }}
+                        >
+                            Usar este código
+                        </Button>
+                    </div>
+                </div>
+            ) : null}
             <p className="text-[15px] leading-relaxed text-muted">
-                Enviamos o código para <span className="font-medium text-ink tabular">{sent.sentTo}</span>. Abra o
-                WhatsApp e digite aqui.
+                {sent.demoCode ? (
+                    <>
+                        Em produção, o código vai para o WhatsApp{' '}
+                        <span className="font-medium text-ink tabular">{sent.sentTo}</span>.
+                    </>
+                ) : (
+                    <>
+                        Enviamos o código para <span className="font-medium text-ink tabular">{sent.sentTo}</span>. Abra o
+                        WhatsApp e digite aqui.
+                    </>
+                )}
             </p>
             <label htmlFor="otp" className="sr-only">
                 Código de 6 números

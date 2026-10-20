@@ -44,10 +44,10 @@ export function EnvelopeTable() {
             <EmptyState
                 icon={<FileSignature />}
                 title="Nenhum documento enviado ainda"
-                description="Gere um contrato a partir da conversa com o lead e ele aparece aqui, com o andamento ao vivo."
+                description="Envie um contrato para assinatura e ele aparece aqui, com o andamento ao vivo."
                 action={
                     <Button asChild>
-                        <Link to="/demo">Enviar o primeiro contrato</Link>
+                        <Link to="/painel/enviar">Enviar o primeiro documento</Link>
                     </Button>
                 }
             />

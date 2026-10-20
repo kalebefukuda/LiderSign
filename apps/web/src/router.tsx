@@ -7,8 +7,9 @@ export const router = createBrowserRouter([
     {
         Component: RootLayout,
         children: [
-            { index: true, lazy: () => import('./routes/home').then((m) => ({ Component: m.default })) },
-            { path: 'demo', lazy: () => import('./routes/demo').then((m) => ({ Component: m.default })) },
+            // O produto é o painel: quem abre o endereço cai direto nele
+            { index: true, element: <Navigate to="/painel" replace /> },
+            { path: 'demo', element: <Navigate to="/painel/integracao" replace /> },
             {
                 path: 'painel',
                 lazy: () => import('./routes/painel/layout').then((m) => ({ Component: m.default })),
@@ -21,6 +22,18 @@ export const router = createBrowserRouter([
                     {
                         path: 'envelopes/:id',
                         lazy: () => import('./routes/painel/envelope').then((m) => ({ Component: m.default })),
+                    },
+                    {
+                        path: 'enviar',
+                        lazy: () => import('./routes/painel/enviar').then((m) => ({ Component: m.default })),
+                    },
+                    {
+                        path: 'integracao',
+                        lazy: () => import('./routes/painel/integracao').then((m) => ({ Component: m.default })),
+                    },
+                    {
+                        path: 'configuracoes',
+                        lazy: () => import('./routes/painel/configuracoes').then((m) => ({ Component: m.default })),
                     },
                     {
                         path: 'modelos',

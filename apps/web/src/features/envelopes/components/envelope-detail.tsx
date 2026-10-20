@@ -16,11 +16,13 @@ import { Card, Kicker, Skeleton } from '@/components/ui/primitives'
 import { CopyButton, EmptyState, ErrorNotice } from '@/components/ui/states'
 import { useLiveEvents } from '@/features/realtime'
 import { errorMessage } from '@/lib/http'
-import { formatDateTime, formatDateTimeLong } from '@/lib/format'
+import { firstName, formatDateTime, formatDateTimeLong } from '@/lib/format'
 import { useResource } from '@/lib/use-resource'
 
 import { envelopesApi } from '../api'
+import { rememberLink } from '../link-store'
 import { AuditTrail } from './audit-trail'
+import { SigningLinkCard } from './signing-link-card'
 import { StatusPill } from './status-pill'
 
 const MESSAGE_KIND_LABEL: Record<MessageKind, string> = {
@@ -28,6 +30,7 @@ const MESSAGE_KIND_LABEL: Record<MessageKind, string> = {
     OTP: 'Código de confirmação',
     SIGNED_COPY: 'Cópia assinada',
     REMINDER: 'Lembrete',
+    TEST: 'Mensagem de teste',
 }
 
 const FINAL_STATUSES = ['COMPLETED', 'CANCELED', 'EXPIRED']
@@ -43,6 +46,7 @@ export function EnvelopeDetail({ id }: { id: string }) {
     const { data, error, loading, reload } = useResource<EnvelopeDetailDto>(url, { refreshMs: final ? 0 : 4000 })
     const [busy, setBusy] = React.useState<'resend' | 'cancel' | null>(null)
     const [confirmCancel, setConfirmCancel] = React.useState(false)
+    const [linkVersion, setLinkVersion] = React.useState(0)
 
     React.useEffect(() => {
         if (data) setFinal(FINAL_STATUSES.includes(data.status) && data.timestamp.status !== 'PENDING')
@@ -56,8 +60,15 @@ export function EnvelopeDetail({ id }: { id: string }) {
     async function act(action: 'resend' | 'cancel') {
         setBusy(action)
         try {
-            await (action === 'resend' ? envelopesApi.resend(id) : envelopesApi.cancel(id))
-            toast.success(action === 'resend' ? 'Novo link enviado pelo WhatsApp' : 'Envelope cancelado')
+            if (action === 'resend') {
+                const envelope = await envelopesApi.resend(id)
+                rememberLink(id, envelope.signingUrl)
+                setLinkVersion((value) => value + 1)
+                toast.success('Novo link gerado. O anterior deixou de valer.')
+            } else {
+                await envelopesApi.cancel(id)
+                toast.success('Envelope cancelado')
+            }
             await reload()
         } catch (err) {
             toast.error(errorMessage(err))
@@ -110,7 +121,7 @@ export function EnvelopeDetail({ id }: { id: string }) {
                     to="/painel/envelopes"
                     className="inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-ink"
                 >
-                    <ArrowLeft className="size-4" /> Envelopes
+                    <ArrowLeft className="size-4" /> Envios
                 </Link>
                 <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div className="min-w-0">
@@ -135,6 +146,10 @@ export function EnvelopeDetail({ id }: { id: string }) {
                     ) : null}
                 </div>
             </div>
+
+            {canAct ? (
+                <SigningLinkCard key={linkVersion} envelopeId={id} signerFirstName={firstName(data.signer.name)} />
+            ) : null}
 
             <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
                 <div className="space-y-6">
@@ -226,7 +241,7 @@ export function EnvelopeDetail({ id }: { id: string }) {
                                         </div>
                                         <p className="mt-1 line-clamp-2 text-muted">{hideOtp(message.body)}</p>
                                         <p className="mt-1 text-xs text-subtle">
-                                            {message.provider === 'simulator' ? 'Simulador' : 'WhatsApp Cloud API'} ·{' '}
+                                            {message.provider === 'simulator' ? 'Modo demonstração, não saiu do computador' : 'WhatsApp oficial'} ·{' '}
                                             {message.status === 'FAILED' ? (
                                                 <span className="text-red-600">falhou{message.error ? `: ${message.error}` : ''}</span>
                                             ) : (

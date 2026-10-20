@@ -22,8 +22,8 @@ export default function NotFoundRoute() {
                 </p>
                 <div className="mt-8 flex flex-wrap gap-3">
                     <Button asChild>
-                        <Link to="/demo">
-                            Ver a demonstração <ArrowRight aria-hidden />
+                        <Link to="/painel">
+                            Ir para o painel <ArrowRight aria-hidden />
                         </Link>
                     </Button>
                     <Button asChild variant="ghost">
