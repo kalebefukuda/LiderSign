@@ -63,8 +63,9 @@ services:
             ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
             AI_MODEL: ${AI_MODEL:-claude-sonnet-5-5}
         ports:
-            # Site + API. O MCP do agente usa LIDERSIGN_API_URL=http://localhost:3000/v1
-            - '3000:3000'
+            # Site + API. Porta no seu computador: APP_PORT no .env (padrão 3000).
+            # O MCP do agente usa LIDERSIGN_API_URL=http://localhost:<APP_PORT>/v1
+            - '${APP_PORT:-3000}:3000'
         volumes:
             - app-data:/data
 
