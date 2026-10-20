@@ -1,0 +1,86 @@
+name: ci
+
+on:
+    push:
+        branches: [main, dev, 'feat/**', 'fix/**']
+    pull_request:
+
+permissions:
+    contents: read
+
+jobs:
+    e2e:
+        name: build e fluxo ponta a ponta
+        runs-on: ubuntu-latest
+        timeout-minutes: 20
+
+        services:
+            db:
+                image: postgres:16-alpine
+                env:
+                    POSTGRES_USER: lidersign
+                    POSTGRES_PASSWORD: lidersign
+                    POSTGRES_DB: lidersign
+                ports: ['5432:5432']
+                options: >-
+                    --health-cmd "pg_isready -U lidersign -d lidersign"
+                    --health-interval 5s --health-timeout 5s --health-retries 20
+
+        env:
+            DATABASE_URL: postgresql://lidersign:lidersign@localhost:5432/lidersign
+            PORT: 3000
+            PARTNER_API_KEY: ci-partner-key-${{ github.run_id }}
+            WEB_PUBLIC_URL: http://localhost:3000
+            STORAGE_DIR: ${{ github.workspace }}/data/storage
+            CERT_DIR: ${{ github.workspace }}/data/certs
+            SEAL_CERT_PASSPHRASE: ci-seal-${{ github.run_id }}
+            TSA_URL: https://freetsa.org/tsr
+            WEBHOOK_ALLOWED_HOSTS: localhost,127.0.0.1
+            WHATSAPP_PROVIDER: simulator
+            DEMO_MODE: 'true'
+            DEMO_TENANT_ID: escritorio-demo
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+
+            - name: pnpm
+              run: corepack enable && corepack prepare pnpm@10.28.0 --activate
+
+            - name: Instalar
+              run: pnpm install --frozen-lockfile
+
+            - name: Build
+              run: pnpm build
+
+            - name: Typecheck
+              run: pnpm typecheck
+
+            - name: Migrar o banco
+              run: pnpm db:migrate
+
+            - name: Subir o app
+              working-directory: apps/api
+              run: |
+                  nohup node dist/main.js > ../../app.log 2>&1 &
+                  for i in $(seq 1 30); do curl -sf http://localhost:3000/health && exit 0; sleep 2; done
+                  cat ../../app.log; exit 1
+
+            - name: Navegador do Playwright
+              run: pnpm exec playwright install --with-deps chromium
+
+            - name: Teste ponta a ponta
+              run: pnpm e2e
+
+            - name: Logs do app
+              if: failure()
+              run: cat app.log
+
+            - uses: actions/upload-artifact@v4
+              if: failure()
+              with:
+                  name: playwright-report
+                  path: playwright-report
