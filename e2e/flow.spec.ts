@@ -71,14 +71,55 @@ test.beforeEach(async ({ request }) => {
     await resetDemo(request)
 })
 
-test('ativar o LíderSign é um clique na tela de Integrações', async ({ page }) => {
+test('ligar o LíderSign cria o escritório e aparece no registro da integração', async ({ page }) => {
     await page.goto('/demo')
+    await expect(page).toHaveURL(/\/painel\/integracao$/)
     const toggle = page.getByRole('switch', { name: 'Ativar LíderSign' })
-    await expect(toggle).toBeVisible()
     await expect(toggle).toHaveAttribute('aria-checked', 'false')
     await toggle.click()
     await expect(toggle).toHaveAttribute('aria-checked', 'true')
-    await expect(page.getByText('prontos para usar')).toBeVisible()
+    await expect(page.getByText('Conta do escritório criada, com os modelos de exemplo')).toBeVisible()
+})
+
+test('escritório envia pelo painel e assina pelo QR code, com o código na tela no modo demonstração', async ({
+    browser,
+    page,
+    request,
+}) => {
+    await page.goto('/')
+    await expect(page).toHaveURL(/\/painel/)
+    await page.getByRole('button', { name: 'Ativar o escritório de demonstração' }).click()
+    await expect(page.getByRole('heading', { name: 'Envios' })).toBeVisible()
+
+    await page.getByRole('link', { name: 'Enviar para assinatura' }).first().click()
+    await expect(page.getByLabel('Nome completo')).toHaveValue(SIGNER.name)
+    await page.getByRole('button', { name: 'Enviar para assinatura' }).click()
+
+    await expect(page).toHaveURL(/\/painel\/envelopes\/[\w-]+$/)
+    await expect(page.getByAltText('QR code do link de assinatura')).toBeVisible()
+    const signingUrl = await page.getByRole('link', { name: 'Abrir neste computador' }).getAttribute('href')
+    expect(signingUrl).toContain('/s/')
+    const envelopeId = page.url().split('/').pop()!
+
+    const phone = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true })
+    await phone.goto(new URL(signingUrl!).pathname)
+    await phone.getByRole('button', { name: 'Sou eu, continuar' }).click()
+    await phone.getByRole('button', { name: 'Li o documento, continuar' }).click()
+    await phone.getByRole('button', { name: 'Enviar código no WhatsApp' }).click()
+
+    // Sem WhatsApp configurado, o código aparece na própria tela de assinatura
+    await expect(phone.getByText('Modo demonstração')).toBeVisible()
+    await phone.getByRole('button', { name: 'Usar este código' }).click()
+
+    await phone.getByRole('tab', { name: 'Digitar nome' }).click()
+    await phone.getByLabel('Seu nome completo').fill(SIGNER.name)
+    await phone.getByRole('checkbox').check()
+    await phone.getByRole('button', { name: 'Assinar documento' }).click()
+    await expect(phone.getByRole('heading', { name: 'Pronto! Documento assinado' })).toBeVisible()
+
+    await waitCompleted(request, envelopeId)
+    await page.goto('/painel/integracao')
+    await expect(page.getByText('envelope.completed · HMAC válido')).toBeVisible({ timeout: 15_000 })
 })
 
 test('lead assina pelo celular e o escritório recebe o PDF selado', async ({ browser, request }) => {
