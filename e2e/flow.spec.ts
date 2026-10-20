@@ -78,37 +78,23 @@ test.beforeEach(async ({ request }) => {
     await resetDemo(request)
 })
 
-test('ligar o LíderSign pela LíderHub cria o escritório e aparece no registro da integração', async ({ page }) => {
-    await page.goto('/demo')
-    await expect(page).toHaveURL(/\/desenvolvedores$/)
+test('na LíderHub, ativar o LíderSign é um switch e o contrato sai pela conversa', async ({ browser, page, request }) => {
+    await page.goto('/')
+    await expect(page).toHaveURL(/\/liderhub/)
     const toggle = page.getByRole('switch', { name: 'Ativar LíderSign' })
+    await expect(toggle).toBeEnabled()
     await expect(toggle).toHaveAttribute('aria-checked', 'false')
     await toggle.click()
     await expect(toggle).toHaveAttribute('aria-checked', 'true')
     await expect(page.getByText('Conta do escritório criada, com os modelos de exemplo')).toBeVisible()
-})
 
-test('escritório envia pelo painel e o cliente assina só com o CPF', async ({ browser, page, request }) => {
-    // O painel abre pronto: o escritório de demonstração liga sozinho
-    await page.goto('/')
-    await expect(page.getByRole('heading', { name: 'Envios' })).toBeVisible()
-    await expect(page.getByRole('link', { name: 'Integração LíderHub' })).toHaveCount(0)
-
-    await page.getByRole('link', { name: 'Enviar para assinatura' }).first().click()
-    await expect(page.getByLabel('Nome completo')).toHaveValue(SIGNER.name)
-    await page.getByRole('button', { name: 'Enviar para assinatura' }).click()
-    await expect(page.getByText('Informe o celular (WhatsApp) de quem assina.')).toBeVisible()
-    await page.getByLabel('Celular (WhatsApp)').fill('(47) 98888-7777')
-    await page.getByRole('button', { name: 'Enviar para assinatura' }).click()
-
-    await expect(page).toHaveURL(/\/painel\/envelopes\/[\w-]+$/)
-    await expect(page.getByRole('heading', { name: 'Envie o link para Maria' })).toBeVisible()
-    await expect(page.getByAltText('QR code do link de assinatura')).toBeVisible()
-    const share = await page.getByRole('link', { name: 'Enviar pelo WhatsApp' }).getAttribute('href')
+    await page.getByRole('button', { name: 'Conversas' }).click()
+    await page.getByLabel('WhatsApp da Maria').fill('(47) 98888-7777')
+    await page.getByRole('button', { name: 'Enviar contrato' }).click()
+    const share = await page.getByRole('link', { name: 'Abrir no meu WhatsApp' }).getAttribute('href')
     expect(share).toContain('https://wa.me/5547988887777?text=')
     const signingUrl = decodeURIComponent(new URL(share!).searchParams.get('text') ?? '').match(/https?:\/\/\S+\/s\/[\w-]+/)?.[0]
     expect(signingUrl).toBeTruthy()
-    const envelopeId = page.url().split('/').pop()!
 
     const phone = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true })
     await phone.goto(new URL(signingUrl!).pathname)
@@ -119,10 +105,38 @@ test('escritório envia pelo painel e o cliente assina só com o CPF', async ({ 
     await phone.getByRole('button', { name: 'Assinar', exact: true }).click()
     await expect(phone.getByRole('heading', { name: 'Pronto! Documento assinado' })).toBeVisible()
 
-    await waitCompleted(request, envelopeId)
-    await expect(page.getByRole('heading', { name: 'Maria assinou' })).toBeVisible({ timeout: 15_000 })
+    // O status volta para a conversa da LíderHub, com o PDF
+    await expect(page.getByText('Maria assinou')).toBeVisible({ timeout: 20_000 })
+    await expect(page.getByText('Contrato assinado.pdf')).toBeVisible({ timeout: 45_000 })
+    await expect(page.getByText('envelope.completed · HMAC válido')).toHaveCount(0)
+
+    // O painel do LíderSign é o bastidor: conexão, resumo e documentos
+    await page.goto('/painel')
+    await expect(page.getByText('Conectado à LíderHub')).toBeVisible()
+    await expect(page.getByRole('navigation', { name: 'Painel' }).getByRole('link')).toHaveText(['Início', 'Documentos', 'Modelos'])
+
+    // Envio avulso continua possível, com o link para mandar pelo WhatsApp
+    await page.goto('/painel/enviar')
+    await page.getByLabel('Celular (WhatsApp)').fill('(47) 98888-7777')
+    await page.getByRole('button', { name: 'Enviar para assinatura' }).click()
+    await expect(page.getByRole('heading', { name: 'Envie o link para Maria' })).toBeVisible()
+    await expect(page.getByAltText('QR code do link de assinatura')).toBeVisible()
+
     await page.goto('/desenvolvedores')
     await expect(page.getByText('envelope.completed · HMAC válido')).toBeVisible({ timeout: 15_000 })
+    void request
+})
+
+test('pelo endereço público só abrem a assinatura e a verificação', async ({ request }) => {
+    const viaTunnel = { 'cf-ray': 'teste', 'cf-connecting-ip': '203.0.113.7' }
+    expect((await request.get('/demo-host/status', { headers: viaTunnel })).status()).toBe(404)
+    for (const path of ['/', '/painel', '/painel/envelopes', '/liderhub', '/desenvolvedores']) {
+        const response = await request.get(path, { headers: viaTunnel, maxRedirects: 0 })
+        expect(response.status(), path).toBe(302)
+        expect(response.headers().location).toBe('/v')
+    }
+    expect((await request.get('/v', { headers: viaTunnel })).status()).toBe(200)
+    expect((await request.get('/demo-host/status')).status()).toBe(200)
 })
 
 test('lead assina pelo celular e o escritório recebe o PDF selado', async ({ browser, request }) => {
