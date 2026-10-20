@@ -88,9 +88,9 @@ test('na LíderHub, ativar o LíderSign é um switch e o contrato sai pela conve
     await expect(toggle).toHaveAttribute('aria-checked', 'true')
     await expect(page.getByText('Conta do escritório criada, com os modelos de exemplo')).toBeVisible()
 
-    await page.getByRole('button', { name: 'Conversas' }).click()
+    await page.getByRole('navigation', { name: 'LíderHub' }).getByRole('button', { name: 'Atendimento' }).click()
     await page.getByLabel('WhatsApp da Maria').fill('(47) 98888-7777')
-    await page.getByRole('button', { name: 'Enviar contrato' }).click()
+    await page.getByRole('button', { name: 'Enviar para assinatura' }).click()
     const share = await page.getByRole('link', { name: 'Abrir no meu WhatsApp' }).getAttribute('href')
     expect(share).toContain('https://wa.me/5547988887777?text=')
     const signingUrl = decodeURIComponent(new URL(share!).searchParams.get('text') ?? '').match(/https?:\/\/\S+\/s\/[\w-]+/)?.[0]
@@ -108,7 +108,14 @@ test('na LíderHub, ativar o LíderSign é um switch e o contrato sai pela conve
     // O status volta para a conversa da LíderHub, com o PDF
     await expect(page.getByText('Maria assinou')).toBeVisible({ timeout: 20_000 })
     await expect(page.getByText('Contrato assinado.pdf')).toBeVisible({ timeout: 45_000 })
-    await expect(page.getByText('envelope.completed · HMAC válido')).toHaveCount(0)
+
+    // Os contratos ficam dentro da LíderHub: lista com filtro e modelos embutidos
+    await page.getByRole('navigation', { name: 'LíderHub' }).getByRole('button', { name: /Contratos/ }).click()
+    await expect(page.getByRole('cell', { name: /Maria Aparecida dos Santos/ })).toBeVisible()
+    await page.getByRole('button', { name: /Assinados/ }).click()
+    await expect(page.getByRole('link', { name: 'Baixar PDF assinado' })).toBeVisible()
+    await page.getByRole('tab', { name: 'Modelos' }).click()
+    await expect(page.frameLocator('iframe[title="Modelos do LíderSign"]').getByRole('heading', { name: 'Modelos' })).toBeVisible()
 
     // O painel do LíderSign é o bastidor: conexão, resumo e documentos
     await page.goto('/painel')
