@@ -83,9 +83,16 @@ export function VerificationResult({ data }: { data: PublicVerificationDto }) {
 
             {data.trail.length ? (
                 <section aria-labelledby="trilha">
-                    <h2 id="trilha" className="text-lg font-semibold tracking-[-0.02em]">
-                        Trilha de auditoria
-                    </h2>
+                    <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                        <h2 id="trilha" className="text-lg font-semibold tracking-[-0.02em]">
+                            Trilha de auditoria
+                        </h2>
+                        <p className={data.trailIntact ? 'text-sm text-emerald-700' : 'text-sm text-red-600'}>
+                            {data.trailIntact
+                                ? 'Íntegra: cada evento confere com o anterior'
+                                : 'Atenção: a trilha não confere'}
+                        </p>
+                    </div>
                     <ol className="mt-4 divide-y divide-line rounded-2xl border border-line">
                         {data.trail.map((item, index) => (
                             <li key={`${item.label}-${index}`} className="flex flex-col gap-0.5 px-5 py-3.5 sm:flex-row sm:items-center sm:justify-between">

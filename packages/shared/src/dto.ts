@@ -160,6 +160,8 @@ export type PublicVerificationDto = {
     signedSha256: string | null
     timestamp: TimestampDto
     trail: { label: string; at: string }[]
+    /** A cadeia de hashes da trilha foi recalculada e confere evento a evento. */
+    trailIntact: boolean
 }
 
 export type FileCheckResponse = {

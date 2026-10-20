@@ -8,6 +8,20 @@ import { PrismaService } from '../prisma/prisma.service'
 export type AuditActor = 'system' | 'signer' | 'partner'
 
 /**
+ * JSON com chaves ordenadas. O Postgres (JSONB) reordena as chaves ao gravar,
+ * então o hash precisa de uma forma canônica para a cadeia poder ser recalculada depois.
+ */
+export function canonicalJson(value: unknown): string {
+    if (value === null || typeof value !== 'object') return JSON.stringify(value) ?? 'null'
+    if (value instanceof Date) return JSON.stringify(value.toISOString())
+    if (Array.isArray(value)) return `[${value.map((item) => canonicalJson(item ?? null)).join(',')}]`
+    const entries = Object.entries(value as Record<string, unknown>)
+        .filter(([, item]) => item !== undefined)
+        .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+    return `{${entries.map(([key, item]) => `${JSON.stringify(key)}:${canonicalJson(item)}`).join(',')}}`
+}
+
+/**
  * Trilha de auditoria append-only com hash encadeado (ISO 27001 A.8.15, LGPD art. 37).
  * hash = sha256(prevHash + type + JSON(data) + createdAt ISO). Alterar um evento quebra todos os seguintes.
  */
@@ -19,7 +33,7 @@ export class AuditService {
     constructor(private readonly prisma: PrismaService) {}
 
     static computeHash(prevHash: string | null, type: string, data: unknown, createdAt: Date): string {
-        return sha256Hex(`${prevHash ?? ''}${type}${JSON.stringify(data ?? {})}${createdAt.toISOString()}`)
+        return sha256Hex(`${prevHash ?? ''}${type}${canonicalJson(data ?? {})}${createdAt.toISOString()}`)
     }
 
     append(
