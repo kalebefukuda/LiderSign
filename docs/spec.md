@@ -9,7 +9,7 @@ Assinador eletrônico nativo da LíderHub. Três ideias guiam tudo:
 ## Arquitetura
 
 ```
-apps/web          React + Vite: /painel (envios, enviar, modelos, integração, configurações), /s/:token (assinatura), /v/:code (verificação)
+apps/web          React + Vite: /painel (enviar, envios, modelos), /s/:token (assinatura), /v/:code (verificação), /desenvolvedores (integração, só para quem avalia)
 apps/api          NestJS: parceiro, modelos, envelopes, assinatura, selagem, webhooks, SSE
                   + serve o build do React e o módulo /demo-host (só na demo)
 packages/shared   Contrato: schemas zod, DTOs, utilitários (CPF, telefone, modelos)
@@ -61,9 +61,10 @@ O escritório nunca vê token. A LíderHub guarda uma chave de parceiro e identi
 ### Assinatura (público, por token; com limite de requisições)
 | Método | Rota | Retorno |
 | --- | --- | --- |
-| GET | `/sign/:token` | `SigningSessionDto` (1º acesso marca VIEWED) |
-| GET | `/sign/:token/document` | PDF original |
-| POST | `/sign/:token/otp` | `{ sentTo, expiresInSeconds, resendInSeconds, demoCode? }` (`demoCode` só com `DEMO_MODE=true` e WhatsApp em modo de demonstração: o código aparece na tela de quem assina) |
+| GET | `/sign/:token` | `SigningSessionDto` (1º acesso marca VIEWED). Até o CPF ser confirmado, `body` e `plainText` vêm vazios |
+| POST | `/sign/:token/identity` | `{ cpf }` → `{ confirmed: true }`. 5 tentativas por link (reserva atômica); errou, 422; esgotou, 429 |
+| GET | `/sign/:token/document` | PDF original (409 antes do CPF) |
+| POST | `/sign/:token/otp` | `{ sentTo, expiresInSeconds, resendInSeconds, demoCode? }` (só depois do CPF; `demoCode` só com `DEMO_MODE=true` e WhatsApp em modo de demonstração) |
 | POST | `/sign/:token/otp/verify` | `{ verified: true }` |
 | POST | `/sign/:token/selfie` (multipart `selfie`) | `{ captured: true }` |
 | POST | `/sign/:token/complete` | `{ status, verificationCode }` |
@@ -89,7 +90,7 @@ Erros: 404 token inválido · 410 expirado ou cancelado · 409 estado errado · 
 | ALL | `/demo-host/v1/*` | Repassa para `/v1/*` com a chave de parceiro e o escritório de demo. Só `/templates`, `/envelopes`, `/events` e `/demo`; rotas de parceiro dão 404 |
 | POST | `/demo-host/activate` | "Ativar LíderSign" em um clique |
 | POST | `/demo-host/deactivate` | Desliga o switch (desativa o escritório de demo) |
-| GET | `/demo-host/status` | `{ active, tenant, templatesCount, whatsappProvider, whatsappConfigured, webPublicUrl }` |
+| GET | `/demo-host/status` | `{ active, tenant, templatesCount, whatsappProvider, whatsappConfigured, webPublicUrl, tunnel }` |
 | POST | `/demo-host/webhook` | Recebe os webhooks e confere o HMAC, como a LíderHub faria |
 | GET | `/demo-host/webhooks` | Últimos 20 webhooks recebidos |
 | GET | `/demo-host/calls` | Registro da integração (em memória, até 40): cada chamada da LíderHub ao LíderSign e cada webhook de volta |
@@ -105,11 +106,12 @@ SENT ──▶ VIEWED ──▶ SIGNED ──▶ COMPLETED
 ```
 
 1. **Criar** (`POST /envelopes`): valida variáveis, preenche o modelo, gera o PDF original, calcula o SHA-256, cria token e código de verificação, envia o link pelo WhatsApp, webhook `envelope.sent`.
-2. **Abrir** (`GET /sign/:token`): VIEWED, webhook `envelope.viewed`.
-3. **Código** (`POST /otp` e `/otp/verify`): 6 dígitos, validade de 10 min, 5 tentativas por código (reserva atômica), reenvio a cada 30 s, no máximo 5 códigos por documento. Guardado só o hash. O código e o token do link vão apenas para o WhatsApp do signatário: nas mensagens que o escritório vê (painel, SSE, banco) eles aparecem ocultos.
-4. **Selfie** (só nível Reforçado).
-5. **Assinar** (`POST /complete`): exige código verificado nos últimos 15 min; grava assinatura, aceite, IP, dispositivo e geolocalização consentida → SIGNED, webhook `envelope.signed`.
-6. **Selar** (assíncrono): carimbo do tempo RFC 3161 sobre o SHA-256 do original · rodapé em todas as páginas · página de evidências com QR · selo PAdES (`ETSI.CAdES.detached`) com o certificado da plataforma → COMPLETED, cópia ao signatário pelo WhatsApp, webhook `envelope.completed`.
+2. **Abrir** (`GET /sign/:token`): VIEWED, webhook `envelope.viewed`. Mostra só o nome do escritório, o título e o primeiro nome.
+3. **CPF** (`POST /identity`): o signatário digita o próprio CPF; só então o texto e o PDF ficam disponíveis. Assim, um link encaminhado não expõe o contrato.
+4. **Código** (só nível Reforçado; `POST /otp` e `/otp/verify`): 6 dígitos, validade de 10 min, 5 tentativas por código (reserva atômica), reenvio a cada 30 s, no máximo 5 códigos por documento. Guardado só o hash. O código e o token do link vão apenas para o WhatsApp do signatário: nas mensagens que o escritório vê (painel, SSE, banco) eles aparecem ocultos.
+5. **Selfie** (só nível Reforçado).
+6. **Assinar** (`POST /complete`): exige CPF confirmado e, no Reforçado, código verificado nos últimos 15 min e selfie; grava assinatura, aceite por clique ("Ao tocar em Assinar..."), IP e dispositivo → SIGNED, webhook `envelope.signed`.
+7. **Selar** (assíncrono): carimbo do tempo RFC 3161 sobre o SHA-256 do original · rodapé em todas as páginas · página de evidências com QR · selo PAdES (`ETSI.CAdES.detached`) com o certificado da plataforma → COMPLETED, cópia ao signatário pelo WhatsApp, webhook `envelope.completed`.
 
 Se o carimbo falhar, o selo sai mesmo assim com `timestampStatus = FAILED` registrado na trilha (nunca um PDF sem selo).
 
