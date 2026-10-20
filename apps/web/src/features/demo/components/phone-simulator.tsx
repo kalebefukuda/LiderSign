@@ -68,18 +68,17 @@ export function PhoneSimulator({
 }) {
     const [view, setView] = React.useState<View>({ kind: 'chat' })
     const [connected, setConnected] = React.useState(false)
-    const { data, setData } = useResource<MessageDto[]>(active ? demoApi.messagesUrl : null, {
+    const { data, reload } = useResource<MessageDto[]>(active ? demoApi.messagesUrl : null, {
         refreshMs: connected ? 10000 : 2500,
     })
     const messages = active ? (data ?? []) : []
     const scrollRef = React.useRef<HTMLDivElement>(null)
 
+    // O evento ao vivo chega sem o código e sem o link (o escritório não pode vê-los):
+    // ele só avisa que há mensagem nova, e o celular busca o conteúdo pela caixa da demo.
     const live = useLiveEvents((event: StreamEvent) => {
         if (event.type !== 'message.created') return
-        setData((current) => {
-            const list = current ?? []
-            return list.some((item) => item.id === event.message.id) ? list : [...list, event.message]
-        })
+        void reload()
     }, active)
 
     React.useEffect(() => setConnected(live.connected), [live.connected])

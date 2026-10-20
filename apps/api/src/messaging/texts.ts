@@ -15,3 +15,7 @@ export function otpText(code: string): string {
 export function signedCopyText(signerName: string, title: string, url: string, verifyUrl: string): string {
     return `Pronto, ${firstName(signerName)}! "${title}" foi assinado. Sua cópia: ${url} · Verificação: ${verifyUrl}`
 }
+
+export function signedCopyResumedText(signerName: string, title: string, verifyUrl: string): string {
+    return `Pronto, ${firstName(signerName)}! "${title}" foi assinado. Para baixar sua cópia, abra o mesmo link que você recebeu antes. Verificação: ${verifyUrl}`
+}

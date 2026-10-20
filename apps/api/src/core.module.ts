@@ -1,5 +1,6 @@
 import { Global, Module } from '@nestjs/common'
 import { AuditService } from './audit/audit.service'
+import { ExpirationService } from './envelopes/expiration.service'
 import { EventsService } from './events/events.service'
 import { MessagingService } from './messaging/messaging.service'
 import { PrismaService } from './prisma/prisma.service'
@@ -21,6 +22,7 @@ const providers = [
     TimestampService,
     PdfRenderService,
     SealService,
+    ExpirationService,
 ]
 
 /** Infraestrutura compartilhada por todos os módulos de domínio. */

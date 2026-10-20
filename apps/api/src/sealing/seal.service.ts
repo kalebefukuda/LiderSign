@@ -12,7 +12,7 @@ import { sha256Hex } from '../common/crypto'
 import { signingUrlFor, toEnvelopeDto, verificationUrlFor } from '../common/mappers'
 import { EventsService } from '../events/events.service'
 import { MessagingService } from '../messaging/messaging.service'
-import { signedCopyText } from '../messaging/texts'
+import { signedCopyResumedText, signedCopyText } from '../messaging/texts'
 import { PrismaService } from '../prisma/prisma.service'
 import { StorageService } from '../storage/storage.service'
 import { WebhooksService } from '../webhooks/webhooks.service'
@@ -21,7 +21,8 @@ import { buildEvidenceDefinition, summarizeUserAgent } from './evidence-page'
 import { renderPdf } from './pdf-render.service'
 import { TimestampService } from './timestamp.service'
 
-const RETRY_DELAYS_MS = [0, 3_000, 10_000]
+/** ~3,5 min de tentativas. Se ainda falhar, a selagem é retomada no próximo boot. */
+const RETRY_DELAYS_MS = [0, 3_000, 10_000, 30_000, 60_000, 120_000]
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 type Evidence = {
@@ -264,9 +265,14 @@ export class SealService implements OnApplicationBootstrap {
     }
 
     private async complete(envelopeId: string, rawToken: string | null) {
-        const envelope = await this.prisma.envelope.update({
-            where: { id: envelopeId },
+        // Só conclui quem está em SIGNED (guarda contra corrida com cancelamento)
+        const changed = await this.prisma.envelope.updateMany({
+            where: { id: envelopeId, status: 'SIGNED' },
             data: { status: 'COMPLETED', completedAt: new Date() },
+        })
+        if (changed.count === 0) return
+        const envelope = await this.prisma.envelope.findUniqueOrThrow({
+            where: { id: envelopeId },
             include: { tenant: true },
         })
         this.events.emit(envelope.tenantId, { type: 'envelope.updated', envelope: toEnvelopeDto(envelope) })
@@ -285,10 +291,31 @@ export class SealService implements OnApplicationBootstrap {
                     verificationUrlFor(envelope.verificationCode),
                 ),
                 url: copyUrl,
+                secrets: [rawToken],
             })
             await this.audit.append(envelope.id, 'COPY_SENT', 'system', {
                 provider: message.provider,
                 status: message.status,
+            })
+        } else {
+            // Selagem retomada após reinício: o token não fica guardado, então o aviso aponta
+            // para o mesmo link recebido antes (ele continua válido e mostra a cópia).
+            const message = await this.messaging.send({
+                tenantId: envelope.tenantId,
+                envelopeId: envelope.id,
+                to: envelope.signerPhone,
+                kind: 'SIGNED_COPY',
+                body: signedCopyResumedText(
+                    envelope.signerName,
+                    envelope.title,
+                    verificationUrlFor(envelope.verificationCode),
+                ),
+                url: verificationUrlFor(envelope.verificationCode),
+            })
+            await this.audit.append(envelope.id, 'COPY_SENT', 'system', {
+                provider: message.provider,
+                status: message.status,
+                retomada: true,
             })
         }
         this.logger.log(`Envelope ${envelope.id} assinado e selado`)

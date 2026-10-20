@@ -61,6 +61,7 @@ export const WEBHOOK_EVENTS = [
     'envelope.signed',
     'envelope.completed',
     'envelope.canceled',
+    'envelope.expired',
 ] as const
 export type WebhookEvent = (typeof WEBHOOK_EVENTS)[number]
 
@@ -81,6 +82,7 @@ export const AUDIT_EVENT_TYPES = [
     'DOCUMENT_SEALED',
     'COPY_SENT',
     'ENVELOPE_CANCELED',
+    'ENVELOPE_EXPIRED',
 ] as const
 export type AuditEventType = (typeof AUDIT_EVENT_TYPES)[number]
 
@@ -100,4 +102,5 @@ export const AUDIT_EVENT_LABEL: Record<AuditEventType, string> = {
     DOCUMENT_SEALED: 'PDF selado (PAdES)',
     COPY_SENT: 'Cópia enviada ao signatário',
     ENVELOPE_CANCELED: 'Envelope cancelado',
+    ENVELOPE_EXPIRED: 'Link expirado sem assinatura',
 }

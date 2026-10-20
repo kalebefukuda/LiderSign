@@ -3,6 +3,7 @@ import { SkipThrottle } from '@nestjs/throttler'
 import { env } from '../config/env'
 import { toMessageDto } from '../common/mappers'
 import { PartnerGuard } from '../common/partner.guard'
+import { MessagingService } from '../messaging/messaging.service'
 import { PrismaService } from '../prisma/prisma.service'
 import { TenantsService } from '../tenants/tenants.service'
 
@@ -14,6 +15,7 @@ export class DemoController {
     constructor(
         private readonly prisma: PrismaService,
         private readonly tenants: TenantsService,
+        private readonly messaging: MessagingService,
     ) {}
 
     @Get('messages')
@@ -26,7 +28,8 @@ export class DemoController {
             orderBy: { createdAt: 'desc' },
             take: 50,
         })
-        return messages.reverse().map(toMessageDto)
+        // Celular simulado: mostra a mensagem como o signatário a recebeu (só existe com DEMO_MODE)
+        return messages.reverse().map((message) => this.messaging.revealForDemo(toMessageDto(message)))
     }
 
     @Post('reset')

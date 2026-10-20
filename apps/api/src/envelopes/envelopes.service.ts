@@ -20,6 +20,7 @@ import {
 } from '../common/mappers'
 import type { RequestContext } from '../common/request-context'
 import { EventsService } from '../events/events.service'
+import { ExpirationService } from './expiration.service'
 import { MessagingService } from '../messaging/messaging.service'
 import { signingLinkText } from '../messaging/texts'
 import { PrismaService } from '../prisma/prisma.service'
@@ -46,14 +47,12 @@ export class EnvelopesService {
         private readonly messaging: MessagingService,
         private readonly webhooks: WebhooksService,
         private readonly events: EventsService,
+        private readonly expiration: ExpirationService,
     ) {}
 
-    /** Expira em lote os envelopes vencidos (checagem preguiçosa, sem cron). */
-    async expireOverdue(where: Prisma.EnvelopeWhereInput = {}) {
-        await this.prisma.envelope.updateMany({
-            where: { ...where, status: { in: ['SENT', 'VIEWED'] }, expiresAt: { lt: new Date() } },
-            data: { status: 'EXPIRED' },
-        })
+    /** Expira os vencidos antes de responder (além da varredura a cada minuto). */
+    expireOverdue(where: Prisma.EnvelopeWhereInput = {}) {
+        return this.expiration.expireOverdue(where)
     }
 
     private async uniqueCode(): Promise<string> {
@@ -138,6 +137,7 @@ export class EnvelopesService {
             kind: 'SIGNING_LINK',
             body: signingLinkText(envelope.signerName, tenant.name, envelope.title, url),
             url,
+            secrets: [token],
         })
         await this.audit.append(envelope.id, 'LINK_SENT', 'system', {
             provider: message.provider,
@@ -206,10 +206,15 @@ export class EnvelopesService {
         if (!['SENT', 'VIEWED'].includes(envelope.status)) {
             throw new ConflictException('Documentos assinados, expirados ou já cancelados não podem ser cancelados')
         }
-        const canceled = await this.prisma.envelope.update({
-            where: { id },
+        // Guarda de estado atômica: se o signatário assinou no mesmo instante, a assinatura vence
+        const changed = await this.prisma.envelope.updateMany({
+            where: { id, status: { in: ['SENT', 'VIEWED'] } },
             data: { status: 'CANCELED', canceledAt: new Date() },
         })
+        if (changed.count === 0) {
+            throw new ConflictException('O documento acabou de mudar de estado e não pode mais ser cancelado')
+        }
+        const canceled = await this.prisma.envelope.findUniqueOrThrow({ where: { id } })
         await this.audit.append(id, 'ENVELOPE_CANCELED', 'partner', {}, ctx)
         this.events.emit(tenant.id, { type: 'envelope.updated', envelope: toEnvelopeDto(canceled) })
         this.webhooks.dispatch(tenant, canceled, 'envelope.canceled')

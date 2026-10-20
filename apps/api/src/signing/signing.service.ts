@@ -25,6 +25,7 @@ import { otpCode, safeEqual, sha256Hex } from '../common/crypto'
 import { toEnvelopeDto } from '../common/mappers'
 import type { RequestContext } from '../common/request-context'
 import { EventsService } from '../events/events.service'
+import { ExpirationService } from '../envelopes/expiration.service'
 import { MessagingService } from '../messaging/messaging.service'
 import { otpText } from '../messaging/texts'
 import { PrismaService } from '../prisma/prisma.service'
@@ -35,6 +36,8 @@ import { WebhooksService } from '../webhooks/webhooks.service'
 const OTP_TTL_MS = 10 * 60 * 1000
 const OTP_RESEND_MS = 30 * 1000
 const OTP_MAX_ATTEMPTS = 5
+/** Teto de códigos por envelope: 5 códigos × 5 tentativas = 25 palpites em 1 milhão de combinações. */
+const OTP_MAX_SENDS = 5
 const OTP_FRESH_MS = 15 * 60 * 1000
 const MAX_SELFIE = 5 * 1024 * 1024
 const MAX_SIGNATURE = 300 * 1024
@@ -65,6 +68,7 @@ export class SigningService {
         private readonly webhooks: WebhooksService,
         private readonly events: EventsService,
         private readonly seal: SealService,
+        private readonly expiration: ExpirationService,
     ) {}
 
     private async resolve(token: string): Promise<EnvelopeWithTenant> {
@@ -75,9 +79,9 @@ export class SigningService {
         })
         if (!envelope) throw new NotFoundException('Link inválido. Peça um novo link ao escritório.')
         if (['SENT', 'VIEWED'].includes(envelope.status) && envelope.expiresAt < new Date()) {
-            envelope = await this.prisma.envelope.update({
+            await this.expiration.expireOverdue({ id: envelope.id })
+            envelope = await this.prisma.envelope.findUniqueOrThrow({
                 where: { id: envelope.id },
-                data: { status: 'EXPIRED' },
                 include: { tenant: true },
             })
         }
@@ -164,6 +168,12 @@ export class SigningService {
                 )
             }
         }
+        if ((await this.messaging.countSent(envelope.id, 'OTP')) >= OTP_MAX_SENDS) {
+            throw new HttpException(
+                'Limite de códigos atingido para este documento. Peça um novo link ao escritório.',
+                HttpStatus.TOO_MANY_REQUESTS,
+            )
+        }
         const code = otpCode()
         await this.prisma.envelope.update({
             where: { id: envelope.id },
@@ -180,6 +190,7 @@ export class SigningService {
             to: envelope.signerPhone,
             kind: 'OTP',
             body: otpText(code),
+            secrets: [code],
         })
         await this.audit.append(envelope.id, 'OTP_SENT', 'system', { provider: message.provider, status: message.status }, ctx)
         if (message.status === 'FAILED') {
@@ -201,12 +212,20 @@ export class SigningService {
         if (envelope.otpExpiresAt < new Date()) {
             throw new ConflictException('Este código expirou. Peça um novo.')
         }
-        if (envelope.otpAttempts >= OTP_MAX_ATTEMPTS) {
+        // Reserva a tentativa antes de comparar, de forma atômica: palpites em paralelo não furam o limite
+        const claimed = await this.prisma.envelope.updateMany({
+            where: { id: envelope.id, otpHash: envelope.otpHash, otpAttempts: { lt: OTP_MAX_ATTEMPTS } },
+            data: { otpAttempts: { increment: 1 } },
+        })
+        if (claimed.count === 0) {
             throw new HttpException('Muitas tentativas. Peça um novo código.', HttpStatus.TOO_MANY_REQUESTS)
         }
         if (!safeEqual(sha256Hex(`${envelope.id}${code}`), envelope.otpHash)) {
-            const attempts = envelope.otpAttempts + 1
-            await this.prisma.envelope.update({ where: { id: envelope.id }, data: { otpAttempts: attempts } })
+            const current = await this.prisma.envelope.findUnique({
+                where: { id: envelope.id },
+                select: { otpAttempts: true },
+            })
+            const attempts = current?.otpAttempts ?? OTP_MAX_ATTEMPTS
             await this.audit.append(envelope.id, 'OTP_FAILED', 'signer', { tentativa: attempts }, ctx)
             const left = OTP_MAX_ATTEMPTS - attempts
             throw new UnprocessableEntityException(
