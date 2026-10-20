@@ -41,7 +41,7 @@ Este contrato vale até a conclusão do pedido e pode ser rescindido por qualque
 
 ## Cláusula 6ª · Da assinatura eletrônica
 
-As partes reconhecem a validade da assinatura eletrônica deste contrato, feita pela plataforma LíderSign, com registro de data, hora, endereço IP e confirmação do celular do CONTRATANTE por código.
+As partes reconhecem a validade da assinatura eletrônica deste contrato, feita pela plataforma LíderSign, com link pessoal enviado ao WhatsApp do CONTRATANTE, confirmação do seu CPF e registro de data, hora e endereço IP.
 
 ## Cláusula 7ª · Do foro
 

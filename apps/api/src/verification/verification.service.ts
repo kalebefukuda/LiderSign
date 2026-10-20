@@ -44,6 +44,7 @@ export class VerificationService {
             signer: {
                 nameMasked: maskName(envelope.signerName),
                 cpfMasked: maskCpf(envelope.signerCpf),
+                cpfConfirmed: envelope.events.some((event) => event.type === 'IDENTITY_CONFIRMED'),
                 phoneVerified: envelope.events.some((event) => event.type === 'OTP_VERIFIED'),
             },
             signedAt: envelope.signedAt?.toISOString() ?? null,

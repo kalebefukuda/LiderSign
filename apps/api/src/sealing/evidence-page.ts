@@ -16,7 +16,8 @@ export type EvidenceInput = {
     signedAt: Date
     ip: string | null
     device: string
-    geolocation: string
+    geolocation: string | null
+    identity: string
     consentText: string
     originalSha256: string
     timestamp: string
@@ -219,10 +220,11 @@ export function buildEvidenceDefinition(input: EvidenceInput): TDocumentDefiniti
             section('Evidências da assinatura'),
             keyValueTable([
                 ['Nível de garantia', input.assuranceLabel],
+                ['Identificação', input.identity],
                 ['Assinado em', `${formatDateTimeBr(input.signedAt)} (horário de Brasília)`],
                 ['Endereço IP', input.ip ?? 'Não informado'],
                 ['Dispositivo', input.device],
-                ['Geolocalização', input.geolocation],
+                ...(input.geolocation ? ([['Geolocalização', input.geolocation]] as [string, string][]) : []),
                 ['Aceite', input.consentText],
             ]),
             section('Integridade e carimbo do tempo'),
@@ -233,7 +235,7 @@ export function buildEvidenceDefinition(input: EvidenceInput): TDocumentDefiniti
             section('Trilha de auditoria'),
             trailTable,
             {
-                text: 'Assinatura eletrônica avançada (Lei 14.063/2020). A integridade deste PDF é protegida por selo digital e pode ser conferida pelo código acima.',
+                text: 'Documento assinado eletronicamente, com autoria e integridade comprováveis pelas evidências acima (MP 2.200-2/2001, art. 10, § 2º). A integridade deste PDF é protegida por selo digital e pode ser conferida pelo código acima.',
                 fontSize: 8,
                 color: MUTED,
                 margin: [0, 12, 0, 0],

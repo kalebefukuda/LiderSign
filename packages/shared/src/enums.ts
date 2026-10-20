@@ -3,8 +3,8 @@ export type EnvelopeStatus = (typeof ENVELOPE_STATUSES)[number]
 
 export const ENVELOPE_STATUS_LABEL: Record<EnvelopeStatus, string> = {
     SENT: 'Enviado',
-    VIEWED: 'Visto',
-    SIGNED: 'Selando',
+    VIEWED: 'Aberto',
+    SIGNED: 'Finalizando',
     COMPLETED: 'Assinado',
     CANCELED: 'Cancelado',
     EXPIRED: 'Expirado',
@@ -12,8 +12,8 @@ export const ENVELOPE_STATUS_LABEL: Record<EnvelopeStatus, string> = {
 
 /**
  * Nível de garantia escolhido no modelo, nunca a cada envio.
- * PADRAO: código no WhatsApp + IP, dispositivo e geolocalização consentida.
- * REFORCADO: PADRAO + selfie do signatário (procurações e litígio de massa).
+ * PADRAO: link pessoal no WhatsApp + CPF digitado pelo signatário + IP e dispositivo.
+ * REFORCADO: PADRAO + código no WhatsApp + selfie (procurações e litígio de massa).
  */
 export const ASSURANCE_LEVELS = ['PADRAO', 'REFORCADO'] as const
 export type AssuranceLevel = (typeof ASSURANCE_LEVELS)[number]
@@ -71,6 +71,8 @@ export const AUDIT_EVENT_TYPES = [
     'DOCUMENT_GENERATED',
     'LINK_SENT',
     'DOCUMENT_VIEWED',
+    'IDENTITY_FAILED',
+    'IDENTITY_CONFIRMED',
     'OTP_SENT',
     'OTP_FAILED',
     'OTP_VERIFIED',
@@ -89,8 +91,10 @@ export type AuditEventType = (typeof AUDIT_EVENT_TYPES)[number]
 export const AUDIT_EVENT_LABEL: Record<AuditEventType, string> = {
     ENVELOPE_CREATED: 'Envelope criado',
     DOCUMENT_GENERATED: 'Documento gerado',
-    LINK_SENT: 'Link enviado pelo WhatsApp',
+    LINK_SENT: 'Link de assinatura gerado',
     DOCUMENT_VIEWED: 'Documento aberto pelo signatário',
+    IDENTITY_FAILED: 'CPF informado não conferiu',
+    IDENTITY_CONFIRMED: 'CPF confirmado pelo signatário',
     OTP_SENT: 'Código enviado pelo WhatsApp',
     OTP_FAILED: 'Código incorreto informado',
     OTP_VERIFIED: 'Telefone confirmado pelo código',

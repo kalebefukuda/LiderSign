@@ -75,6 +75,10 @@ model Envelope {
   otpAttempts      Int     @default(0)
   otpVerifiedAt    DateTime?
 
+  /// O signatário confirma o próprio CPF antes de ver o documento
+  identityAttempts   Int     @default(0)
+  identityVerifiedAt DateTime?
+
   originalPath     String
   originalSha256   String
   signedPath       String?

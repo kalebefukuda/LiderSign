@@ -67,6 +67,15 @@ export type CreateEnvelopeInput = z.input<typeof createEnvelopeSchema>
 
 /* ---------- Assinatura (público, via token) ---------- */
 
+/** O signatário digita o próprio CPF para abrir o documento. */
+export const confirmIdentitySchema = z.object({
+    cpf: z
+        .string()
+        .transform((value) => value.replace(/\D/g, ''))
+        .pipe(z.string().length(11, 'Digite os 11 números do CPF')),
+})
+export type ConfirmIdentityInput = z.infer<typeof confirmIdentitySchema>
+
 export const verifyOtpSchema = z.object({
     code: z.string().regex(/^\d{6}$/, 'O código tem 6 números'),
 })

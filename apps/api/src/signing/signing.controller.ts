@@ -12,7 +12,13 @@ import {
 } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { Throttle } from '@nestjs/throttler'
-import { completeSigningSchema, verifyOtpSchema, type CompleteSigningInput } from '@lidersign/shared'
+import {
+    completeSigningSchema,
+    confirmIdentitySchema,
+    verifyOtpSchema,
+    type CompleteSigningInput,
+    type ConfirmIdentityInput,
+} from '@lidersign/shared'
 import type { Response } from 'express'
 import { Ctx, type RequestContext } from '../common/request-context'
 import { ZodPipe } from '../common/zod.pipe'
@@ -36,6 +42,17 @@ export class SigningController {
         res.setHeader('Content-Disposition', 'inline; filename="documento.pdf"')
         res.setHeader('Cache-Control', 'no-store')
         return new StreamableFile(data)
+    }
+
+    @Post('identity')
+    @HttpCode(200)
+    @Throttle({ default: { limit: 10, ttl: 60_000 } })
+    identity(
+        @Param('token') token: string,
+        @Body(new ZodPipe(confirmIdentitySchema)) body: ConfirmIdentityInput,
+        @Ctx() ctx: RequestContext,
+    ) {
+        return this.signing.confirmIdentity(token, body.cpf, ctx)
     }
 
     @Post('otp')

@@ -29,6 +29,8 @@ type Evidence = {
     ip: string | null
     userAgent: string | null
     geolocation: { lat: number; lng: number; accuracy?: number } | null
+    identityConfirmedAt?: string | null
+    phoneVerifiedAt?: string | null
     consentText: string
     signedAt: string
 }
@@ -198,7 +200,14 @@ export class SealService implements OnApplicationBootstrap {
                 device: summarizeUserAgent(evidence.userAgent ?? null),
                 geolocation: geo
                     ? `${geo.lat.toFixed(5)}, ${geo.lng.toFixed(5)}${geo.accuracy ? ` (precisão de ${Math.round(geo.accuracy)} m)` : ''}`
-                    : 'Não autorizada pelo signatário',
+                    : null,
+                identity: [
+                    evidence.identityConfirmedAt ? 'CPF digitado e conferido pelo signatário' : null,
+                    evidence.phoneVerifiedAt ? 'celular confirmado por código no WhatsApp' : null,
+                    'link pessoal enviado ao WhatsApp do signatário',
+                ]
+                    .filter(Boolean)
+                    .join(' · '),
                 consentText: evidence.consentText ?? '',
                 originalSha256: envelope.originalSha256,
                 timestamp: timestampText,

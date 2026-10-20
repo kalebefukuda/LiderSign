@@ -136,11 +136,16 @@ export type SigningSessionDto = {
     status: EnvelopeStatus
     assuranceLevel: AssuranceLevel
     requiresSelfie: boolean
+    /** Código no WhatsApp: só no nível Reforçado. No Padrão, o link no WhatsApp + o CPF identificam quem assina. */
+    requiresOtp: boolean
     signer: { name: string; cpfMasked: string; phoneMasked: string }
+    /** O signatário digitou o próprio CPF. Antes disso, o conteúdo do documento não é enviado. */
+    identityConfirmed: boolean
     otpVerified: boolean
     selfieCaptured: boolean
+    /** Vazio até o CPF ser confirmado. */
     plainText: string
-    /** Texto do documento já preenchido, no formato dos modelos (títulos, negrito, listas). */
+    /** Texto do documento já preenchido, no formato dos modelos. Vazio até o CPF ser confirmado. */
     body: string
     expiresAt: string
     verificationCode: string
@@ -153,7 +158,7 @@ export type PublicVerificationDto = {
     officeName: string
     status: EnvelopeStatus
     assuranceLevel: AssuranceLevel
-    signer: { nameMasked: string; cpfMasked: string; phoneVerified: boolean }
+    signer: { nameMasked: string; cpfMasked: string; cpfConfirmed: boolean; phoneVerified: boolean }
     signedAt: string | null
     completedAt: string | null
     originalSha256: string

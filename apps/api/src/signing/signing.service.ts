@@ -42,9 +42,11 @@ const OTP_MAX_SENDS = 5
 const OTP_FRESH_MS = 15 * 60 * 1000
 const MAX_SELFIE = 5 * 1024 * 1024
 const MAX_SIGNATURE = 300 * 1024
+/** Tentativas de CPF por link. Com 5 palpites, adivinhar um CPF é inviável; esgotou, o escritório gera outro link. */
+const IDENTITY_MAX_ATTEMPTS = 5
 
-export const CONSENT_TEXT =
-    'Li o documento e concordo em assiná-lo eletronicamente. Reconheço esta assinatura como válida (Lei 14.063/2020).'
+/** Aceite por clique: o texto fica junto do botão "Assinar" e vai para a trilha e para a página de evidências. */
+export const CONSENT_TEXT = 'Ao tocar em "Assinar", declaro que li o documento e concordo em assiná-lo eletronicamente.'
 
 type EnvelopeWithTenant = Envelope & { tenant: Tenant }
 type UploadedFile = { buffer: Buffer; size: number }
@@ -101,15 +103,28 @@ export class SigningService {
         this.events.emit(envelope.tenantId, { type: 'envelope.updated', envelope: toEnvelopeDto(envelope) })
     }
 
+    private requiresOtp(envelope: Envelope) {
+        return envelope.assuranceLevel === 'REFORCADO'
+    }
+
+    private assertIdentity(envelope: Envelope) {
+        if (!envelope.identityVerifiedAt) throw new ConflictException('Confirme seu CPF para continuar.')
+    }
+
     private toSession(envelope: Envelope & { tenant: Tenant }): SigningSessionDto {
+        // Antes do CPF, só o necessário para a pessoa se reconhecer: o conteúdo do documento fica de fora
+        const identityConfirmed = Boolean(envelope.identityVerifiedAt)
         return {
             title: envelope.title,
             officeName: envelope.tenant.name,
             status: envelope.status as EnvelopeStatus,
             assuranceLevel: envelope.assuranceLevel as AssuranceLevel,
             requiresSelfie: envelope.assuranceLevel === 'REFORCADO',
+            requiresOtp: this.requiresOtp(envelope),
+            identityConfirmed,
             signer: {
-                name: envelope.signerName,
+                // Antes do CPF, só o primeiro nome (minimização, LGPD art. 6º, III)
+                name: identityConfirmed ? envelope.signerName : (envelope.signerName.trim().split(/\s+/)[0] ?? ''),
                 cpfMasked: maskCpf(envelope.signerCpf),
                 phoneMasked: maskPhone(envelope.signerPhone),
             },
@@ -117,8 +132,8 @@ export class SigningService {
                 envelope.otpVerifiedAt && Date.now() - envelope.otpVerifiedAt.getTime() < OTP_FRESH_MS,
             ),
             selfieCaptured: Boolean(envelope.selfiePath),
-            plainText: toPlainText(envelope.renderedBody),
-            body: envelope.renderedBody,
+            plainText: identityConfirmed ? toPlainText(envelope.renderedBody) : '',
+            body: identityConfirmed ? envelope.renderedBody : '',
             expiresAt: envelope.expiresAt.toISOString(),
             verificationCode: envelope.verificationCode,
         }
@@ -151,12 +166,51 @@ export class SigningService {
         if (envelope.status === 'EXPIRED' || envelope.status === 'CANCELED') {
             throw new GoneException('Este documento não está mais disponível.')
         }
+        this.assertIdentity(envelope)
         return this.storage.get(envelope.originalPath)
+    }
+
+    /** O signatário digita o próprio CPF. Tentativas reservadas de forma atômica, como no código. */
+    async confirmIdentity(token: string, cpf: string, ctx: RequestContext) {
+        const envelope = await this.resolve(token)
+        this.assertOpen(envelope)
+        if (envelope.identityVerifiedAt) return { confirmed: true as const }
+        const claimed = await this.prisma.envelope.updateMany({
+            where: { id: envelope.id, identityVerifiedAt: null, identityAttempts: { lt: IDENTITY_MAX_ATTEMPTS } },
+            data: { identityAttempts: { increment: 1 } },
+        })
+        if (claimed.count === 0) {
+            throw new HttpException(
+                'Muitas tentativas. Peça um novo link ao escritório pelo WhatsApp.',
+                HttpStatus.TOO_MANY_REQUESTS,
+            )
+        }
+        if (!safeEqual(sha256Hex(cpf), sha256Hex(envelope.signerCpf.replace(/\D/g, '')))) {
+            const current = await this.prisma.envelope.findUnique({
+                where: { id: envelope.id },
+                select: { identityAttempts: true },
+            })
+            const attempts = current?.identityAttempts ?? IDENTITY_MAX_ATTEMPTS
+            await this.audit.append(envelope.id, 'IDENTITY_FAILED', 'signer', { tentativa: attempts }, ctx)
+            const left = IDENTITY_MAX_ATTEMPTS - attempts
+            throw new UnprocessableEntityException(
+                left > 0
+                    ? `Este CPF não confere com o do documento (${left} ${left === 1 ? 'tentativa restante' : 'tentativas restantes'}).`
+                    : 'Este CPF não confere. Peça um novo link ao escritório pelo WhatsApp.',
+            )
+        }
+        await this.prisma.envelope.update({
+            where: { id: envelope.id },
+            data: { identityVerifiedAt: new Date() },
+        })
+        await this.audit.append(envelope.id, 'IDENTITY_CONFIRMED', 'signer', { cpf: maskCpf(envelope.signerCpf) }, ctx)
+        return { confirmed: true as const }
     }
 
     async sendOtp(token: string, ctx: RequestContext) {
         const envelope = await this.resolve(token)
         this.assertOpen(envelope)
+        this.assertIdentity(envelope)
         if (envelope.otpSentAt) {
             const wait = OTP_RESEND_MS - (Date.now() - envelope.otpSentAt.getTime())
             if (wait > 0) {
@@ -250,6 +304,7 @@ export class SigningService {
         const envelope = await this.resolve(token)
         this.assertOpen(envelope)
         if (envelope.assuranceLevel !== 'REFORCADO') throw new ConflictException('Este documento não pede selfie.')
+        this.assertIdentity(envelope)
         if (!file?.buffer?.length) throw new UnprocessableEntityException('Envie a foto no campo "selfie".')
         if (file.size > MAX_SELFIE) throw new PayloadTooLargeException('A foto pode ter no máximo 5 MB.')
         const ext = selfieExtension(file.buffer)
@@ -270,7 +325,11 @@ export class SigningService {
     async complete(token: string, input: CompleteSigningInput, ctx: RequestContext) {
         const envelope = await this.resolve(token)
         this.assertOpen(envelope)
-        if (!envelope.otpVerifiedAt || Date.now() - envelope.otpVerifiedAt.getTime() > OTP_FRESH_MS) {
+        this.assertIdentity(envelope)
+        const otpFresh = Boolean(
+            envelope.otpVerifiedAt && Date.now() - envelope.otpVerifiedAt.getTime() <= OTP_FRESH_MS,
+        )
+        if (this.requiresOtp(envelope) && !otpFresh) {
             throw new ConflictException('Confirme o código do WhatsApp antes de assinar.')
         }
         if (envelope.assuranceLevel === 'REFORCADO' && !envelope.selfiePath) {
@@ -295,7 +354,8 @@ export class SigningService {
             ip: ctx.ip,
             userAgent: ctx.userAgent,
             geolocation: input.geolocation ?? null,
-            phoneVerifiedAt: envelope.otpVerifiedAt.toISOString(),
+            identityConfirmedAt: envelope.identityVerifiedAt!.toISOString(),
+            phoneVerifiedAt: otpFresh ? envelope.otpVerifiedAt!.toISOString() : null,
             consentText: CONSENT_TEXT,
             signedAt: signedAt.toISOString(),
         }
