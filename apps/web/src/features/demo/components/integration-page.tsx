@@ -69,14 +69,7 @@ export function IntegrationPage() {
     }
 
     return (
-        <div className="space-y-14 animate-enter">
-            <div className="max-w-2xl">
-                <h1 className="text-[28px] font-bold tracking-[-0.03em]">Integração com a LíderHub</h1>
-                <p className="mt-2 text-[16px] leading-relaxed text-muted">
-                    A LíderHub usa o LíderSign por API, com uma chave de parceiro guardada no servidor dela. O escritório
-                    não cria conta nem cola token.
-                </p>
-            </div>
+        <div className="space-y-14">
 
             <section aria-labelledby="como-funciona" className="space-y-4">
                 <Kicker id="como-funciona">Como funciona</Kicker>
@@ -113,8 +106,8 @@ export function IntegrationPage() {
                                 )}
                             </div>
                             <p className="mt-1 text-sm leading-relaxed text-muted">
-                                É o switch que o escritório vê dentro da LíderHub. Ligar faz o passo 1 de verdade: a chamada
-                                aparece no registro abaixo.
+                                É o switch que o escritório vê dentro da LíderHub. Ligar faz o passo 1 de verdade, e a chamada
+                                aparece no registro abaixo. O painel de demonstração liga sozinho quando é aberto.
                             </p>
                         </div>
                         <div className="flex items-center gap-3 pt-1">

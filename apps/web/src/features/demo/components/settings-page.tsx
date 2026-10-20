@@ -47,6 +47,7 @@ export function SettingsPage() {
     const configured = Boolean(data?.whatsappConfigured)
     const publicUrl = data?.webPublicUrl ?? window.location.origin
     const local = isLocalUrl(publicUrl)
+    const tunnel = Boolean(data?.tunnel)
     const port = window.location.port || '3000'
 
     async function sendTest(event: React.FormEvent) {
@@ -86,13 +87,7 @@ export function SettingsPage() {
     }
 
     return (
-        <div className="space-y-12 animate-enter">
-            <div className="max-w-2xl">
-                <h1 className="text-[28px] font-bold tracking-[-0.03em]">Configurações</h1>
-                <p className="mt-2 text-[16px] leading-relaxed text-muted">
-                    Como as mensagens chegam ao cliente e como abrir a assinatura no seu celular.
-                </p>
-            </div>
+        <div className="space-y-12">
 
             <section aria-labelledby="whatsapp" className="space-y-4">
                 <Kicker id="whatsapp">WhatsApp</Kicker>
@@ -143,9 +138,10 @@ export function SettingsPage() {
                     ) : (
                         <>
                             <p className="max-w-2xl text-[15px] leading-relaxed text-ink/80">
-                                Nenhuma mensagem sai do computador. Depois de enviar um documento, você abre o link pelo QR
-                                code, e o código de confirmação aparece na própria tela de assinatura. Na LíderHub, quem envia
-                                é o WhatsApp oficial dela.
+                                Nenhuma mensagem sai daqui. Depois de enviar, o escritório manda o link pelo próprio
+                                WhatsApp, no botão "Enviar pelo WhatsApp". Na LíderHub, quem envia é o WhatsApp oficial
+                                dela. O código por WhatsApp só é pedido no nível Reforçado; sem a Meta configurada, ele
+                                aparece na tela de assinatura.
                             </p>
                             <div className="space-y-2">
                                 <p className="text-sm font-medium">Para usar um número de teste da Meta, no .env:</p>
@@ -163,13 +159,21 @@ WHATSAPP_ACCESS_TOKEN=<token da Meta>`}</Code>
             </section>
 
             <section aria-labelledby="celular" className="space-y-4">
-                <Kicker id="celular">Abrir no celular</Kicker>
+                <Kicker id="celular">Endereço dos links</Kicker>
                 <div className="space-y-5 rounded-2xl border border-line p-5 sm:p-6">
                     <div className="flex flex-wrap items-center gap-3">
                         <Smartphone className="size-5 text-brand" aria-hidden />
                         <p className="font-semibold">Endereço dos links</p>
                         <span className="break-all font-mono text-[13px] text-muted">{publicUrl}</span>
-                        {local ? <Badge tone="warning">Só abre neste computador</Badge> : <Badge tone="success">Abre no celular</Badge>}
+                        {tunnel ? (
+                            <Badge tone="success" dot>
+                                Túnel HTTPS ativo
+                            </Badge>
+                        ) : local ? (
+                            <Badge tone="warning">Só abre neste computador</Badge>
+                        ) : (
+                            <Badge tone="success">Abre no celular</Badge>
+                        )}
                     </div>
                     {local ? (
                         <div className="space-y-5">
@@ -199,8 +203,10 @@ cloudflared tunnel --url http://localhost:${port}`}</Code>
                             </div>
                         </div>
                     ) : (
-                        <p className="text-[15px] text-ink/80">
-                            Os links do QR code abrem em qualquer celular que alcance esse endereço.
+                        <p className="max-w-2xl text-[15px] leading-relaxed text-ink/80">
+                            {tunnel
+                                ? 'O docker compose subiu um túnel da Cloudflare: os links abrem em qualquer celular, em qualquer rede. O endereço é público enquanto o túnel estiver no ar e muda a cada vez que ele sobe. Para desligar: docker compose stop tunnel.'
+                                : 'Os links abrem em qualquer celular que alcance esse endereço.'}
                         </p>
                     )}
                 </div>

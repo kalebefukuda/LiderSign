@@ -11,8 +11,10 @@ export type DemoStatus = {
     whatsappProvider: 'simulator' | 'cloud_api'
     /** WhatsApp oficial com Phone Number ID e token preenchidos */
     whatsappConfigured: boolean
-    /** Endereço que vai nos links (WEB_PUBLIC_URL) */
+    /** Endereço que vai nos links (túnel ou WEB_PUBLIC_URL) */
     webPublicUrl: string
+    /** Túnel HTTPS do docker compose no ar */
+    tunnel: boolean
 }
 
 /** Webhook que a "LíderHub" recebeu do LíderSign, com o HMAC conferido. */

@@ -7,6 +7,11 @@ const base = (token: string) => `${SIGN_BASE}/${enc(token)}`
 
 export const signingApi = {
     session: (token: string) => fetchJson<SigningSessionDto>(base(token), { cache: 'no-store' }),
+    confirmIdentity: (token: string, cpf: string) =>
+        fetchJson<{ confirmed: true }>(`${base(token)}/identity`, {
+            method: 'POST',
+            body: JSON.stringify({ cpf }),
+        }),
     sendOtp: (token: string) =>
         fetchJson<{
             sentTo: string

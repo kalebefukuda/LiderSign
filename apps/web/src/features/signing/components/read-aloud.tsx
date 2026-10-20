@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 type Status = 'idle' | 'speaking' | 'paused'
 
 /** "Ouvir o contrato": leitura em voz alta pelo próprio celular (sem custo, sem servidor). */
-export function ReadAloud({ text }: { text: string }) {
+export function ReadAloud({ text, compact = false }: { text: string; compact?: boolean }) {
     const [supported, setSupported] = React.useState(false)
     const [status, setStatus] = React.useState<Status>('idle')
 
@@ -39,6 +39,44 @@ export function ReadAloud({ text }: { text: string }) {
             synth.speak(utterance)
         })
         setStatus('speaking')
+    }
+
+    if (compact) {
+        const label = status === 'idle' ? 'Ouvir' : status === 'speaking' ? 'Pausar' : 'Continuar'
+        return (
+            <span className="inline-flex items-center gap-3">
+                <button
+                    type="button"
+                    className="inline-flex items-center gap-1.5 text-[15px] font-medium text-brand"
+                    onClick={() => {
+                        if (status === 'idle') start()
+                        else if (status === 'speaking') {
+                            window.speechSynthesis.pause()
+                            setStatus('paused')
+                        } else {
+                            window.speechSynthesis.resume()
+                            setStatus('speaking')
+                        }
+                    }}
+                >
+                    {status === 'speaking' ? <Pause className="size-4" aria-hidden /> : <Volume2 className="size-4" aria-hidden />}
+                    {label}
+                </button>
+                {status !== 'idle' ? (
+                    <button
+                        type="button"
+                        aria-label="Parar leitura"
+                        className="text-muted"
+                        onClick={() => {
+                            window.speechSynthesis.cancel()
+                            setStatus('idle')
+                        }}
+                    >
+                        <Square className="size-4" aria-hidden />
+                    </button>
+                ) : null}
+            </span>
+        )
     }
 
     if (status === 'idle') {

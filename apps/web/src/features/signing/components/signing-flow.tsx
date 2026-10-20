@@ -1,5 +1,5 @@
 import type { SigningSessionDto } from '@lidersign/shared'
-import { ArrowLeft, CheckCircle2, Download, FileText, Link2Off, Lock, ShieldCheck } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, Download, Link2Off, Lock, ShieldCheck } from 'lucide-react'
 import { Link } from 'react-router'
 import * as React from 'react'
 
@@ -12,16 +12,18 @@ import { HttpError } from '@/lib/http'
 
 import { signingApi } from '../api'
 import { DocumentText } from './document-text'
+import { IdentityStep } from './identity-step'
 import { OtpStep } from './otp-step'
+import { PdfPages } from './pdf-pages'
 import { ReadAloud } from './read-aloud'
 import { SelfieStep } from './selfie-step'
 import { SignStep } from './sign-step'
 
-type StepId = 'confirm' | 'read' | 'otp' | 'selfie' | 'sign'
+type StepId = 'identity' | 'read' | 'otp' | 'selfie' | 'sign'
 
 const STEP_LABEL: Record<StepId, string> = {
-    confirm: 'Confirme seus dados',
-    read: 'Leia ou ouça',
+    identity: 'Confirme que é você',
+    read: 'Confira o documento',
     otp: 'Código no WhatsApp',
     selfie: 'Selfie',
     sign: 'Assine',
@@ -34,14 +36,27 @@ type LoadState =
 
 function initialStep(session: SigningSessionDto): StepId | 'done' {
     if (session.status === 'SIGNED' || session.status === 'COMPLETED') return 'done'
-    if (session.otpVerified) return session.requiresSelfie && !session.selfieCaptured ? 'selfie' : 'sign'
-    return 'confirm'
+    if (!session.identityConfirmed) return 'identity'
+    if (session.requiresOtp && session.otpVerified) {
+        return session.requiresSelfie && !session.selfieCaptured ? 'selfie' : 'sign'
+    }
+    return 'read'
+}
+
+function stepsFor(session: SigningSessionDto): StepId[] {
+    return [
+        'identity',
+        'read',
+        ...(session.requiresOtp ? (['otp'] as const) : []),
+        ...(session.requiresSelfie ? (['selfie'] as const) : []),
+        'sign',
+    ]
 }
 
 export function SigningFlow({ token }: { token: string }) {
     const [state, setState] = React.useState<LoadState>({ kind: 'loading' })
-    const [step, setStep] = React.useState<StepId | 'done'>('confirm')
-    const [notMe, setNotMe] = React.useState(false)
+    const [step, setStep] = React.useState<StepId | 'done'>('identity')
+    const [asText, setAsText] = React.useState(false)
 
     const load = React.useCallback(async () => {
         try {
@@ -107,8 +122,9 @@ export function SigningFlow({ token }: { token: string }) {
     }
 
     const { session } = state
-    const steps: StepId[] = ['confirm', 'read', 'otp', ...(session.requiresSelfie ? (['selfie'] as const) : []), 'sign']
+    const steps = stepsFor(session)
     const go = (next: StepId | 'done') => setStep(next)
+    const showText = () => setAsText(true)
     const nextOf = (current: StepId) => steps[steps.indexOf(current) + 1] ?? 'done'
     const prevOf = (current: StepId) => steps[steps.indexOf(current) - 1]
 
@@ -122,7 +138,8 @@ export function SigningFlow({ token }: { token: string }) {
 
     const index = steps.indexOf(step)
     const previous = prevOf(step)
-    const canGoBack = previous && step !== 'sign' && step !== 'selfie' && !(step === 'otp' && session.otpVerified)
+    const canGoBack =
+        previous && previous !== 'identity' && step !== 'selfie' && !(step === 'otp' && session.otpVerified)
 
     return (
         <Shell>
@@ -159,68 +176,57 @@ export function SigningFlow({ token }: { token: string }) {
             <div key={step} className="mt-7 animate-enter">
                 <p className="text-[13px] font-semibold uppercase tracking-[0.16em] text-subtle">{STEP_LABEL[step]}</p>
 
-                {step === 'confirm' ? (
-                    <div className="mt-3 space-y-6">
-                        <h1 className="text-[28px] font-bold leading-tight tracking-[-0.035em]">
-                            Olá, {firstName(session.signer.name)}
-                        </h1>
-                        <p className="text-[17px] leading-relaxed text-ink/80">
-                            <span className="font-semibold text-ink">{session.officeName}</span> enviou um documento
-                            para você assinar pelo celular.
-                        </p>
-                        <div className="rounded-2xl border border-line">
-                            <div className="flex items-center gap-3 border-b border-line px-4 py-4">
-                                <FileText className="size-5 shrink-0 text-brand" aria-hidden />
-                                <p className="font-medium leading-snug">{session.title}</p>
-                            </div>
-                            <dl className="divide-y divide-line">
-                                <div className="flex items-center justify-between gap-4 px-4 py-3.5">
-                                    <dt className="text-[15px] text-muted">Nome</dt>
-                                    <dd className="text-right text-[15px] font-medium">{session.signer.name}</dd>
-                                </div>
-                                <div className="flex items-center justify-between gap-4 px-4 py-3.5">
-                                    <dt className="text-[15px] text-muted">CPF</dt>
-                                    <dd className="font-mono text-[15px] tabular">{session.signer.cpfMasked}</dd>
-                                </div>
-                            </dl>
-                        </div>
-                        {notMe ? (
-                            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-[15px] leading-relaxed text-amber-900">
-                                Não assine. Responda no WhatsApp avisando o escritório que este documento chegou para a
-                                pessoa errada. Você pode fechar esta página.
-                            </div>
-                        ) : null}
-                        <div className="space-y-2 pt-2">
-                            <Button size="lg" className="w-full" onClick={() => go('read')}>
-                                Sou eu, continuar
-                            </Button>
-                            <Button variant="ghost" size="lg" className="w-full" onClick={() => setNotMe(true)}>
-                                Não sou eu
-                            </Button>
-                        </div>
-                    </div>
+                {step === 'identity' ? (
+                    <IdentityStep
+                        token={token}
+                        firstName={firstName(session.signer.name)}
+                        officeName={session.officeName}
+                        title={session.title}
+                        onConfirmed={() => {
+                            // Recarrega a sessão: agora ela traz o texto do documento
+                            void load().then(() => go('read'))
+                        }}
+                    />
                 ) : null}
 
                 {step === 'read' ? (
                     <div className="mt-3 space-y-5">
                         <h1 className="text-[26px] font-bold leading-tight tracking-[-0.035em]">{session.title}</h1>
-                        <ReadAloud text={session.plainText} />
-                        <div
-                            className="max-h-[52vh] overflow-y-auto rounded-2xl border border-line bg-surface/50 px-5 py-5 scrollbar-thin"
-                            tabIndex={0}
-                            aria-label="Texto do documento"
-                        >
-                            <DocumentText body={session.body} />
+                        <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+                            <ReadAloud text={session.plainText} compact />
+                            <button
+                                type="button"
+                                onClick={() => setAsText((value) => !value)}
+                                className="text-[15px] font-medium text-brand"
+                            >
+                                {asText ? 'Ver as páginas do PDF' : 'Ver em letra maior'}
+                            </button>
+                            <a
+                                href={signingApi.documentUrl(token)}
+                                className="inline-flex items-center gap-1.5 text-[15px] font-medium text-brand"
+                            >
+                                <Download className="size-4" aria-hidden /> Baixar
+                            </a>
                         </div>
-                        <a
-                            href={signingApi.documentUrl(token)}
-                            className="inline-flex items-center gap-2 text-[15px] font-medium text-brand underline-offset-4 hover:underline"
-                        >
-                            <Download className="size-4" aria-hidden /> Baixar PDF
-                        </a>
+                        {asText ? (
+                            <div
+                                className="rounded-2xl border border-line bg-white px-5 py-5 text-[17px]"
+                                tabIndex={0}
+                                aria-label="Texto do documento"
+                            >
+                                <DocumentText body={session.body} />
+                            </div>
+                        ) : (
+                            <>
+                                <PdfPages url={signingApi.documentUrl(token)} onError={showText} />
+                                <div className="sr-only" aria-label="Texto do documento">
+                                    <DocumentText body={session.body} />
+                                </div>
+                            </>
+                        )}
                         <div className="sticky bottom-0 -mx-5 border-t border-line bg-white px-5 pb-[max(16px,env(safe-area-inset-bottom))] pt-4">
-                            <Button size="lg" className="w-full" onClick={() => go('otp')}>
-                                Li o documento, continuar
+                            <Button size="lg" className="w-full" onClick={() => go(nextOf('read'))}>
+                                Continuar para assinar
                             </Button>
                         </div>
                     </div>
@@ -246,7 +252,7 @@ export function SigningFlow({ token }: { token: string }) {
 
                 {step === 'sign' ? (
                     <div className="mt-3 space-y-5">
-                        <h1 className="text-[26px] font-bold leading-tight tracking-[-0.035em]">Faça sua assinatura</h1>
+                        <h1 className="text-[26px] font-bold leading-tight tracking-[-0.035em]">Sua assinatura</h1>
                         <SignStep token={token} signerName={session.signer.name} onSigned={() => go('done')} />
                     </div>
                 ) : null}
@@ -291,7 +297,9 @@ function DoneScreen({ token, initial }: { token: string; initial: SigningSession
             </span>
             <h1 className="mt-6 text-[28px] font-bold leading-tight tracking-[-0.035em]">Pronto! Documento assinado</h1>
             <p className="mt-3 max-w-xs text-[17px] leading-relaxed text-ink/80">
-                {completed ? 'Enviamos sua cópia no WhatsApp.' : 'Estamos selando o documento. Leva só alguns segundos.'}
+                {completed
+                    ? `${session.officeName} já recebeu. Guarde a sua cópia.`
+                    : 'Estamos finalizando o documento. Leva só alguns segundos.'}
             </p>
 
             <div className="mt-8 w-full space-y-3 text-left">
@@ -308,7 +316,7 @@ function DoneScreen({ token, initial }: { token: string; initial: SigningSession
                         aria-live="polite"
                     >
                         <span className="size-2 animate-pulse rounded-full bg-brand" aria-hidden />
-                        {waitedTooLong ? 'Ainda selando. A cópia chega no seu WhatsApp.' : 'Selando o PDF…'}
+                        {waitedTooLong ? 'Ainda finalizando. Você pode voltar a este link depois.' : 'Finalizando o PDF…'}
                     </div>
                 )}
                 <div className="rounded-2xl border border-line p-4">

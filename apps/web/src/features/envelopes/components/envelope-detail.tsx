@@ -4,7 +4,7 @@ import {
     type MessageKind,
     type StreamEvent,
 } from '@lidersign/shared'
-import { ArrowLeft, Download, ExternalLink, RefreshCw, Send, ShieldCheck, XCircle } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, ChevronDown, Download, ExternalLink, Loader2, RefreshCw, Send, XCircle } from 'lucide-react'
 import { Link } from 'react-router'
 import * as React from 'react'
 import { toast } from 'sonner'
@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/compone
 import { Card, Kicker, Skeleton } from '@/components/ui/primitives'
 import { CopyButton, EmptyState, ErrorNotice } from '@/components/ui/states'
 import { useLiveEvents } from '@/features/realtime'
+import { cn } from '@/lib/cn'
 import { errorMessage } from '@/lib/http'
 import { firstName, formatDateTime, formatDateTimeLong } from '@/lib/format'
 import { useResource } from '@/lib/use-resource'
@@ -64,10 +65,10 @@ export function EnvelopeDetail({ id }: { id: string }) {
                 const envelope = await envelopesApi.resend(id)
                 rememberLink(id, envelope.signingUrl)
                 setLinkVersion((value) => value + 1)
-                toast.success('Novo link gerado. O anterior deixou de valer.')
+                toast.success('Novo link pronto. O anterior deixou de valer.')
             } else {
                 await envelopesApi.cancel(id)
-                toast.success('Envelope cancelado')
+                toast.success('Envio cancelado')
             }
             await reload()
         } catch (err) {
@@ -82,7 +83,7 @@ export function EnvelopeDetail({ id }: { id: string }) {
         return (
             <div className="space-y-6">
                 <Skeleton className="h-8 w-2/3" />
-                <Skeleton className="h-32 w-full rounded-2xl" />
+                <Skeleton className="h-24 w-full rounded-2xl" />
                 <Skeleton className="h-64 w-full rounded-2xl" />
             </div>
         )
@@ -91,11 +92,11 @@ export function EnvelopeDetail({ id }: { id: string }) {
     if (error && !data) {
         return error.status === 404 ? (
             <EmptyState
-                title="Envelope não encontrado"
+                title="Envio não encontrado"
                 description="Ele pode ter sido apagado ao reiniciar a demonstração."
                 action={
                     <Button asChild variant="secondary">
-                        <Link to="/painel/envelopes">Voltar para envelopes</Link>
+                        <Link to="/painel/envelopes">Voltar para os envios</Link>
                     </Button>
                 }
             />
@@ -113,6 +114,7 @@ export function EnvelopeDetail({ id }: { id: string }) {
 
     if (!data) return null
     const canAct = data.status === 'SENT' || data.status === 'VIEWED'
+    const signerFirst = firstName(data.signer.name)
 
     return (
         <div className="space-y-10 animate-enter">
@@ -129,137 +131,267 @@ export function EnvelopeDetail({ id }: { id: string }) {
                             <h1 className="text-2xl font-bold tracking-[-0.03em] sm:text-[28px]">{data.title}</h1>
                             <StatusPill status={data.status} />
                         </div>
-                        <p className="mt-1.5 text-sm text-muted">
-                            Enviado em <span className="tabular">{formatDateTime(data.sentAt ?? data.createdAt)}</span>
-                            {data.externalRef ? <> · ref. {data.externalRef}</> : null}
+                        <p className="mt-1.5 text-[15px] text-muted">
+                            Para <span className="text-ink">{data.signer.name}</span> · enviado em{' '}
+                            <span className="tabular">{formatDateTime(data.sentAt ?? data.createdAt)}</span>
                         </p>
                     </div>
                     {canAct ? (
                         <div className="flex gap-2">
                             <Button variant="secondary" size="sm" loading={busy === 'resend'} onClick={() => act('resend')}>
-                                <Send aria-hidden /> Reenviar link
+                                <Send aria-hidden /> Gerar novo link
                             </Button>
-                            <Button variant="danger" size="sm" onClick={() => setConfirmCancel(true)}>
-                                <XCircle aria-hidden /> Cancelar
+                            <Button variant="ghost" size="sm" onClick={() => setConfirmCancel(true)}>
+                                <XCircle aria-hidden /> Cancelar envio
                             </Button>
                         </div>
                     ) : null}
                 </div>
             </div>
 
+            <Progress envelope={data} />
+
             {canAct ? (
-                <SigningLinkCard key={linkVersion} envelopeId={id} signerFirstName={firstName(data.signer.name)} />
+                <SigningLinkCard
+                    key={linkVersion}
+                    envelopeId={id}
+                    signerFirstName={signerFirst}
+                    documentTitle={data.title}
+                    phoneMasked={data.signer.phoneMasked}
+                />
             ) : null}
 
-            <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
-                <div className="space-y-6">
-                    <Card className="grid gap-x-8 gap-y-5 p-6 sm:grid-cols-2">
-                        <Info label="Signatário" value={data.signer.name} />
-                        <Info label="CPF" value={data.signer.cpfMasked} mono />
-                        <Info label="Celular" value={data.signer.phoneMasked} mono />
-                        <Info label="Nível de garantia" value={ASSURANCE_LEVEL_LABEL[data.assuranceLevel]} />
-                        <div className="sm:col-span-2">
-                            <Kicker>Código de verificação</Kicker>
-                            <div className="mt-1.5 flex items-center gap-2">
-                                <span className="font-mono text-[15px] tracking-wide">{data.verificationCode}</span>
-                                <CopyButton value={data.verificationCode} />
-                                <Link
-                                    to={`/v/${encodeURIComponent(data.verificationCode)}`}
-                                    className="inline-flex items-center gap-1 text-sm text-brand hover:underline"
-                                >
-                                    Abrir verificação <ExternalLink className="size-3.5" />
-                                </Link>
-                            </div>
-                        </div>
-                    </Card>
+            {data.status === 'SIGNED' ? (
+                <Notice icon={<Loader2 className="size-5 animate-spin text-brand" aria-hidden />}>
+                    {signerFirst} assinou. Estamos finalizando o PDF com o selo e o carimbo do tempo, leva poucos segundos.
+                </Notice>
+            ) : null}
 
-                    <section aria-labelledby="trilha">
-                        <div className="mb-4 flex items-baseline justify-between gap-4">
-                            <h2 id="trilha" className="text-lg font-semibold tracking-[-0.02em]">
-                                Trilha de auditoria
-                            </h2>
-                            <p className="text-xs text-subtle">Cada evento leva o hash do anterior</p>
+            {data.status === 'COMPLETED' ? (
+                <section className="flex flex-col gap-5 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-7">
+                    <div className="flex items-start gap-3">
+                        <CheckCircle2 className="mt-0.5 size-6 shrink-0 text-emerald-600" aria-hidden />
+                        <div>
+                            <h2 className="text-xl font-bold tracking-[-0.02em]">{signerFirst} assinou</h2>
+                            <p className="mt-1 text-[15px] text-ink/80">
+                                Em {formatDateTimeLong(data.signedAt ?? data.completedAt!)}. O PDF assinado já está pronto
+                                {data.messages.some((m) => m.kind === 'SIGNED_COPY' && m.provider !== 'simulator')
+                                    ? ` e uma cópia foi para o WhatsApp de ${signerFirst}.`
+                                    : '.'}
+                            </p>
                         </div>
-                        <Card className="p-6">
-                            {data.events.length ? (
-                                <AuditTrail events={data.events} />
-                            ) : (
-                                <p className="text-sm text-muted">Nenhum evento registrado.</p>
-                            )}
-                        </Card>
-                    </section>
-                </div>
+                    </div>
+                    <div className="flex shrink-0 flex-wrap gap-2">
+                        <Button asChild>
+                            <a href={envelopesApi.fileUrl(id, 'signed')} download>
+                                <Download aria-hidden /> Baixar PDF assinado
+                            </a>
+                        </Button>
+                        <Button asChild variant="secondary">
+                            <Link to={`/v/${encodeURIComponent(data.verificationCode)}`}>
+                                Ver autenticidade <ExternalLink aria-hidden />
+                            </Link>
+                        </Button>
+                    </div>
+                </section>
+            ) : null}
 
-                <aside className="space-y-6">
+            {data.status === 'CANCELED' || data.status === 'EXPIRED' ? (
+                <Notice icon={<XCircle className="size-5 text-muted" aria-hidden />}>
+                    {data.status === 'CANCELED'
+                        ? 'Este envio foi cancelado. O link deixou de funcionar.'
+                        : `O prazo para assinar acabou em ${formatDateTime(data.expiresAt)}. Envie o documento de novo.`}
+                </Notice>
+            ) : null}
+
+            <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
+                <section aria-labelledby="historico">
+                    <h2 id="historico" className="mb-4 text-lg font-semibold tracking-[-0.02em]">
+                        Histórico
+                    </h2>
                     <Card className="p-6">
-                        <Kicker>Arquivos</Kicker>
+                        {data.events.length ? (
+                            <AuditTrail events={data.events} />
+                        ) : (
+                            <p className="text-sm text-muted">Nada registrado ainda.</p>
+                        )}
+                    </Card>
+                </section>
+
+                <aside className="space-y-6 lg:pt-11">
+                    <Card className="p-6">
+                        <Kicker>Documento</Kicker>
                         <div className="mt-4 flex flex-col gap-2">
-                            <DownloadLink href={envelopesApi.fileUrl(id, 'original')} label="PDF original" />
                             {data.status === 'COMPLETED' ? (
-                                <DownloadLink href={envelopesApi.fileUrl(id, 'signed')} label="PDF assinado e selado" primary />
-                            ) : (
-                                <p className="rounded-[10px] border border-dashed border-line-strong px-3.5 py-3 text-sm text-muted">
-                                    O PDF assinado aparece aqui quando o cliente concluir.
-                                </p>
-                            )}
-                            {data.timestamp.status === 'OK' ? (
-                                <DownloadLink href={envelopesApi.fileUrl(id, 'timestamp')} label="Carimbo do tempo (.tsr)" />
+                                <DownloadLink href={envelopesApi.fileUrl(id, 'signed')} label="PDF assinado" primary />
                             ) : null}
+                            <DownloadLink href={envelopesApi.fileUrl(id, 'original')} label="PDF enviado (sem assinatura)" />
                         </div>
                     </Card>
 
                     <Card className="space-y-4 p-6">
-                        <div className="flex items-center gap-2">
-                            <ShieldCheck className="size-4 text-brand" aria-hidden />
-                            <Kicker className="text-ink/70">Integridade</Kicker>
-                        </div>
-                        <HashRow label="SHA-256 do original" value={data.originalSha256} />
-                        {data.signedSha256 ? <HashRow label="SHA-256 do assinado" value={data.signedSha256} /> : null}
+                        <Kicker>Quem assina</Kicker>
                         <div>
-                            <p className="text-xs text-subtle">Carimbo do tempo</p>
-                            <p className="mt-1 text-sm">
-                                <TimestampLabel status={data.timestamp.status} />
-                                {data.timestamp.genTime ? (
-                                    <span className="text-muted tabular"> · {formatDateTimeLong(data.timestamp.genTime)}</span>
-                                ) : null}
+                            <p className="text-[15px] font-medium">{data.signer.name}</p>
+                            <p className="mt-1 font-mono text-[13px] text-muted tabular">
+                                CPF {data.signer.cpfMasked} · {data.signer.phoneMasked}
                             </p>
-                            {data.timestamp.tsa ? <p className="mt-0.5 text-xs text-subtle">{data.timestamp.tsa}</p> : null}
                         </div>
+                        <p className="text-sm text-muted">
+                            Nível {ASSURANCE_LEVEL_LABEL[data.assuranceLevel]}:{' '}
+                            {data.assuranceLevel === 'REFORCADO'
+                                ? 'confirma o CPF, o código no WhatsApp e tira uma selfie.'
+                                : 'confirma o CPF e assina.'}
+                        </p>
                     </Card>
 
                     <Card className="p-6">
-                        <Kicker>Mensagens no WhatsApp</Kicker>
+                        <Kicker>Código de verificação</Kicker>
+                        <div className="mt-2 flex items-center gap-1">
+                            <span className="font-mono text-[17px] tracking-wide">{data.verificationCode}</span>
+                            <CopyButton value={data.verificationCode} />
+                        </div>
+                        <p className="mt-2 text-sm leading-relaxed text-muted">
+                            Vai impresso no PDF. Qualquer pessoa confere a autenticidade em{' '}
+                            <Link to="/v" className="text-brand hover:underline">
+                                Verificar documento
+                            </Link>
+                            .
+                        </p>
+                    </Card>
+                </aside>
+            </div>
+
+            <TechnicalDetails data={data} id={id} />
+
+            <Dialog open={confirmCancel} onOpenChange={setConfirmCancel}>
+                <DialogContent className="p-6">
+                    <DialogTitle>Cancelar este envio?</DialogTitle>
+                    <DialogDescription className="mt-2">
+                        O link de assinatura deixa de funcionar na hora. Para assinar depois, será preciso enviar de novo.
+                    </DialogDescription>
+                    <div className="mt-6 flex justify-end gap-2">
+                        <Button variant="secondary" onClick={() => setConfirmCancel(false)}>
+                            Manter
+                        </Button>
+                        <Button variant="dark" loading={busy === 'cancel'} onClick={() => act('cancel')}>
+                            Cancelar envio
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+        </div>
+    )
+}
+
+/** Andamento em 4 passos, do jeito que o escritório pensa. */
+function Progress({ envelope }: { envelope: EnvelopeDetailDto }) {
+    const stopped = envelope.status === 'CANCELED' || envelope.status === 'EXPIRED'
+    const steps = [
+        { label: 'Enviado', at: envelope.sentAt ?? envelope.createdAt },
+        { label: 'Aberto pelo cliente', at: envelope.viewedAt },
+        { label: 'Assinado', at: envelope.signedAt },
+        { label: 'PDF pronto', at: envelope.completedAt },
+    ]
+    const current = steps.findIndex((step) => !step.at)
+    return (
+        <ol aria-label="Andamento" className="grid grid-cols-2 gap-x-4 gap-y-5 sm:grid-cols-4">
+            {steps.map((step, index) => {
+                const done = Boolean(step.at)
+                const active = !stopped && index === current
+                return (
+                    <li key={step.label} className="min-w-0">
+                        <div
+                            className={cn(
+                                'h-1 rounded-full',
+                                done ? 'bg-brand' : active ? 'bg-brand/30' : 'bg-line',
+                            )}
+                        />
+                        <p className={cn('mt-2.5 text-sm font-medium', done ? 'text-ink' : active ? 'text-ink/70' : 'text-subtle')}>
+                            {step.label}
+                        </p>
+                        <p className="mt-0.5 text-xs text-subtle tabular">
+                            {step.at ? formatDateTime(step.at) : active ? 'aguardando' : ''}
+                        </p>
+                    </li>
+                )
+            })}
+        </ol>
+    )
+}
+
+function Notice({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
+    return (
+        <div className="flex items-start gap-3 rounded-2xl border border-line bg-surface/60 p-5 text-[15px] leading-relaxed text-ink/85">
+            <span className="mt-0.5 shrink-0">{icon}</span>
+            <p>{children}</p>
+        </div>
+    )
+}
+
+/** Para auditoria e para a TI: hashes, carimbo do tempo, mensagens e avisos para a LíderHub. */
+function TechnicalDetails({ data, id }: { data: EnvelopeDetailDto; id: string }) {
+    return (
+        <details className="group rounded-2xl border border-line">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-6 py-4 text-sm font-medium text-muted transition-colors hover:text-ink [&::-webkit-details-marker]:hidden">
+                Detalhes técnicos e trilha de auditoria
+                <ChevronDown className="size-4 transition-transform group-open:rotate-180" aria-hidden />
+            </summary>
+            <div className="grid gap-8 border-t border-line px-6 py-6 lg:grid-cols-2">
+                <div className="space-y-5">
+                    <HashRow label="SHA-256 do PDF enviado" value={data.originalSha256} />
+                    {data.signedSha256 ? <HashRow label="SHA-256 do PDF assinado" value={data.signedSha256} /> : null}
+                    <div>
+                        <p className="text-xs text-subtle">Carimbo do tempo (RFC 3161)</p>
+                        <p className="mt-1 text-sm">
+                            <TimestampLabel status={data.timestamp.status} />
+                            {data.timestamp.genTime ? (
+                                <span className="text-muted tabular"> · {formatDateTimeLong(data.timestamp.genTime)}</span>
+                            ) : null}
+                        </p>
+                        {data.timestamp.status === 'OK' ? (
+                            <a
+                                href={envelopesApi.fileUrl(id, 'timestamp')}
+                                download
+                                className="mt-1 inline-flex items-center gap-1 text-sm text-brand hover:underline"
+                            >
+                                Baixar carimbo (.tsr) <Download className="size-3.5" aria-hidden />
+                            </a>
+                        ) : null}
+                    </div>
+                    {data.externalRef ? (
+                        <div>
+                            <p className="text-xs text-subtle">Referência na LíderHub</p>
+                            <p className="mt-1 font-mono text-sm">{data.externalRef}</p>
+                        </div>
+                    ) : null}
+                    <div>
+                        <p className="text-xs text-subtle">Mensagens</p>
                         {data.messages.length ? (
-                            <ul className="mt-4 space-y-4">
+                            <ul className="mt-2 space-y-2">
                                 {data.messages.map((message) => (
                                     <li key={message.id} className="text-sm">
-                                        <div className="flex items-center justify-between gap-2">
-                                            <p className="font-medium">{MESSAGE_KIND_LABEL[message.kind]}</p>
-                                            <span className="text-xs text-subtle tabular">
-                                                {formatDateTime(message.createdAt)}
-                                            </span>
-                                        </div>
-                                        <p className="mt-1 line-clamp-2 text-muted">{hideOtp(message.body)}</p>
-                                        <p className="mt-1 text-xs text-subtle">
-                                            {message.provider === 'simulator' ? 'Modo demonstração, não saiu do computador' : 'WhatsApp oficial'} ·{' '}
-                                            {message.status === 'FAILED' ? (
-                                                <span className="text-red-600">falhou{message.error ? `: ${message.error}` : ''}</span>
-                                            ) : (
-                                                message.toMasked
-                                            )}
+                                        <span className="font-medium">{MESSAGE_KIND_LABEL[message.kind]}</span>{' '}
+                                        <span className="text-subtle tabular">{formatDateTime(message.createdAt)}</span>
+                                        <p className="line-clamp-1 text-muted">{hideOtp(message.body)}</p>
+                                        <p className="text-xs text-subtle">
+                                            {message.provider === 'simulator'
+                                                ? 'Modo demonstração: registrada, não enviada'
+                                                : message.status === 'FAILED'
+                                                  ? `WhatsApp: falhou${message.error ? `, ${message.error}` : ''}`
+                                                  : `WhatsApp · ${message.toMasked}`}
                                         </p>
                                     </li>
                                 ))}
                             </ul>
                         ) : (
-                            <p className="mt-3 text-sm text-muted">Nenhuma mensagem enviada.</p>
+                            <p className="mt-1 text-sm text-muted">Nenhuma.</p>
                         )}
-                    </Card>
-
-                    <Card className="p-6">
-                        <Kicker>Webhooks para a LíderHub</Kicker>
+                    </div>
+                    <div>
+                        <p className="text-xs text-subtle">Avisos para a LíderHub (webhooks)</p>
                         {data.webhookDeliveries.length ? (
-                            <ul className="mt-4 space-y-3">
+                            <ul className="mt-2 space-y-1.5">
                                 {data.webhookDeliveries.map((delivery) => (
                                     <li key={delivery.id} className="flex items-center justify-between gap-3 text-sm">
                                         <span className="font-mono text-[13px]">{delivery.event}</span>
@@ -271,39 +403,16 @@ export function EnvelopeDetail({ id }: { id: string }) {
                                 ))}
                             </ul>
                         ) : (
-                            <p className="mt-3 text-sm text-muted">Nenhum webhook entregue ainda.</p>
+                            <p className="mt-1 text-sm text-muted">Nenhum ainda.</p>
                         )}
-                    </Card>
-                </aside>
-            </div>
-
-            <Dialog open={confirmCancel} onOpenChange={setConfirmCancel}>
-                <DialogContent className="p-6">
-                    <DialogTitle>Cancelar este envelope?</DialogTitle>
-                    <DialogDescription className="mt-2">
-                        O link de assinatura deixa de funcionar na hora. Para assinar depois, será preciso enviar um
-                        novo documento.
-                    </DialogDescription>
-                    <div className="mt-6 flex justify-end gap-2">
-                        <Button variant="secondary" onClick={() => setConfirmCancel(false)}>
-                            Manter
-                        </Button>
-                        <Button variant="dark" loading={busy === 'cancel'} onClick={() => act('cancel')}>
-                            Cancelar envelope
-                        </Button>
                     </div>
-                </DialogContent>
-            </Dialog>
-        </div>
-    )
-}
-
-function Info({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
-    return (
-        <div>
-            <Kicker>{label}</Kicker>
-            <p className={mono ? 'mt-1.5 font-mono text-[15px] tabular' : 'mt-1.5 text-[15px]'}>{value}</p>
-        </div>
+                </div>
+                <div>
+                    <p className="mb-3 text-xs text-subtle">Trilha de auditoria: cada evento leva o hash do anterior</p>
+                    <AuditTrail events={data.events} technical />
+                </div>
+            </div>
+        </details>
     )
 }
 

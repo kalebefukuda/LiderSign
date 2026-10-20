@@ -1,31 +1,30 @@
-import { Check, Copy, ExternalLink, MonitorSmartphone, RefreshCw, Smartphone } from 'lucide-react'
+import { Check, Copy, MessageCircle, RefreshCw, Smartphone } from 'lucide-react'
 import QRCode from 'qrcode'
 import * as React from 'react'
-import { Link } from 'react-router'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
-import { Kicker, Skeleton } from '@/components/ui/primitives'
+import { Skeleton } from '@/components/ui/primitives'
 import { DEMO_HOST_BASE } from '@/lib/endpoints'
 import { errorMessage } from '@/lib/http'
 import { isLocalUrl } from '@/lib/url'
 import { useResource } from '@/lib/use-resource'
 
 import { envelopesApi } from '../api'
-import { recallLink, rememberLink } from '../link-store'
+import { recallLink, rememberLink, whatsappShareUrl, type StoredLink } from '../link-store'
 
-type HostStatus = { whatsappProvider: 'simulator' | 'cloud_api'; whatsappConfigured: boolean }
+type HostStatus = { whatsappProvider: 'simulator' | 'cloud_api'; tenant: { name: string } | null }
 
-/**
- * Como o link chega ao cliente. Em produção, pelo WhatsApp; aqui também por QR code,
- * para abrir a assinatura no seu celular sem depender de conta na Meta.
- */
-export function SigningLinkCard({ envelopeId, signerFirstName }: { envelopeId: string; signerFirstName: string }) {
-    const [url, setUrl] = React.useState<string | null>(() => recallLink(envelopeId))
+type Props = { envelopeId: string; signerFirstName: string; documentTitle: string; phoneMasked: string }
+
+/** Próximo passo depois do envio: fazer o link chegar ao cliente. */
+export function SigningLinkCard({ envelopeId, signerFirstName, documentTitle, phoneMasked }: Props) {
+    const [link, setLink] = React.useState<StoredLink | null>(() => recallLink(envelopeId))
     const [qr, setQr] = React.useState<string | null>(null)
     const [regenerating, setRegenerating] = React.useState(false)
     const [copied, setCopied] = React.useState(false)
     const host = useResource<HostStatus>(`${DEMO_HOST_BASE}/status`)
+    const url = link?.url ?? null
 
     React.useEffect(() => {
         let cancelled = false
@@ -33,7 +32,7 @@ export function SigningLinkCard({ envelopeId, signerFirstName }: { envelopeId: s
             setQr(null)
             return
         }
-        QRCode.toDataURL(url, { margin: 1, width: 440, color: { dark: '#0B1220', light: '#FFFFFF' } })
+        QRCode.toDataURL(url, { margin: 1, width: 360, color: { dark: '#0B1220', light: '#FFFFFF' } })
             .then((data) => {
                 if (!cancelled) setQr(data)
             })
@@ -48,8 +47,8 @@ export function SigningLinkCard({ envelopeId, signerFirstName }: { envelopeId: s
         try {
             const envelope = await envelopesApi.resend(envelopeId)
             rememberLink(envelopeId, envelope.signingUrl)
-            setUrl(envelope.signingUrl)
-            toast.success('Novo link gerado. O anterior deixou de valer.')
+            setLink(recallLink(envelopeId))
+            toast.success('Novo link pronto. O anterior deixou de valer.')
         } catch (error) {
             toast.error(errorMessage(error))
         } finally {
@@ -57,83 +56,84 @@ export function SigningLinkCard({ envelopeId, signerFirstName }: { envelopeId: s
         }
     }
 
-    const viaWhatsApp = host.data?.whatsappProvider === 'cloud_api'
-    const local = url ? isLocalUrl(url) : false
+    async function copy() {
+        if (!url) return
+        try {
+            await navigator.clipboard.writeText(url)
+            setCopied(true)
+            window.setTimeout(() => setCopied(false), 1600)
+        } catch {
+            toast.error('Não foi possível copiar. Selecione o link e copie.')
+        }
+    }
+
+    const sentByPlatform = host.data?.whatsappProvider === 'cloud_api'
+    const office = host.data?.tenant?.name ?? 'O escritório'
+    const message = url
+        ? `Olá, ${signerFirstName}! ${office} enviou "${documentTitle}" para você assinar pelo celular. É rápido: ${url}`
+        : ''
 
     return (
-        <section aria-labelledby="link-assinatura" className="rounded-2xl border border-brand/25 bg-brand-soft/30 p-5 sm:p-6">
-            <Kicker id="link-assinatura">Link de assinatura</Kicker>
-            <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-ink/85">
-                {viaWhatsApp
-                    ? `Enviado para o WhatsApp de ${signerFirstName}. Você também pode abrir pelo QR code.`
-                    : `Para assinar como ${signerFirstName}, aponte a câmera do seu celular para o QR code.`}
-            </p>
+        <section
+            aria-labelledby="proximo-passo"
+            className="overflow-hidden rounded-2xl border border-brand/25 bg-brand-soft/40"
+        >
+            <div className="grid gap-6 p-5 sm:p-7 md:grid-cols-[1fr_auto] md:items-center">
+                <div className="min-w-0">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand">Próximo passo</p>
+                    <h2 id="proximo-passo" className="mt-2 text-xl font-bold tracking-[-0.02em]">
+                        {sentByPlatform ? `Enviado no WhatsApp de ${signerFirstName}` : `Envie o link para ${signerFirstName}`}
+                    </h2>
+                    <p className="mt-2 max-w-[52ch] text-[15px] leading-relaxed text-ink/80">
+                        {sentByPlatform
+                            ? `A mensagem foi para ${phoneMasked}. ${signerFirstName} abre no celular, confere o contrato e assina. O andamento aparece aqui sozinho.`
+                            : `${signerFirstName} abre no celular, confere o contrato e assina. O andamento aparece aqui sozinho.`}
+                    </p>
 
-            {url ? (
-                <div className="mt-5 grid gap-6 sm:grid-cols-[220px_1fr] sm:items-start">
-                    <div className="flex aspect-square w-[220px] items-center justify-center rounded-xl border border-line bg-white p-2.5">
-                        {qr ? (
-                            <img src={qr} alt="QR code do link de assinatura" className="size-full" />
-                        ) : (
-                            <Skeleton className="size-full" />
-                        )}
-                    </div>
-                    <div className="min-w-0 space-y-4">
-                        <ol className="space-y-2.5 text-[14px] text-ink/85">
-                            <li className="flex gap-2.5">
-                                <Smartphone className="mt-0.5 size-4 shrink-0 text-brand" aria-hidden />
-                                Escaneie com a câmera do celular e siga os passos da assinatura.
-                            </li>
-                            <li className="flex gap-2.5">
-                                <MonitorSmartphone className="mt-0.5 size-4 shrink-0 text-brand" aria-hidden />
-                                Sem celular por perto? Abra neste computador.
-                            </li>
-                        </ol>
-                        <div className="flex flex-wrap gap-2">
-                            <Button asChild size="sm">
-                                <a href={url} target="_blank" rel="noreferrer">
-                                    <ExternalLink aria-hidden /> Abrir neste computador
+                    {url ? (
+                        <div className="mt-5 flex flex-wrap gap-2">
+                            <Button asChild variant={sentByPlatform ? 'secondary' : 'primary'}>
+                                <a href={whatsappShareUrl(message, link?.phone)} target="_blank" rel="noreferrer">
+                                    <MessageCircle aria-hidden />
+                                    {sentByPlatform ? 'Mandar de novo pelo meu WhatsApp' : 'Enviar pelo WhatsApp'}
                                 </a>
                             </Button>
-                            <Button
-                                variant="secondary"
-                                size="sm"
-                                onClick={async () => {
-                                    try {
-                                        await navigator.clipboard.writeText(url)
-                                        setCopied(true)
-                                        window.setTimeout(() => setCopied(false), 1600)
-                                    } catch {
-                                        toast.error('Não foi possível copiar. Selecione o link abaixo.')
-                                    }
-                                }}
-                            >
-                                {copied ? <Check aria-hidden /> : <Copy aria-hidden />} {copied ? 'Copiado' : 'Copiar link'}
+                            <Button variant="secondary" onClick={() => void copy()}>
+                                {copied ? <Check aria-hidden /> : <Copy aria-hidden />}
+                                {copied ? 'Link copiado' : 'Copiar link'}
                             </Button>
                         </div>
-                        <p className="break-all font-mono text-[12px] text-subtle">{url}</p>
-                        {local ? (
-                            <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-3.5 text-[13px] leading-relaxed text-amber-950/85">
-                                Este link aponta para <span className="font-mono">localhost</span>, que só existe neste
-                                computador: o celular não consegue abrir.{' '}
-                                <Link to="/painel/configuracoes" className="font-medium text-amber-900 underline underline-offset-2">
-                                    Veja como abrir no celular
-                                </Link>
-                                .
-                            </div>
-                        ) : null}
+                    ) : (
+                        <div className="mt-5 flex flex-wrap items-center gap-3">
+                            <Button loading={regenerating} onClick={() => void regenerate()}>
+                                <RefreshCw aria-hidden /> Gerar o link de novo
+                            </Button>
+                            <p className="text-sm text-muted">Por segurança, o link só fica disponível na tela em que foi criado.</p>
+                        </div>
+                    )}
+                    {url && isLocalUrl(url) ? (
+                        <p className="mt-4 text-[13px] text-amber-800">
+                            Este link só abre neste computador. Suba com o Docker para ter um endereço que abre no celular.
+                        </p>
+                    ) : null}
+                </div>
+
+                {url ? (
+                    <div className="flex items-center gap-4 md:flex-col md:items-center md:gap-2">
+                        <div className="size-[132px] shrink-0 rounded-xl border border-line bg-white p-2 md:size-[150px]">
+                            {qr ? (
+                                <img src={qr} alt="QR code do link de assinatura" className="size-full" />
+                            ) : (
+                                <Skeleton className="size-full" />
+                            )}
+                        </div>
+                        <p className="flex max-w-[150px] items-start gap-1.5 text-[12px] leading-snug text-muted md:text-center">
+                            <Smartphone className="mt-px size-3.5 shrink-0 md:hidden" aria-hidden />
+                            Ou aponte a câmera do celular para abrir aqui
+                        </p>
                     </div>
-                </div>
-            ) : (
-                <div className="mt-4 flex flex-wrap items-center gap-3">
-                    <p className="text-[14px] text-muted">
-                        Por segurança, o link só aparece na hora do envio. Gere um novo para mostrar o QR code.
-                    </p>
-                    <Button variant="secondary" size="sm" loading={regenerating} onClick={() => void regenerate()}>
-                        <RefreshCw aria-hidden /> Gerar novo link
-                    </Button>
-                </div>
-            )}
+                ) : null}
+            </div>
         </section>
     )
 }

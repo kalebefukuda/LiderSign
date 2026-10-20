@@ -20,6 +20,7 @@
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "lucide-react": "^1.60.0",
+        "pdfjs-dist": "5.7.284",
         "qrcode": "1.5.4",
         "react": "19.3.1",
         "react-dom": "19.3.1",

@@ -1,7 +1,6 @@
-import { ArrowRight, PlugZap, ServerCrash, ShieldCheck } from 'lucide-react'
+import { RefreshCw, ServerCrash, ShieldCheck } from 'lucide-react'
 import * as React from 'react'
-import { Link, Outlet, useLocation } from 'react-router'
-import { toast } from 'sonner'
+import { Link, Outlet } from 'react-router'
 
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/primitives'
@@ -11,75 +10,59 @@ import { demoApi, onDemoStatusChange, type DemoStatus } from '@/features/demo'
 import { errorMessage } from '@/lib/http'
 import { useResource } from '@/lib/use-resource'
 
-/** Páginas que funcionam mesmo com o LíderSign desligado (é nelas que se liga e configura). */
-const ALWAYS_OPEN = ['/painel/integracao', '/painel/configuracoes']
-
-/** Painel do escritório. Na LíderHub ele vive dentro da plataforma; aqui usa o escritório de demonstração. */
+/**
+ * Painel do escritório. Na LíderHub ele vive dentro da plataforma e o escritório já chega com o
+ * LíderSign ligado; aqui, na demonstração, o painel liga o escritório de exemplo sozinho.
+ */
 export default function PanelLayout() {
-    const { pathname } = useLocation()
     const status = useResource<DemoStatus>(demoApi.statusUrl)
-    const [activating, setActivating] = React.useState(false)
-    const officeName = status.data?.tenant?.name ?? 'Escritório de demonstração'
-    const open = ALWAYS_OPEN.some((path) => pathname.startsWith(path))
+    const [activationError, setActivationError] = React.useState<string | null>(null)
+    const activating = React.useRef(false)
+    const officeName = status.data?.tenant?.name ?? 'Seu escritório'
     const { reload } = status
 
     React.useEffect(() => onDemoStatusChange(() => void reload()), [reload])
 
-    async function activate() {
-        setActivating(true)
-        try {
-            await demoApi.activate()
-            toast.success('LíderSign ativo, com os modelos de exemplo')
-        } catch (error) {
-            toast.error(errorMessage(error))
-        } finally {
-            setActivating(false)
-        }
-    }
+    React.useEffect(() => {
+        if (!status.data || status.data.active || activating.current) return
+        activating.current = true
+        demoApi
+            .activate()
+            .catch((error) => setActivationError(errorMessage(error)))
+            .finally(() => {
+                activating.current = false
+            })
+    }, [status.data])
 
     let content: React.ReactNode
-    if (status.loading && !status.data) {
-        content = (
-            <div className="space-y-4">
-                <Skeleton className="h-8 w-56" />
-                <Skeleton className="h-4 w-96 max-w-full" />
-                <Skeleton className="mt-6 h-64 w-full rounded-2xl" />
-            </div>
-        )
-    } else if (!status.data) {
+    if (status.data?.active) {
+        content = <Outlet />
+    } else if ((status.error && !status.data) || activationError) {
         content = (
             <EmptyState
                 icon={<ServerCrash />}
                 title="Sem conexão com o LíderSign"
-                description="Não foi possível falar com a API. Confira se ela está rodando e tente de novo."
+                description={activationError ?? 'Não foi possível carregar o painel. Confira se o sistema está no ar.'}
                 action={
-                    <Button variant="secondary" onClick={() => void status.reload()}>
-                        Tentar de novo
+                    <Button
+                        variant="secondary"
+                        onClick={() => {
+                            setActivationError(null)
+                            void status.reload()
+                        }}
+                    >
+                        <RefreshCw aria-hidden /> Tentar de novo
                     </Button>
                 }
             />
         )
-    } else if (status.data.active || open) {
-        content = <Outlet />
     } else {
         content = (
-            <EmptyState
-                icon={<PlugZap />}
-                title="Ative o LíderSign para começar"
-                description="Um clique cria o escritório de demonstração, já com dois modelos de contrato. Na LíderHub, é o switch que o escritório liga."
-                action={
-                    <div className="flex flex-wrap justify-center gap-2">
-                        <Button loading={activating} onClick={() => void activate()}>
-                            Ativar o escritório de demonstração
-                        </Button>
-                        <Button asChild variant="ghost">
-                            <Link to="/painel/integracao">
-                                Como a integração funciona <ArrowRight aria-hidden />
-                            </Link>
-                        </Button>
-                    </div>
-                }
-            />
+            <div className="space-y-4" aria-busy="true">
+                <Skeleton className="h-8 w-56" />
+                <Skeleton className="h-4 w-96 max-w-full" />
+                <Skeleton className="mt-6 h-64 w-full rounded-2xl" />
+            </div>
         )
     }
 

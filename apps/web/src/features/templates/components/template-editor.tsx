@@ -33,8 +33,8 @@ export type TemplateDraft = {
 }
 
 const ASSURANCE_HELP: Record<AssuranceLevel, string> = {
-    PADRAO: 'Código no WhatsApp, IP, dispositivo e localização consentida. Para contratos de honorários.',
-    REFORCADO: 'Padrão + selfie do cliente. Indicado para procurações e ações de massa.',
+    PADRAO: 'O cliente confirma o CPF e assina. Registra IP e dispositivo. Para contratos de honorários.',
+    REFORCADO: 'Padrão + código no WhatsApp e selfie do cliente. Indicado para procurações e ações de massa.',
 }
 
 export function TemplateEditor({

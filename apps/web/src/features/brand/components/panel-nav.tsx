@@ -1,4 +1,4 @@
-import { FileSignature, FileText, PlugZap, Send, Settings } from 'lucide-react'
+import { FileSignature, FileText, Send } from 'lucide-react'
 import { Link, useLocation } from 'react-router'
 
 import { cn } from '@/lib/cn'
@@ -8,11 +8,7 @@ const primary = { href: '/painel/enviar', label: 'Enviar para assinatura', icon:
 const groups = [
     [
         { href: '/painel/envelopes', label: 'Envios', icon: FileSignature },
-        { href: '/painel/modelos', label: 'Modelos', icon: FileText },
-    ],
-    [
-        { href: '/painel/integracao', label: 'Integração LíderHub', icon: PlugZap },
-        { href: '/painel/configuracoes', label: 'Configurações', icon: Settings },
+        { href: '/painel/modelos', label: 'Modelos de contrato', icon: FileText },
     ],
 ]
 

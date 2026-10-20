@@ -29,7 +29,18 @@ export default function VerifyCodeRoute() {
                             <Skeleton className="h-4 w-1/2" />
                         </div>
                     ) : data ? (
-                        <VerificationResult data={data} />
+                        <VerificationResult data={data}>
+                            <section aria-labelledby="conferir">
+                                <h2 id="conferir" className="text-lg font-semibold tracking-[-0.02em]">
+                                    Tem o PDF em mãos?
+                                </h2>
+                                <p className="mb-5 mt-1.5 text-sm leading-relaxed text-muted">
+                                    Envie o arquivo para conferir se ele é exatamente o que foi assinado, sem nenhuma
+                                    alteração.
+                                </p>
+                                <FileCheck expectedCode={data.code} />
+                            </section>
+                        </VerificationResult>
                     ) : notFound ? (
                         <div className="space-y-8">
                             <EmptyState
@@ -59,17 +70,6 @@ export default function VerifyCodeRoute() {
                     )}
                 </div>
 
-                {data ? (
-                    <section aria-labelledby="conferir" className="mt-14 border-t border-line pt-10">
-                        <h2 id="conferir" className="text-lg font-semibold tracking-[-0.02em]">
-                            Confira um arquivo
-                        </h2>
-                        <p className="mb-5 mt-1.5 text-sm leading-relaxed text-muted">
-                            Recebeu este PDF de alguém? Envie aqui para saber se ele é exatamente o que foi assinado.
-                        </p>
-                        <FileCheck expectedCode={data.code} />
-                    </section>
-                ) : null}
             </main>
         </div>
     )
