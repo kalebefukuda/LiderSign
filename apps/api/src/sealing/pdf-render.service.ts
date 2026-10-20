@@ -78,36 +78,113 @@ export const baseStyles: TDocumentDefinitions['styles'] = {
     header: { fontSize: 8, color: MUTED },
 }
 
+/** Quem assina, como aparece no bloco de assinatura do fim do documento. */
+export type DocumentSigner = { name: string; cpfMasked: string; role: string }
+
+export type DocumentInput = { title: string; officeName: string; body: string; signer: DocumentSigner }
+
+/** Marca no PDF original: ele tem o bloco de assinatura (documentos antigos não têm). */
+export const SIGNATURE_BLOCK_KEYWORD = 'lidersign:signature-block:v1'
+
+/** Espaço reservado para a assinatura, em pontos. */
+export const SIGNATURE_AREA = { width: 240, height: 56 }
+/** Altura total do bloco (rótulo + área + linha + nome + papel + nota): se não couber, vai inteiro para a próxima página. */
+const SIGNATURE_BLOCK_HEIGHT = 128
+
+const SIGNATURE_BLOCK_ID = 'lidersign-signature-block'
+const SIGNATURE_AREA_ID = 'lidersign-signature-area'
+
+export type SignatureAnchor = { pageNumber: number; left: number; top: number }
+
+export function roleForKind(kind: string): string {
+    if (kind === 'PROCURACAO') return 'Outorgante'
+    if (kind === 'CONTRATO') return 'Contratante'
+    return 'Signatário'
+}
+
+function signatureBlock(signer: DocumentSigner): Content {
+    // O pdfmake aceita "id" em qualquer nó (e o repassa ao pageBreakBefore), mas os tipos só o declaram em texto
+    const block = {
+        id: SIGNATURE_BLOCK_ID,
+        margin: [0, 32, 0, 0],
+        stack: [
+            { text: 'ASSINATURA', fontSize: 7.5, color: MUTED, characterSpacing: 1.2, margin: [0, 0, 0, 6] },
+            {
+                id: SIGNATURE_AREA_ID,
+                stack: [
+                    {
+                        canvas: [
+                            { type: 'rect', x: 0, y: 0, w: SIGNATURE_AREA.width, h: SIGNATURE_AREA.height, color: '#FFFFFF' },
+                        ],
+                    },
+                ],
+            },
+            {
+                canvas: [{ type: 'line', x1: 0, y1: 0, x2: SIGNATURE_AREA.width, y2: 0, lineWidth: 0.6, lineColor: MUTED }],
+            },
+            { text: signer.name, fontSize: 10, bold: true, color: '#111827', margin: [0, 5, 0, 0] },
+            { text: `${signer.role} · CPF ${signer.cpfMasked}`, fontSize: 8.5, color: MUTED, margin: [0, 2, 0, 0] },
+            { text: 'Assinatura eletrônica pelo LíderSign', fontSize: 7.5, color: MUTED, margin: [0, 2, 0, 0] },
+        ],
+    }
+    return block as unknown as Content
+}
+
+/**
+ * Definição do PDF original. O bloco de assinatura nunca se divide entre páginas, e a posição da área
+ * reservada é informada em onAnchor: a selagem desenha a assinatura exatamente ali.
+ */
+function documentDefinition(input: DocumentInput, onAnchor?: (anchor: SignatureAnchor) => void): TDocumentDefinitions {
+    return {
+        pageSize: 'A4',
+        pageMargins: [56, 72, 56, 72],
+        info: {
+            title: input.title,
+            author: input.officeName,
+            creator: 'LíderSign',
+            producer: 'LíderSign',
+            keywords: SIGNATURE_BLOCK_KEYWORD,
+        },
+        header: () => ({
+            columns: [
+                { text: input.officeName, style: 'header' },
+                { text: input.title, style: 'header', alignment: 'right' },
+            ],
+            margin: [56, 32, 56, 0],
+        }),
+        footer: (currentPage: number, pageCount: number) => ({
+            text: `Página ${currentPage} de ${pageCount}`,
+            style: 'header',
+            alignment: 'right',
+            margin: [56, 20, 56, 0],
+        }),
+        content: [...blocksToContent(parseTemplate(input.body)), signatureBlock(input.signer)],
+        pageBreakBefore: (node) => {
+            const position = node.startPosition
+            if (node.id === SIGNATURE_BLOCK_ID) {
+                return position.top + SIGNATURE_BLOCK_HEIGHT > 72 + position.pageInnerHeight
+            }
+            if (node.id === SIGNATURE_AREA_ID) {
+                onAnchor?.({ pageNumber: position.pageNumber, left: position.left, top: position.top })
+            }
+            return false
+        },
+        defaultStyle: { font: 'Roboto', fontSize: 10.5, color: INK },
+        styles: baseStyles,
+    }
+}
+
+/** Refaz o layout do original (determinístico) só para achar onde fica a área de assinatura. */
+export async function locateSignatureArea(input: DocumentInput): Promise<SignatureAnchor | null> {
+    let anchor: SignatureAnchor | null = null
+    await renderPdf(documentDefinition(input, (found) => (anchor = found)))
+    return anchor
+}
+
 @Injectable()
 export class PdfRenderService {
     /** PDF original: é o que o signatário lê e o que tem o hash registrado. */
-    renderDocument(input: { title: string; officeName: string; body: string }): Promise<Buffer> {
-        const definition: TDocumentDefinitions = {
-            pageSize: 'A4',
-            pageMargins: [56, 72, 56, 72],
-            info: {
-                title: input.title,
-                author: input.officeName,
-                creator: 'LíderSign',
-                producer: 'LíderSign',
-            },
-            header: () => ({
-                columns: [
-                    { text: input.officeName, style: 'header' },
-                    { text: input.title, style: 'header', alignment: 'right' },
-                ],
-                margin: [56, 32, 56, 0],
-            }),
-            footer: (currentPage: number, pageCount: number) => ({
-                text: `Página ${currentPage} de ${pageCount}`,
-                style: 'header',
-                alignment: 'right',
-                margin: [56, 20, 56, 0],
-            }),
-            content: blocksToContent(parseTemplate(input.body)),
-            defaultStyle: { font: 'Roboto', fontSize: 10.5, color: INK },
-            styles: baseStyles,
-        }
-        return renderPdf(definition)
+    renderDocument(input: DocumentInput): Promise<Buffer> {
+        return renderPdf(documentDefinition(input))
     }
 }

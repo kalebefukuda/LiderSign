@@ -113,7 +113,8 @@ Rotas, ciclo do envelope e formato dos webhooks: [docs/spec.md](docs/spec.md). D
 ### O que vai no PDF assinado
 
 - O documento original, com um rodapé de verificação em todas as páginas.
-- **Página de evidências:** signatário (CPF mascarado), telefone confirmado por código, assinatura, IP, dispositivo, geolocalização (se autorizada), aceite, SHA-256 do original, carimbo do tempo, trilha de auditoria e QR de verificação.
+- **Bloco de assinatura no fim do contrato:** já vem no PDF que o cliente lê (linha, nome, papel e CPF mascarado). Na selagem, a assinatura (nome em letra cursiva ou o desenho) entra ali, com data, hora e código.
+- **Página de evidências:** signatário (CPF mascarado), como foi identificado (CPF digitado, link pessoal no WhatsApp e, no nível com selfie, código e selfie), assinatura, IP, dispositivo, aceite, SHA-256 do original, carimbo do tempo, trilha de auditoria e QR de verificação.
 - **Selo PAdES** (`ETSI.CAdES.detached`) com o certificado da plataforma: qualquer alteração no arquivo invalida o selo.
 - **Carimbo do tempo RFC 3161** sobre o hash do original, baixável como `.tsr` e verificável com `openssl ts -verify`.
 
@@ -121,8 +122,8 @@ Dois níveis de garantia, escolhidos no modelo (nunca a cada envio):
 
 | Nível | Autenticação | Uso |
 | --- | --- | --- |
-| Padrão | Código no WhatsApp + IP, dispositivo e geolocalização consentida | Contratos de honorários e propostas |
-| Reforçado | Padrão + selfie | Procurações e declarações em litígio de massa |
+| Padrão | Link pessoal no WhatsApp + CPF digitado por quem assina + IP e dispositivo | Contratos de honorários e propostas |
+| Com selfie | Padrão + código no WhatsApp + selfie | Procurações e declarações em litígio de massa |
 
 > Pesquisa usada para orientar o produto, não é parecer jurídico. Validar com especialista antes de uso com clientes.
 

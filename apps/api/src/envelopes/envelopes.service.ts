@@ -1,6 +1,7 @@
 import { ConflictException, Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common'
 import { Prisma, type Envelope, type Tenant } from '@prisma/client'
 import {
+    maskCpf,
     ENVELOPE_STATUSES,
     fillTemplate,
     missingVariables,
@@ -24,7 +25,7 @@ import { ExpirationService } from './expiration.service'
 import { MessagingService } from '../messaging/messaging.service'
 import { signingLinkText } from '../messaging/texts'
 import { PrismaService } from '../prisma/prisma.service'
-import { PdfRenderService } from '../sealing/pdf-render.service'
+import { PdfRenderService, roleForKind } from '../sealing/pdf-render.service'
 import { StorageService } from '../storage/storage.service'
 import { TemplatesService } from '../templates/templates.service'
 import { WebhooksService } from '../webhooks/webhooks.service'
@@ -82,6 +83,7 @@ export class EnvelopesService {
             title: template.name,
             officeName: tenant.name,
             body: renderedBody,
+            signer: { name: input.signer.name, cpfMasked: maskCpf(input.signer.cpf), role: roleForKind(template.kind) },
         })
         const originalSha256 = sha256Hex(original)
         const id = randomUUID()

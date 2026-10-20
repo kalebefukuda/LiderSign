@@ -18,7 +18,14 @@ import { StorageService } from '../storage/storage.service'
 import { WebhooksService } from '../webhooks/webhooks.service'
 import { CertificateService } from './certificate.service'
 import { buildEvidenceDefinition, summarizeUserAgent } from './evidence-page'
-import { renderPdf } from './pdf-render.service'
+import {
+    locateSignatureArea,
+    renderPdf,
+    roleForKind,
+    SIGNATURE_AREA,
+    SIGNATURE_BLOCK_KEYWORD,
+    type SignatureAnchor,
+} from './pdf-render.service'
 import { TimestampService } from './timestamp.service'
 
 /** ~3,5 min de tentativas. Se ainda falhar, a selagem é retomada no próximo boot. */
@@ -38,6 +45,34 @@ type Evidence = {
 /** Helvetica padrão só cobre WinAnsi: remove o que não couber para o carimbo nunca quebrar. */
 function winAnsi(text: string): string {
     return text.replace(/[^\x20-\x7E\xA0-\xFF]/g, '')
+}
+
+type SignatureVisual = { type: 'drawn'; imageDataUrl: string } | { type: 'typed'; typedName: string }
+
+/** Desenha a assinatura na área reservada do bloco, com a data e o código logo acima. */
+async function drawSignature(doc: PDFDocument, anchor: SignatureAnchor, signature: SignatureVisual, note: string) {
+    const page = doc.getPage(anchor.pageNumber - 1)
+    const x = anchor.left
+    const bottom = page.getHeight() - anchor.top - SIGNATURE_AREA.height
+    if (signature.type === 'drawn') {
+        const png = await doc.embedPng(Buffer.from(signature.imageDataUrl.split(',')[1] ?? '', 'base64'))
+        const scale = Math.min((SIGNATURE_AREA.width - 8) / png.width, (SIGNATURE_AREA.height - 14) / png.height)
+        page.drawImage(png, { x: x + 4, y: bottom + 2, width: png.width * scale, height: png.height * scale })
+    } else {
+        const font = await doc.embedFont(StandardFonts.TimesRomanItalic)
+        const text = winAnsi(signature.typedName)
+        let size = 24
+        while (size > 11 && font.widthOfTextAtSize(text, size) > SIGNATURE_AREA.width - 8) size -= 1
+        page.drawText(text, { x: x + 4, y: bottom + 10, size, font, color: rgb(0.04, 0.12, 0.3) })
+    }
+    const small = await doc.embedFont(StandardFonts.Helvetica)
+    page.drawText(winAnsi(note), {
+        x: x + 4,
+        y: bottom + SIGNATURE_AREA.height - 7,
+        size: 6.5,
+        font: small,
+        color: rgb(0.42, 0.45, 0.5),
+    })
 }
 
 function imageMime(data: Buffer): 'image/png' | 'image/jpeg' | 'image/webp' | null {
@@ -145,7 +180,11 @@ export class SealService implements OnApplicationBootstrap {
 
         const envelope = await this.prisma.envelope.findUniqueOrThrow({
             where: { id: envelopeId },
-            include: { tenant: true, events: { orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] } },
+            include: {
+                tenant: true,
+                template: { select: { kind: true } },
+                events: { orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] },
+            },
         })
         const original = await this.storage.get(envelope.originalPath)
         const verifyUrl = verificationUrlFor(envelope.verificationCode)
@@ -190,6 +229,7 @@ export class SealService implements OnApplicationBootstrap {
                     name: envelope.signerName,
                     cpfMasked: maskCpf(envelope.signerCpf),
                     phoneMasked: maskPhone(envelope.signerPhone),
+                    phoneVerified: Boolean(evidence.phoneVerifiedAt),
                 },
                 signature,
                 selfieDataUrl,
@@ -221,6 +261,30 @@ export class SealService implements OnApplicationBootstrap {
 
         // 3. Junta original + evidências e carimba o rodapé em todas as páginas
         const doc = await PDFDocument.load(original)
+
+        // A assinatura no bloco do fim do documento (originais anteriores ao bloco não têm a marca e ficam como estão)
+        if ((doc.getKeywords() ?? '').includes(SIGNATURE_BLOCK_KEYWORD)) {
+            const anchor = await locateSignatureArea({
+                title: envelope.title,
+                officeName: doc.getAuthor() ?? envelope.tenant.name,
+                body: envelope.renderedBody,
+                signer: {
+                    name: envelope.signerName,
+                    cpfMasked: maskCpf(envelope.signerCpf),
+                    role: roleForKind(envelope.template.kind),
+                },
+            })
+            if (anchor) {
+                await drawSignature(
+                    doc,
+                    anchor,
+                    signature,
+                    `Assinado eletronicamente em ${formatDateTimeBr(envelope.signedAt ?? new Date())} · código ${envelope.verificationCode}`,
+                )
+            } else {
+                this.logger.warn(`Área de assinatura não encontrada em ${envelope.id}`)
+            }
+        }
         const evidenceDoc = await PDFDocument.load(evidencePdf)
         const pages = await doc.copyPages(evidenceDoc, evidenceDoc.getPageIndices())
         pages.forEach((page) => doc.addPage(page))

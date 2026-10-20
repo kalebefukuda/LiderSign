@@ -8,7 +8,7 @@ export type EvidenceInput = {
     verificationCode: string
     verificationUrl: string
     qrDataUrl: string
-    signer: { name: string; cpfMasked: string; phoneMasked: string }
+    signer: { name: string; cpfMasked: string; phoneMasked: string; phoneVerified: boolean }
     signature: { type: 'drawn'; imageDataUrl: string } | { type: 'typed'; typedName: string }
     selfieDataUrl: string | null
     selfieNote: string | null
@@ -118,7 +118,9 @@ export function buildEvidenceDefinition(input: EvidenceInput): TDocumentDefiniti
                 { text: input.signer.name, fontSize: 12, bold: true, color: '#111827' },
                 { text: `CPF ${input.signer.cpfMasked}`, fontSize: 9, color: INK, margin: [0, 4, 0, 0] },
                 {
-                    text: `Celular ${input.signer.phoneMasked} · confirmado por código no WhatsApp`,
+                    text: input.signer.phoneVerified
+                        ? `Celular ${input.signer.phoneMasked} · confirmado por código no WhatsApp`
+                        : `Celular ${input.signer.phoneMasked} · recebeu o link pessoal no WhatsApp`,
                     fontSize: 9,
                     color: INK,
                     margin: [0, 2, 0, 0],
