@@ -31,10 +31,13 @@ docker compose up --build
 Abra **http://localhost:3000**. A demonstração começa pela **LíderHub (simulação)**, porque é de lá que o escritório usa o LíderSign no dia a dia:
 
 1. **Integrações:** ligue o switch **Ativar LíderSign**. É o único passo do escritório: sem conta e sem token. Do lado, a ZapSign mostra o caminho de hoje (conta, plano com API e token).
-2. **Conversas:** a conversa com a lead já está pronta. Coloque o **seu** celular em "WhatsApp da Maria" e clique em **Enviar contrato**. O LíderSign gera o PDF e o link sai na conversa.
+2. **Atendimento:** a conversa com a lead já está pronta. No painel do contato, coloque o **seu** celular em "WhatsApp da Maria" e clique em **Enviar para assinatura**. O LíderSign gera o PDF e o link sai na conversa.
 3. **Assinar no celular:** toque em **Abrir no meu WhatsApp** (ou aponte a câmera para o QR), abra o link, digite o CPF da lead (`529.982.247-25`), confira o contrato e toque em **Assinar**.
 4. **O status volta para a conversa:** "Maria abriu", "Maria assinou" e o PDF assinado, sem sair da LíderHub.
-5. **Painel do LíderSign:** em **Abrir o LíderSign**, o bastidor do escritório: documentos, PDFs, modelos de contrato e a verificação pública de autenticidade.
+5. **Contratos, sem sair da LíderHub:** a aba nova lista todos os contratos com filtro por status, busca, PDF assinado e atalho para a conversa. Em **Modelos**, as telas de modelos do LíderSign aparecem embutidas: o escritório sobe o contrato dele e a IA marca os campos. Hoje, com a ZapSign, o escritório precisa sair da LíderHub para isso.
+6. **Painel do LíderSign:** **Abrir o LíderSign** leva ao painel próprio, para outras plataformas ou para quem usar o LíderSign sozinho.
+
+Para a LíderHub de verdade, são dois caminhos: embutir as telas do LíderSign (prontas, zero trabalho para ela) ou fazer as telas no visual dela usando a mesma API, que já devolve contratos, status, PDFs e modelos.
 
 ### Quem faz o quê
 
