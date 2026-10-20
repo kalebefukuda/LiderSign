@@ -4,6 +4,8 @@ O link que vai no WhatsApp usa o `WEB_PUBLIC_URL`. Com `http://localhost:3000`, 
 
 O Nest serve a API e o site na mesma porta, então basta um túnel, para a porta 3000.
 
+> **Atenção:** com o túnel aberto, qualquer pessoa com a URL acessa a demo (inclusive o celular simulado e o painel sem login). Use só durante a gravação e feche o túnel (Ctrl+C) depois.
+
 ## 1. Suba o túnel (sem conta)
 
 ```bash

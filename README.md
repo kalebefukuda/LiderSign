@@ -72,7 +72,7 @@ Na integração real, quem manda a mensagem é a própria LíderHub, pelo númer
 
 ## O Assistente da LíderHub usando o LíderSign (MCP)
 
-O modal da ZapSign promete que "em breve" o agente vai listar modelos, ver campos, criar documento e ver status. O LíderSign já entrega essas 4 ferramentas num servidor MCP feito com Mastra:
+O modal da ZapSign promete que "em breve" o agente vai listar modelos, ver campos, criar documento e ver status. O LíderSign já entrega essas 4 ferramentas num servidor MCP feito com Mastra. Com o app no ar, compile o agente na sua máquina (`pnpm install && pnpm --filter @lidersign/agent build`) e ligue no Claude Code:
 
 ```bash
 claude mcp add lidersign \
@@ -116,16 +116,17 @@ Dois níveis de garantia, escolhidos no modelo (nunca a cada envio):
 ## Segurança e LGPD
 
 - **A01/A07:2025:** a chave de parceiro fica só no servidor (comparação em tempo constante). O link de assinatura é um token aleatório de 32 bytes, e o banco guarda só o hash. O código de 6 dígitos vale 10 minutos, permite 5 tentativas e também é guardado como hash.
+- **A07:2025:** o código e o token do link vão só para o WhatsApp do signatário. O escritório vê as mensagens com esses valores ocultos, e no banco eles nem chegam. Limite atômico de tentativas e no máximo 5 códigos por documento.
 - **A01:2025 (SSRF):** webhooks só para hosts permitidos (`WEBHOOK_ALLOWED_HOSTS`), assinados com HMAC-SHA256.
 - **A04:2025:** segredos só em variáveis de ambiente. Em produção, o certificado e-CNPJ fica num cofre.
 - **A05:2025:** toda entrada é validada com zod, e os uploads são conferidos pelos bytes iniciais, não pela extensão.
-- **A08/A09:2025:** o documento fica imutável depois do envio. A trilha de auditoria é append-only e cada evento carrega o hash do anterior.
+- **A08/A09:2025:** o documento fica imutável depois do envio. A trilha de auditoria é append-only e cada evento carrega o hash do anterior. A verificação pública recalcula a cadeia e mostra se ela confere.
 - **Também:** limite de requisições nas rotas públicas e cabeçalhos de segurança (helmet).
 - **LGPD:**
     - CPF e telefone aparecem mascarados nas telas, nos logs e na verificação pública (art. 6º, III).
     - A selfie, que é dado biométrico, só é pedida no nível Reforçado, com aviso e consentimento (art. 11).
     - O escritório é o controlador e a LíderHub, a operadora.
-- **Só para a demo:** o módulo `/demo-host` simula o back da LíderHub e não tem autenticação. Ele só existe com `DEMO_MODE=true` e nunca deve ir para produção.
+- **Só para a demo:** o módulo `/demo-host` simula o back da LíderHub e não tem autenticação. Ele só existe com `DEMO_MODE=true`, deixa passar apenas as rotas que a tela usa (nunca as de parceiro) e nunca deve ir para produção. Com túnel aberto, a demo fica pública: feche o túnel depois de gravar.
 
 ## Próximos passos
 

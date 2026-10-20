@@ -74,7 +74,7 @@ Erros: 404 token inválido · 410 expirado ou cancelado · 409 estado errado · 
 ### Verificação pública
 | Método | Rota | Retorno |
 | --- | --- | --- |
-| GET | `/public/verify/:code` | `PublicVerificationDto` |
+| GET | `/public/verify/:code` | `PublicVerificationDto` (inclui `trailIntact`: a cadeia de hashes recalculada confere) |
 | POST | `/public/verify/file` (multipart `file`) | `FileCheckResponse` (compara o SHA-256) |
 
 ### Demo (só com `DEMO_MODE=true`; Bearer + X-Tenant-Id)
@@ -86,8 +86,9 @@ Erros: 404 token inválido · 410 expirado ou cancelado · 409 estado errado · 
 ### Back da LíderHub simulado (só com `DEMO_MODE=true`, sem autenticação: nunca em produção)
 | Método | Rota | Faz |
 | --- | --- | --- |
-| ALL | `/demo-host/v1/*` | Repassa para `/v1/*` com a chave de parceiro e o escritório de demo |
+| ALL | `/demo-host/v1/*` | Repassa para `/v1/*` com a chave de parceiro e o escritório de demo. Só `/templates`, `/envelopes`, `/events` e `/demo`; rotas de parceiro dão 404 |
 | POST | `/demo-host/activate` | "Ativar LíderSign" em um clique |
+| POST | `/demo-host/deactivate` | Desliga o switch (desativa o escritório de demo) |
 | GET | `/demo-host/status` | `{ active, tenant, templatesCount, whatsappProvider }` |
 | POST | `/demo-host/webhook` | Recebe os webhooks e confere o HMAC, como a LíderHub faria |
 | GET | `/demo-host/webhooks` | Últimos 20 webhooks recebidos |
@@ -98,12 +99,12 @@ Erros: 404 token inválido · 410 expirado ou cancelado · 409 estado errado · 
 
 ```
 SENT ──▶ VIEWED ──▶ SIGNED ──▶ COMPLETED
-  └────────┴──▶ CANCELED / EXPIRED (7 dias)
+  └────────┴──▶ CANCELED / EXPIRED (7 dias; varredura a cada minuto, webhook envelope.expired)
 ```
 
 1. **Criar** (`POST /envelopes`): valida variáveis, preenche o modelo, gera o PDF original, calcula o SHA-256, cria token e código de verificação, envia o link pelo WhatsApp, webhook `envelope.sent`.
 2. **Abrir** (`GET /sign/:token`): VIEWED, webhook `envelope.viewed`.
-3. **Código** (`POST /otp` e `/otp/verify`): 6 dígitos, validade de 10 min, 5 tentativas, reenvio a cada 30 s. Guardado só o hash.
+3. **Código** (`POST /otp` e `/otp/verify`): 6 dígitos, validade de 10 min, 5 tentativas por código (reserva atômica), reenvio a cada 30 s, no máximo 5 códigos por documento. Guardado só o hash. O código e o token do link vão apenas para o WhatsApp do signatário: nas mensagens que o escritório vê (painel, SSE, banco) eles aparecem ocultos.
 4. **Selfie** (só nível Reforçado).
 5. **Assinar** (`POST /complete`): exige código verificado nos últimos 15 min; grava assinatura, aceite, IP, dispositivo e geolocalização consentida → SIGNED, webhook `envelope.signed`.
 6. **Selar** (assíncrono): carimbo do tempo RFC 3161 sobre o SHA-256 do original · rodapé em todas as páginas · página de evidências com QR · selo PAdES (`ETSI.CAdES.detached`) com o certificado da plataforma → COMPLETED, cópia ao signatário pelo WhatsApp, webhook `envelope.completed`.
