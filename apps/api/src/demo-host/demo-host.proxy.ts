@@ -9,6 +9,7 @@ import { Logger } from '@nestjs/common'
 import type { NextFunction, Request, Response } from 'express'
 import { Readable } from 'node:stream'
 import { env } from '../config/env'
+import { logCall } from './call-log'
 
 const FORWARD_REQUEST_HEADERS = ['content-type', 'accept', 'user-agent', 'accept-language']
 const FORWARD_RESPONSE_HEADERS = ['content-type', 'content-disposition', 'cache-control', 'retry-after']
@@ -48,6 +49,7 @@ export function createDemoHostProxy(port: number) {
         }
 
         const hasBody = !['GET', 'HEAD'].includes(req.method)
+        const startedAt = Date.now()
         let upstream: globalThis.Response
         try {
             upstream = await fetch(target, {
@@ -70,6 +72,18 @@ export function createDemoHostProxy(port: number) {
                 })
             }
             return
+        }
+
+        // Registro da integração: só ações (consultas de leitura e o reset da demo ficam de fora)
+        if (hasBody && !path.startsWith('/demo')) {
+            logCall({
+                direction: 'liderhub-to-lidersign',
+                method: req.method,
+                path: `/v1${path}`,
+                status: upstream.status,
+                ms: Date.now() - startedAt,
+                detail: null,
+            })
         }
 
         res.status(upstream.status)

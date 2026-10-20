@@ -2,9 +2,10 @@
  * DEMONSTRAÇÃO APENAS: rotas do "back-end da LíderHub" simulado (ativar, status e receber webhooks).
  * Só sobe com DEMO_MODE=true. Ver demo-host.proxy.ts.
  */
-import { BadGatewayException, Controller, Get, Headers, HttpCode, Post, Req, Res } from '@nestjs/common'
+import { BadGatewayException, Body, Controller, Get, Headers, HttpCode, Post, Req, Res } from '@nestjs/common'
 import { SkipThrottle } from '@nestjs/throttler'
 import type { Request, Response } from 'express'
+import { listCalls } from './call-log'
 import { DemoHostService } from './demo-host.service'
 
 @Controller('demo-host')
@@ -52,5 +53,17 @@ export class DemoHostController {
     @Get('webhooks')
     webhooks() {
         return this.host.list()
+    }
+
+    /** Registro da integração: ações da LíderHub no LíderSign e webhooks de volta. */
+    @Get('calls')
+    calls() {
+        return listCalls()
+    }
+
+    @Post('whatsapp-test')
+    @HttpCode(200)
+    whatsappTest(@Body() body: { phone?: unknown }) {
+        return this.host.whatsappTest(typeof body?.phone === 'string' ? body.phone : '')
     }
 }

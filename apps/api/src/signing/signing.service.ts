@@ -25,6 +25,7 @@ import { otpCode, safeEqual, sha256Hex } from '../common/crypto'
 import { toEnvelopeDto } from '../common/mappers'
 import type { RequestContext } from '../common/request-context'
 import { EventsService } from '../events/events.service'
+import { env } from '../config/env'
 import { ExpirationService } from '../envelopes/expiration.service'
 import { MessagingService } from '../messaging/messaging.service'
 import { otpText } from '../messaging/texts'
@@ -200,6 +201,9 @@ export class SigningService {
             sentTo: maskPhone(envelope.signerPhone),
             expiresInSeconds: OTP_TTL_MS / 1000,
             resendInSeconds: OTP_RESEND_MS / 1000,
+            // Só na demonstração sem WhatsApp: o código vai para quem está assinando, na própria tela.
+            // Com o WhatsApp ligado (ou fora da demo), ele chega apenas pelo WhatsApp.
+            ...(env().DEMO_MODE && this.messaging.providerName === 'simulator' ? { demoCode: code } : {}),
         }
     }
 

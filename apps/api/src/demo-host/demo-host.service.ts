@@ -3,10 +3,14 @@
  * e recebe os webhooks do LíderSign validando o HMAC, exatamente como um parceiro externo faria.
  * Só sobe com DEMO_MODE=true. Nunca usar em produção.
  */
-import { Injectable, Logger } from '@nestjs/common'
-import type { ConnectTenantResponse, TemplateDto, TenantDto, WebhookPayload } from '@lidersign/shared'
+import { BadRequestException, ConflictException, Injectable, Logger } from '@nestjs/common'
+import type { ConnectTenantResponse, MessageStatus, TemplateDto, TenantDto, WebhookPayload } from '@lidersign/shared'
+import { isValidBrPhone, normalizeBrPhone } from '@lidersign/shared'
 import { createHmac, timingSafeEqual } from 'node:crypto'
 import { env } from '../config/env'
+import { MessagingService } from '../messaging/messaging.service'
+import { PrismaService } from '../prisma/prisma.service'
+import { clearCalls, logCall } from './call-log'
 import { partnerHeaders } from './demo-host.proxy'
 
 const TOLERANCE_SECONDS = 5 * 60
@@ -25,6 +29,10 @@ export type DemoHostStatus = {
     tenant: TenantDto | null
     templatesCount: number
     whatsappProvider: 'simulator' | 'cloud_api'
+    /** Cloud API com Phone Number ID e token preenchidos */
+    whatsappConfigured: boolean
+    /** Endereço que vai nos links (WEB_PUBLIC_URL) */
+    webPublicUrl: string
 }
 
 export const DEMO_OFFICE_NAME = 'Escritório Demo · Advocacia Previdenciária'
@@ -34,6 +42,11 @@ export class DemoHostService {
     private readonly logger = new Logger('DemoHost')
     private secret: string | null = null
     private received: ReceivedWebhook[] = []
+
+    constructor(
+        private readonly prisma: PrismaService,
+        private readonly messaging: MessagingService,
+    ) {}
 
     private get base() {
         return `http://127.0.0.1:${env().PORT}`
@@ -49,6 +62,7 @@ export class DemoHostService {
     }
 
     async activate(): Promise<Omit<ConnectTenantResponse, 'webhookSecret'>> {
+        const startedAt = Date.now()
         const res = await this.call('/v1/partner/tenants', {
             method: 'POST',
             body: JSON.stringify({
@@ -61,30 +75,70 @@ export class DemoHostService {
         const json = (await res.json()) as ConnectTenantResponse
         if (!res.ok) throw new Error(`Falha ao ativar: HTTP ${res.status}`)
         if (json.created) {
-            // Escritório novo: segredo novo e histórico de webhooks zerado
+            // Escritório novo: segredo novo, histórico de webhooks e de chamadas zerado
             this.secret = json.webhookSecret ?? null
             this.received = []
+            clearCalls()
         }
+        logCall({
+            direction: 'liderhub-to-lidersign',
+            method: 'POST',
+            path: '/v1/partner/tenants',
+            status: res.status,
+            ms: Date.now() - startedAt,
+            detail: json.created ? 'Conta do escritório criada, com os modelos de exemplo' : 'Conta do escritório reativada',
+        })
         const { webhookSecret: _secret, ...rest } = json
         return rest
     }
 
     async deactivate(): Promise<void> {
-        const res = await this.call(`/v1/partner/tenants/${encodeURIComponent(env().DEMO_TENANT_ID)}`, {
+        const startedAt = Date.now()
+        const path = `/v1/partner/tenants/${encodeURIComponent(env().DEMO_TENANT_ID)}`
+        const res = await this.call(path, { method: 'DELETE' })
+        logCall({
+            direction: 'liderhub-to-lidersign',
             method: 'DELETE',
+            path,
+            status: res.status,
+            ms: Date.now() - startedAt,
+            detail: 'Conta do escritório desativada',
         })
         if (!res.ok && res.status !== 404) throw new Error(`Falha ao desativar: HTTP ${res.status}`)
     }
 
     async status(): Promise<DemoHostStatus> {
-        const whatsappProvider = env().WHATSAPP_PROVIDER
-        const tenantRes = await this.call(`/v1/partner/tenants/${encodeURIComponent(env().DEMO_TENANT_ID)}`)
-        if (!tenantRes.ok) return { active: false, tenant: null, templatesCount: 0, whatsappProvider }
+        const config = env()
+        const base = {
+            whatsappProvider: config.WHATSAPP_PROVIDER,
+            whatsappConfigured:
+                config.WHATSAPP_PROVIDER === 'cloud_api' &&
+                Boolean(config.WHATSAPP_PHONE_NUMBER_ID) &&
+                Boolean(config.WHATSAPP_ACCESS_TOKEN),
+            webPublicUrl: config.WEB_PUBLIC_URL,
+        }
+        const tenantRes = await this.call(`/v1/partner/tenants/${encodeURIComponent(config.DEMO_TENANT_ID)}`)
+        if (!tenantRes.ok) return { active: false, tenant: null, templatesCount: 0, ...base }
         const tenant = (await tenantRes.json()) as TenantDto
-        if (!tenant.active) return { active: false, tenant, templatesCount: 0, whatsappProvider }
+        if (!tenant.active) return { active: false, tenant, templatesCount: 0, ...base }
         const templatesRes = await this.call('/v1/templates')
         const templates = templatesRes.ok ? ((await templatesRes.json()) as TemplateDto[]) : []
-        return { active: true, tenant, templatesCount: templates.length, whatsappProvider }
+        return { active: true, tenant, templatesCount: templates.length, ...base }
+    }
+
+    /** Configurações › WhatsApp: manda uma mensagem de teste para conferir a conexão com a Meta. */
+    async whatsappTest(phone: string): Promise<{ status: MessageStatus; error: string | null; provider: string }> {
+        if (!isValidBrPhone(phone)) throw new BadRequestException('Informe o celular com DDD.')
+        const tenant = await this.prisma.tenant.findUnique({ where: { externalId: env().DEMO_TENANT_ID } })
+        if (!tenant?.active) throw new ConflictException('Ative o escritório de demonstração antes do teste.')
+        const message = await this.messaging.send({
+            tenantId: tenant.id,
+            envelopeId: null,
+            to: normalizeBrPhone(phone),
+            kind: 'TEST',
+            body: 'Teste do LíderSign: a conexão com o WhatsApp está funcionando.',
+        })
+        return { status: message.status as MessageStatus, error: message.error, provider: message.provider }
     }
 
     private async fetchSecret(): Promise<string | null> {
@@ -146,6 +200,14 @@ export class DemoHostService {
             reason,
         }
         this.received = [item, ...this.received].slice(0, MAX_RECEIVED)
+        logCall({
+            direction: 'lidersign-to-liderhub',
+            method: 'POST',
+            path: '/demo-host/webhook',
+            status: 200,
+            ms: 0,
+            detail: `${item.event ?? 'evento'} · ${verified ? 'HMAC válido' : `recusado (${reason})`}`,
+        })
         if (!verified) this.logger.warn(`Webhook recusado: ${reason}`)
         return item
     }

@@ -46,7 +46,7 @@ export const VARIABLE_TYPES = [
 ] as const
 export type VariableType = (typeof VARIABLE_TYPES)[number]
 
-export const MESSAGE_KINDS = ['SIGNING_LINK', 'OTP', 'SIGNED_COPY', 'REMINDER'] as const
+export const MESSAGE_KINDS = ['SIGNING_LINK', 'OTP', 'SIGNED_COPY', 'REMINDER', 'TEST'] as const
 export type MessageKind = (typeof MESSAGE_KINDS)[number]
 
 export const MESSAGE_STATUSES = ['SIMULATED', 'SENT', 'FAILED'] as const
