@@ -9,7 +9,7 @@ Assinador eletrônico nativo da LíderHub. Três ideias guiam tudo:
 ## Arquitetura
 
 ```
-apps/web          React + Vite: /demo, /painel, /s/:token (assinatura), /v/:code (verificação)
+apps/web          React + Vite: /painel (envios, enviar, modelos, integração, configurações), /s/:token (assinatura), /v/:code (verificação)
 apps/api          NestJS: parceiro, modelos, envelopes, assinatura, selagem, webhooks, SSE
                   + serve o build do React e o módulo /demo-host (só na demo)
 packages/shared   Contrato: schemas zod, DTOs, utilitários (CPF, telefone, modelos)
@@ -63,7 +63,7 @@ O escritório nunca vê token. A LíderHub guarda uma chave de parceiro e identi
 | --- | --- | --- |
 | GET | `/sign/:token` | `SigningSessionDto` (1º acesso marca VIEWED) |
 | GET | `/sign/:token/document` | PDF original |
-| POST | `/sign/:token/otp` | `{ sentTo, expiresInSeconds, resendInSeconds }` |
+| POST | `/sign/:token/otp` | `{ sentTo, expiresInSeconds, resendInSeconds, demoCode? }` (`demoCode` só com `DEMO_MODE=true` e WhatsApp em modo de demonstração: o código aparece na tela de quem assina) |
 | POST | `/sign/:token/otp/verify` | `{ verified: true }` |
 | POST | `/sign/:token/selfie` (multipart `selfie`) | `{ captured: true }` |
 | POST | `/sign/:token/complete` | `{ status, verificationCode }` |
@@ -80,7 +80,7 @@ Erros: 404 token inválido · 410 expirado ou cancelado · 409 estado errado · 
 ### Demo (só com `DEMO_MODE=true`; Bearer + X-Tenant-Id)
 | Método | Rota | Retorno |
 | --- | --- | --- |
-| GET | `/demo/messages` | `MessageDto[]` (caixa do simulador de WhatsApp) |
+| GET | `/demo/messages` | `MessageDto[]` (mensagens do modo demonstração, com código e link ocultos) |
 | POST | `/demo/reset` | 204, apaga o escritório de demo |
 
 ### Back da LíderHub simulado (só com `DEMO_MODE=true`, sem autenticação: nunca em produção)
@@ -89,9 +89,11 @@ Erros: 404 token inválido · 410 expirado ou cancelado · 409 estado errado · 
 | ALL | `/demo-host/v1/*` | Repassa para `/v1/*` com a chave de parceiro e o escritório de demo. Só `/templates`, `/envelopes`, `/events` e `/demo`; rotas de parceiro dão 404 |
 | POST | `/demo-host/activate` | "Ativar LíderSign" em um clique |
 | POST | `/demo-host/deactivate` | Desliga o switch (desativa o escritório de demo) |
-| GET | `/demo-host/status` | `{ active, tenant, templatesCount, whatsappProvider }` |
+| GET | `/demo-host/status` | `{ active, tenant, templatesCount, whatsappProvider, whatsappConfigured, webPublicUrl }` |
 | POST | `/demo-host/webhook` | Recebe os webhooks e confere o HMAC, como a LíderHub faria |
 | GET | `/demo-host/webhooks` | Últimos 20 webhooks recebidos |
+| GET | `/demo-host/calls` | Registro da integração (em memória, até 40): cada chamada da LíderHub ao LíderSign e cada webhook de volta |
+| POST | `/demo-host/whatsapp-test` | `{ phone }` → manda uma mensagem de teste pelo provedor configurado e devolve `{ status, error, provider }` |
 
 `GET /health` → `{ ok, db, whatsappProvider, tsa, ai }`
 

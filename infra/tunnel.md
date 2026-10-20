@@ -1,12 +1,28 @@
 # Abrir o link de assinatura no celular de verdade
 
-O link que vai no WhatsApp usa o `WEB_PUBLIC_URL`. Com `http://localhost:3000`, ele só abre no seu computador. Para o celular abrir, exponha o app por um túnel HTTPS (o HTTPS também libera câmera e localização no navegador do celular).
+O link do QR code (e o que vai no WhatsApp) usa o `WEB_PUBLIC_URL`. Com `http://localhost:3000`, ele só abre no seu computador. Há dois jeitos de o celular abrir. A tela **Configurações** do painel mostra os dois, com os comandos prontos para copiar.
 
-O Nest serve a API e o site na mesma porta, então basta um túnel, para a porta 3000.
+O Nest serve a API e o site na mesma porta, então basta apontar para ela (3000, ou a do `APP_PORT`).
 
-> **Atenção:** com o túnel aberto, qualquer pessoa com a URL acessa a demo (inclusive o celular simulado e o painel sem login). Use só durante a gravação e feche o túnel (Ctrl+C) depois.
+## Opção A: mesmo Wi-Fi (mais simples)
 
-## 1. Suba o túnel (sem conta)
+```bash
+ipconfig getifaddr en0      # macOS; no Windows: ipconfig (IPv4)
+```
+
+No `.env` da raiz, com o IP que apareceu:
+
+```bash
+WEB_PUBLIC_URL=http://192.168.0.10:3000
+```
+
+Depois `docker compose up -d` e envie um documento novo: o QR code já sai com esse endereço. Sem HTTPS, o navegador do celular não libera câmera e localização (a selfie do nível Reforçado precisa da opção B).
+
+## Opção B: túnel HTTPS (qualquer rede)
+
+> **Atenção:** com o túnel aberto, qualquer pessoa com a URL acessa a demo (inclusive o painel, que não tem login). Use só durante a gravação e feche o túnel (Ctrl+C) depois.
+
+### 1. Suba o túnel (sem conta)
 
 ```bash
 # macOS: brew install cloudflared · Windows: winget install --id Cloudflare.cloudflared
@@ -15,7 +31,7 @@ cloudflared tunnel --url http://localhost:3000
 
 Ele mostra uma URL do tipo `https://algumas-palavras.trycloudflare.com`. Deixe o terminal aberto.
 
-## 2. Reinicie com a URL pública
+### 2. Reinicie com a URL pública
 
 ```bash
 WEB_PUBLIC_URL=https://algumas-palavras.trycloudflare.com docker compose up -d
@@ -25,9 +41,9 @@ No Windows (PowerShell): `$env:WEB_PUBLIC_URL="https://..."; docker compose up -
 
 Os envelopes criados depois disso já saem com o link público.
 
-## 3. WhatsApp oficial (número de teste da Meta)
+## WhatsApp oficial (opcional, número de teste da Meta)
 
-No `.env` da raiz:
+Sem isso, tudo funciona no modo demonstração: o código aparece na tela de assinatura. Se tiver acesso à Meta, no `.env` da raiz:
 
 ```bash
 WHATSAPP_PROVIDER=cloud_api
@@ -35,7 +51,7 @@ WHATSAPP_PHONE_NUMBER_ID=<Phone Number ID da tela "Configuração da API">
 WHATSAPP_ACCESS_TOKEN=<token temporário; nunca versione>
 ```
 
-Depois: `docker compose up -d` de novo.
+Depois: `docker compose up -d` de novo. Em **Configurações**, "Enviar mensagem de teste" confere a conexão.
 
 Antes de enviar, mande um "oi" do seu celular para o número de teste: isso abre a janela de 24 h e libera mensagens em texto livre, sem modelo aprovado.
 

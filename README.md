@@ -28,13 +28,15 @@ Precisa só do Docker.
 docker compose up --build
 ```
 
-Abra **http://localhost:3000/demo** e siga o roteiro (uns 2 minutos):
+Abra **http://localhost:3000** e siga o roteiro (uns 2 minutos):
 
-1. **Integrações:** abra o "Conectar" da ZapSign para ver o caminho de hoje. Depois ative o LíderSign no switch.
-2. **Atendimento:** a conversa com a lead já está qualificada. Clique em "Enviar para assinatura".
-3. **Celular simulado (à direita):** toque no link e assine. O código de confirmação chega no próprio celular simulado.
-4. **Envelopes:** acompanhe o status ao vivo e os webhooks que a LíderHub recebeu, com o HMAC conferido. Em "Trilha e arquivos", baixe o PDF selado.
-5. **Verificação:** abra o link de verificação e envie o PDF (confere). Mude um byte do arquivo e envie de novo (não confere).
+1. **Ativar:** o painel abre pedindo para ativar o LíderSign. Um clique cria o escritório de demonstração, já com dois modelos de contrato. Em **Integração LíderHub** dá para ver o mesmo switch que o escritório teria na LíderHub, a chamada que ele faz e o "Conectar" da ZapSign de hoje, para comparar.
+2. **Enviar para assinatura:** os dados de exemplo já vêm preenchidos. Clique em enviar.
+3. **Assinar pelo celular:** aponte a câmera para o QR code da tela do documento (ou clique em "Abrir neste computador"). Sem WhatsApp configurado, o código de confirmação aparece na própria tela de assinatura, numa faixa de "Modo demonstração".
+4. **Acompanhar:** o status muda ao vivo. Na tela do documento ficam a trilha de auditoria, as mensagens, os webhooks e o PDF selado. Em **Integração LíderHub**, o registro mostra cada chamada da LíderHub e cada webhook de volta, com o HMAC conferido.
+5. **Verificar:** abra a verificação pelo código do documento e envie o PDF (confere). Mude um byte do arquivo e envie de novo (não confere).
+
+Para o celular abrir o QR code, o link precisa de um endereço que ele alcance: o IP do computador no mesmo Wi-Fi ou um túnel HTTPS. A tela **Configurações** mostra os dois caminhos, e o passo a passo está em [infra/tunnel.md](infra/tunnel.md).
 
 Não precisa de conta de WhatsApp nem de chave de IA: tudo tem um modo local.
 
@@ -54,7 +56,7 @@ pnpm db:migrate
 pnpm dev            # Nest na porta 4000 e Vite na 3000
 ```
 
-Abra http://localhost:3000/demo. Em desenvolvimento, o Vite faz proxy de `/v1`, `/demo-host` e `/health` para o Nest.
+Abra http://localhost:3000. Em desenvolvimento, o Vite faz proxy de `/v1`, `/demo-host` e `/health` para o Nest.
 
 ### Testes
 
@@ -62,7 +64,7 @@ Abra http://localhost:3000/demo. Em desenvolvimento, o Vite faz proxy de `/v1`, 
 pnpm e2e            # com o app no ar; outra URL: E2E_BASE_URL=http://localhost:4000 pnpm e2e
 ```
 
-O teste ponta a ponta ativa o escritório, gera o contrato, assina pelo celular (viewport de 390 px), espera o PDF selado, confere o arquivo na verificação pública, confirma que uma cópia alterada é rejeitada e que a LíderHub recebeu os webhooks com HMAC válido. Roda no GitHub Actions a cada push.
+O teste ponta a ponta liga o LíderSign pela tela de integração, envia pelo painel, abre o link do QR code e assina pelo celular (viewport de 390 px) com o código do modo demonstração; pela API, gera o contrato, espera o PDF selado, confere o arquivo na verificação pública, confirma que uma cópia alterada é rejeitada e que a LíderHub recebeu os webhooks com HMAC válido. Roda no GitHub Actions a cada push.
 
 ## WhatsApp de verdade
 
@@ -87,7 +89,7 @@ Depois é só pedir: *"Gere o contrato de honorários da Maria Aparecida dos San
 ## Como funciona
 
 ```
-apps/web          React + Vite: demo, painel do escritório, assinatura e verificação
+apps/web          React + Vite: painel do escritório, assinatura e verificação
 apps/api          NestJS: API, selagem do PDF, webhooks e tempo real; serve o site
 packages/shared   Contrato entre as partes: schemas zod, tipos e utilitários
 packages/agent    Mastra: servidor MCP e IA que transforma contrato em modelo
@@ -126,7 +128,7 @@ Dois níveis de garantia, escolhidos no modelo (nunca a cada envio):
     - CPF e telefone aparecem mascarados nas telas, nos logs e na verificação pública (art. 6º, III).
     - A selfie, que é dado biométrico, só é pedida no nível Reforçado, com aviso e consentimento (art. 11).
     - O escritório é o controlador e a LíderHub, a operadora.
-- **Só para a demo:** o módulo `/demo-host` simula o back da LíderHub e não tem autenticação. Ele só existe com `DEMO_MODE=true`, deixa passar apenas as rotas que a tela usa (nunca as de parceiro) e nunca deve ir para produção. Com túnel aberto, a demo fica pública: feche o túnel depois de gravar.
+- **Só para a demo:** o módulo `/demo-host` simula o back da LíderHub e não tem autenticação. Ele só existe com `DEMO_MODE=true`, deixa passar apenas as rotas que a tela usa (nunca as de parceiro) e nunca deve ir para produção. Também só no modo demonstração, e só quando nenhum WhatsApp está configurado, o código de confirmação volta para a tela de quem assina (`demoCode`), porque não há outro canal para entregá-lo. Com túnel aberto, a demo fica pública: feche o túnel depois de gravar.
 
 ## Próximos passos
 
