@@ -8,6 +8,7 @@ import { AppModule } from './app.module'
 import { HttpExceptionFilter } from './common/http-exception.filter'
 import { loadEnv } from './config/env'
 import { startTunnelDiscovery } from './config/public-url'
+import { officeOnly } from './common/office-only'
 import { createDemoHostProxy } from './demo-host/demo-host.proxy'
 
 function parseTrustProxy(value: string | undefined): number | string {
@@ -50,6 +51,9 @@ async function bootstrap() {
             crossOriginEmbedderPolicy: false,
         }),
     )
+
+    // Painel e demo sem login: só no computador do escritório, nunca pelo endereço público
+    app.use(officeOnly)
 
     if (env.DEMO_MODE) {
         // Receptor de webhooks da "LíderHub": precisa do corpo cru para conferir o HMAC
