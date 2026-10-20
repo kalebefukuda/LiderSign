@@ -12,6 +12,7 @@ import { env } from '../config/env'
 
 const FORWARD_REQUEST_HEADERS = ['content-type', 'accept', 'user-agent', 'accept-language']
 const FORWARD_RESPONSE_HEADERS = ['content-type', 'content-disposition', 'cache-control', 'retry-after']
+const ALLOWED_PREFIXES = ['/templates', '/envelopes', '/events', '/demo']
 
 export function partnerHeaders(clientIp?: string | null): Record<string, string> {
     return {
@@ -29,6 +30,12 @@ export function createDemoHostProxy(port: number) {
     const logger = new Logger('DemoHost')
 
     return async (req: Request, res: Response, next: NextFunction) => {
+        // Só o que a tela do escritório usa. Rotas de parceiro (/partner/*) nunca passam por aqui.
+        const path = req.path
+        if (!ALLOWED_PREFIXES.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))) {
+            res.status(404).json({ statusCode: 404, error: 'Not Found', message: 'Rota não disponível na demo.' })
+            return
+        }
         const target = `http://127.0.0.1:${port}/v1${req.url}`
         const controller = new AbortController()
         // Cliente desconectou (ex.: fechou a aba do SSE): encerra a chamada interna também

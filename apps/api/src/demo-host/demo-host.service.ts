@@ -69,6 +69,13 @@ export class DemoHostService {
         return rest
     }
 
+    async deactivate(): Promise<void> {
+        const res = await this.call(`/v1/partner/tenants/${encodeURIComponent(env().DEMO_TENANT_ID)}`, {
+            method: 'DELETE',
+        })
+        if (!res.ok && res.status !== 404) throw new Error(`Falha ao desativar: HTTP ${res.status}`)
+    }
+
     async status(): Promise<DemoHostStatus> {
         const whatsappProvider = env().WHATSAPP_PROVIDER
         const tenantRes = await this.call(`/v1/partner/tenants/${encodeURIComponent(env().DEMO_TENANT_ID)}`)

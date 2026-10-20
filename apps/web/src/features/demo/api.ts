@@ -1,6 +1,6 @@
 import type { ConnectTenantResponse, MessageDto, TenantDto, WebhookPayload } from '@lidersign/shared'
 
-import { DEMO_HOST_BASE, enc, PARTNER_BASE } from '@/lib/endpoints'
+import { DEMO_HOST_BASE, PARTNER_BASE } from '@/lib/endpoints'
 import { fetchJson } from '@/lib/http'
 
 /** Situação do escritório de demonstração, vista pelo "back da LíderHub". */
@@ -26,8 +26,7 @@ export const demoApi = {
     messagesUrl: `${PARTNER_BASE}/demo/messages`,
     status: () => fetchJson<DemoStatus>(`${DEMO_HOST_BASE}/status`, { cache: 'no-store' }),
     activate: () => fetchJson<Omit<ConnectTenantResponse, 'webhookSecret'>>(`${DEMO_HOST_BASE}/activate`, { method: 'POST' }),
-    deactivate: (externalId: string) =>
-        fetchJson<void>(`${PARTNER_BASE}/partner/tenants/${enc(externalId)}`, { method: 'DELETE' }),
+    deactivate: () => fetchJson<void>(`${DEMO_HOST_BASE}/deactivate`, { method: 'POST' }),
     reset: () => fetchJson<void>(`${PARTNER_BASE}/demo/reset`, { method: 'POST' }),
     messages: () => fetchJson<MessageDto[]>(`${PARTNER_BASE}/demo/messages`, { cache: 'no-store' }),
 }

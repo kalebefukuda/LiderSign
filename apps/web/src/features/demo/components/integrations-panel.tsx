@@ -43,7 +43,7 @@ export function IntegrationsPanel({
                 const result = await demoApi.activate()
                 toast.success(result.created ? 'LíderSign ativo. Modelos de exemplo prontos.' : 'LíderSign ativo de novo.')
             } else if (status?.tenant) {
-                await demoApi.deactivate(status.tenant.externalId)
+                await demoApi.deactivate()
                 toast('LíderSign desativado neste escritório.')
             }
             await onChanged()

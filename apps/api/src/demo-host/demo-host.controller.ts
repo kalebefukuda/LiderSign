@@ -29,6 +29,17 @@ export class DemoHostController {
         }
     }
 
+    /** Desligar o switch: desativa só o escritório de demonstração. */
+    @Post('deactivate')
+    @HttpCode(204)
+    async deactivate() {
+        try {
+            await this.host.deactivate()
+        } catch {
+            throw new BadGatewayException('Não foi possível desativar o LíderSign agora. Tente de novo.')
+        }
+    }
+
     /** Receptor de webhooks da "LíderHub". O corpo chega cru para validar o HMAC. */
     @Post('webhook')
     @HttpCode(200)
