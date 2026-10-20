@@ -1,0 +1,27 @@
+{
+    "name": "lidersign",
+    "private": true,
+    "description": "Assinador eletrônico nativo da LíderHub: zero configuração, WhatsApp primeiro, feito para o juiz.",
+    "packageManager": "pnpm@10.28.0",
+    "engines": {
+        "node": ">=22"
+    },
+    "scripts": {
+        "dev": "turbo run dev --parallel",
+        "build": "turbo run build",
+        "typecheck": "turbo run typecheck",
+        "test": "turbo run test",
+        "db:migrate": "pnpm --filter @lidersign/api db:migrate",
+        "db:reset": "pnpm --filter @lidersign/api db:reset",
+        "mcp": "pnpm --filter @lidersign/agent mcp",
+        "e2e": "playwright test",
+        "format": "prettier --write ."
+    },
+    "devDependencies": {
+        "@lidersign/shared": "workspace:*",
+        "@playwright/test": "1.64.1",
+        "prettier": "3.6.2",
+        "turbo": "2.11.9",
+        "typescript": "5.9.3"
+    }
+}
