@@ -50,6 +50,8 @@ services:
             SEAL_CERT_PASSPHRASE: ${SEAL_CERT_PASSPHRASE:-demo-troque-esta-senha}
             # Carimbo do tempo RFC 3161. Defina TSA_URL= (vazio) para desligar.
             TSA_URL: ${TSA_URL-https://freetsa.org/tsr}
+            # Confia no X-Forwarded-For de 1 salto (o túnel do infra/tunnel.md). Sem túnel, o IP registrado é o do Docker.
+            TRUST_PROXY: ${TRUST_PROXY:-1}
             # Hosts que podem receber webhooks (proteção contra SSRF). A demo entrega para o próprio app.
             WEBHOOK_ALLOWED_HOSTS: ${WEBHOOK_ALLOWED_HOSTS:-localhost,127.0.0.1}
             # simulator (padrão, sem conta) ou cloud_api (WhatsApp oficial da Meta)

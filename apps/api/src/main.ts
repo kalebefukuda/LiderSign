@@ -9,6 +9,13 @@ import { HttpExceptionFilter } from './common/http-exception.filter'
 import { loadEnv } from './config/env'
 import { createDemoHostProxy } from './demo-host/demo-host.proxy'
 
+function parseTrustProxy(value: string | undefined): number | string {
+    const trimmed = (value ?? '').trim()
+    if (trimmed === '') return 'loopback'
+    if (/^\d+$/.test(trimmed)) return Number(trimmed)
+    return trimmed
+}
+
 async function bootstrap() {
     const env = loadEnv()
     const app = await NestFactory.create<NestExpressApplication>(AppModule.register(), {
@@ -16,8 +23,9 @@ async function bootstrap() {
         bodyParser: false,
     })
 
-    // X-Forwarded-For só é aceito de saltos locais (Docker, túnel, proxy da demo): o IP não é forjável de fora
-    app.set('trust proxy', 'loopback, linklocal, uniquelocal')
+    // Em quem confiar no X-Forwarded-For (IP da evidência e limite de requisições).
+    // Padrão: só loopback. Atrás de um proxy ou túnel conhecido, TRUST_PROXY=1 (número de saltos).
+    app.set('trust proxy', parseTrustProxy(process.env.TRUST_PROXY))
     app.disable('x-powered-by')
     app.use(
         helmet({
