@@ -93,7 +93,14 @@ test('lead assina pelo celular e o escritório recebe o PDF selado', async ({ br
     await phone.getByRole('button', { name: 'Li o documento, continuar' }).click()
 
     await phone.getByRole('button', { name: 'Enviar código no WhatsApp' }).click()
-    await phone.getByLabel('Código de 6 números').fill(await latestOtp(request))
+    const code = await latestOtp(request)
+
+    // O escritório nunca vê o código nem o token do link: só o signatário, no WhatsApp.
+    const officeView = JSON.stringify(await (await request.get(`/demo-host/v1/envelopes/${envelope.id}`)).json())
+    expect(officeView).not.toContain(code)
+    expect(officeView).not.toContain(new URL(envelope.signingUrl!).pathname.split('/').pop()!)
+
+    await phone.getByLabel('Código de 6 números').fill(code)
 
     await phone.getByRole('tab', { name: 'Digitar nome' }).click()
     await phone.getByLabel('Seu nome completo').fill(SIGNER.name)
@@ -133,6 +140,7 @@ test('lead assina pelo celular e o escritório recebe o PDF selado', async ({ br
     // A verificação pública mostra o documento como autêntico.
     await phone.goto(`/v/${envelope.verificationCode}`)
     await expect(phone.getByText('Documento autêntico')).toBeVisible()
+    await expect(phone.getByText('Íntegra: cada evento confere com o anterior')).toBeVisible()
 })
 
 test('procuração exige selfie no nível Reforçado', async ({ request }) => {
@@ -144,6 +152,10 @@ test('procuração exige selfie no nível Reforçado', async ({ request }) => {
     await request.post(`/v1/sign/${token}/otp`)
     const verify = await request.post(`/v1/sign/${token}/otp/verify`, { data: { code: await latestOtp(request) } })
     expect(verify.ok()).toBeTruthy()
+
+    // O proxy da demo não deixa passar rotas de parceiro (ex.: segredo do webhook)
+    const secret = await request.get('/demo-host/v1/partner/tenants/escritorio-demo/webhook-secret')
+    expect(secret.status()).toBe(404)
 
     const withoutSelfie = await request.post(`/v1/sign/${token}/complete`, {
         data: { signature: { type: 'typed', typedName: SIGNER.name }, consent: true },
