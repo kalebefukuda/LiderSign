@@ -9,7 +9,7 @@ Assinador eletrônico nativo da LíderHub. Três ideias guiam tudo:
 ## Arquitetura
 
 ```
-apps/web          React + Vite: /painel (enviar, envios, modelos), /s/:token (assinatura), /v/:code (verificação), /desenvolvedores (integração, só para quem avalia)
+apps/web          React + Vite: /liderhub (simulação da LíderHub), /painel (início, documentos, modelos, envio avulso), /s/:token (assinatura), /v/:code (verificação), /desenvolvedores
 apps/api          NestJS: parceiro, modelos, envelopes, assinatura, selagem, webhooks, SSE
                   + serve o build do React e o módulo /demo-host (só na demo)
 packages/shared   Contrato: schemas zod, DTOs, utilitários (CPF, telefone, modelos)
@@ -17,6 +17,7 @@ packages/agent    Mastra: IA que transforma contrato em modelo + servidor MCP
 ```
 
 - Mesma stack da LíderHub (React + Nest, TypeScript ponta a ponta). Em produção é um processo só: o Nest serve a API e o site na mesma porta, então basta um container e um túnel para abrir o link no celular.
+- Pelo endereço público (túnel, cabeçalhos da Cloudflare ou Host fora da rede local), só `/s/*`, `/v/*` e a API `/v1` respondem; `/painel`, `/liderhub`, `/desenvolvedores` redirecionam para `/v` e `/demo-host` dá 404.
 - O navegador nunca recebe a chave de parceiro. Na demo, o módulo `/demo-host` faz o papel do back da LíderHub: guarda a chave, repassa as chamadas para `/v1` e recebe os webhooks.
 - Banco: Postgres com Prisma (o Supabase também é Postgres: troca só a `DATABASE_URL`). Arquivos: disco local (`STORAGE_DIR`), atrás de uma interface (troca por S3 ou Supabase Storage).
 - Tempo real: SSE do Nest (`/v1/events`).

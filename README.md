@@ -28,17 +28,26 @@ Precisa só do Docker.
 docker compose up --build
 ```
 
-Abra **http://localhost:3000**. O painel já abre pronto, como o escritório veria dentro da LíderHub:
+Abra **http://localhost:3000**. A demonstração começa pela **LíderHub (simulação)**, porque é de lá que o escritório usa o LíderSign no dia a dia:
 
-1. **Enviar para assinatura:** o contrato de exemplo já vem preenchido. Coloque o **seu** celular no campo de WhatsApp e envie.
-2. **Mandar o link:** na tela do documento, toque em **Enviar pelo WhatsApp**. Abre o seu WhatsApp com a mensagem pronta (ou aponte a câmera para o QR code).
-3. **Assinar no celular:** abra o link, digite o CPF do exemplo (`529.982.247-25`), confira o contrato e toque em **Assinar**.
-4. **Acompanhar:** no computador, o andamento muda sozinho (enviado, aberto, assinado, PDF pronto) e o PDF assinado fica para baixar.
-5. **Verificar:** em **Ver autenticidade**, envie o PDF (confere). Mude um byte do arquivo e envie de novo (não confere).
+1. **Integrações:** ligue o switch **Ativar LíderSign**. É o único passo do escritório: sem conta e sem token. Do lado, a ZapSign mostra o caminho de hoje (conta, plano com API e token).
+2. **Conversas:** a conversa com a lead já está pronta. Coloque o **seu** celular em "WhatsApp da Maria" e clique em **Enviar contrato**. O LíderSign gera o PDF e o link sai na conversa.
+3. **Assinar no celular:** toque em **Abrir no meu WhatsApp** (ou aponte a câmera para o QR), abra o link, digite o CPF da lead (`529.982.247-25`), confira o contrato e toque em **Assinar**.
+4. **O status volta para a conversa:** "Maria abriu", "Maria assinou" e o PDF assinado, sem sair da LíderHub.
+5. **Painel do LíderSign:** em **Abrir o LíderSign**, o bastidor do escritório: documentos, PDFs, modelos de contrato e a verificação pública de autenticidade.
 
-O link abre em qualquer celular porque o `docker compose` sobe junto um túnel HTTPS da Cloudflare (sem conta) e o app usa o endereço dele nos links. O endereço é público enquanto estiver rodando: `docker compose stop tunnel` desliga.
+### Quem faz o quê
 
-**Para quem avalia o código:** [http://localhost:3000/desenvolvedores](http://localhost:3000/desenvolvedores) mostra como a LíderHub integra, com o switch "Ativar LíderSign", o registro ao vivo de cada chamada e webhook (HMAC conferido) e o comando do MCP. O escritório não vê essa página.
+| Quem | Onde | O que faz |
+| --- | --- | --- |
+| Escritório | LíderHub | Liga o LíderSign uma vez e envia contratos pelas conversas (ou o agente de IA envia) |
+| Cliente | Celular | Recebe o link no WhatsApp, confirma o CPF, confere o PDF e assina. Nunca vê painel |
+| LíderHub | Servidor dela | Fala com o LíderSign pela API (chave de parceiro) e recebe os avisos por webhook |
+| Painel do LíderSign | Bastidor | Modelos, histórico e PDFs. Como o painel da ClickSign hoje, abre de vez em quando |
+
+O link abre em qualquer celular porque o `docker compose` sobe junto um túnel HTTPS da Cloudflare (sem conta) e o app usa o endereço dele nos links. Pelo endereço público só abrem a assinatura e a verificação: o painel, a simulação e a área de desenvolvedores ficam restritos ao computador. `docker compose stop tunnel` desliga o túnel.
+
+**Para quem avalia o código:** [/desenvolvedores](http://localhost:3000/desenvolvedores) explica a integração (as 3 chamadas, o registro ao vivo com HMAC conferido e o comando do MCP).
 
 Não precisa de conta de WhatsApp nem de chave de IA: tudo tem um modo local.
 
@@ -131,12 +140,15 @@ Dois níveis de garantia, escolhidos no modelo (nunca a cada envio):
     - CPF e telefone aparecem mascarados nas telas, nos logs e na verificação pública (art. 6º, III).
     - A selfie, que é dado biométrico, só é pedida no nível Reforçado, com aviso e consentimento (art. 11).
     - O escritório é o controlador e a LíderHub, a operadora.
-- **Só para a demo:** o módulo `/demo-host` simula o back da LíderHub e não tem autenticação. Ele só existe com `DEMO_MODE=true`, deixa passar apenas as rotas que a tela usa (nunca as de parceiro) e nunca deve ir para produção. Também só no modo demonstração, e só quando nenhum WhatsApp está configurado, o código do nível Reforçado volta para a tela de quem assina (`demoCode`), porque não há outro canal para entregá-lo. O túnel do compose deixa a demo pública enquanto roda (URL aleatória): rode `docker compose stop tunnel` depois de gravar.
+- **Só para a demo:** o módulo `/demo-host` simula o back da LíderHub e não tem autenticação. Ele só existe com `DEMO_MODE=true`, só responde no computador do escritório (nunca pelo túnel; A01:2025), deixa passar apenas as rotas que a tela usa (nunca as de parceiro) e nunca deve ir para produção. Também só no modo demonstração, e só quando nenhum WhatsApp está configurado, o código do nível Reforçado volta para a tela de quem assina (`demoCode`), porque não há outro canal para entregá-lo. O túnel do compose deixa a demo pública enquanto roda (URL aleatória): rode `docker compose stop tunnel` depois de gravar.
 
 ## Próximos passos
 
-- **Nível Reforçado completo:** Pix de R$ 0,01 vinculado ao CPF e biometria (Serpro Datavalid).
-- **Assinatura gov.br e ICP-Brasil:** e-CNPJ e carimbo de ACT credenciada no lugar do certificado de demonstração.
+- **Nível "Com selfie" completo:** Pix de R$ 0,01 vinculado ao CPF e comparação da selfie com a base oficial (Serpro Datavalid).
+- **ICP-Brasil, lado da plataforma:** e-CNPJ ICP-Brasil no selo e carimbo do tempo de ACT credenciada, no lugar do certificado de demonstração e do FreeTSA. O código do selo já está pronto; falta contratar.
+- **ICP-Brasil, lado de quem assina (assinatura qualificada):** integrar um certificado em nuvem (PSC, como BirdID ou VIDaaS) no passo de assinatura. Exige que o cliente tenha e-CPF, o que é raro no público de BPC/LOAS.
+- **gov.br (assinatura avançada, gratuita):** o público de BPC já tem conta gov.br por causa do Meu INSS. A [API do ITI](https://www.gov.br/iti/pt-br/assuntos/assinatura-eletronica-avancada) hoje atende aplicações públicas; o ITI anunciou abertura a entidades privadas, sem data confirmada. Enquanto isso, dá para aceitar o PDF assinado no assinador do ITI e conferir a assinatura.
+- **Várias plataformas:** uma chave de parceiro por plataforma (hoje só a da LíderHub), para outras integrarem do mesmo jeito.
 - **Carimbo do tempo embutido** na assinatura (PAdES-B-T), em vez de anexado ao dossiê.
 - **Fila dedicada para a selagem**, com BullMQ.
 - **Login do painel.** Dentro da LíderHub, o painel vira uma tela da própria plataforma.
