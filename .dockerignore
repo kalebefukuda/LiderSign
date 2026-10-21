@@ -2,7 +2,8 @@
 **/dist
 **/.turbo
 **/*.tsbuildinfo
-**/data
+/data
+apps/api/data
 .env
 .env.*
 !.env.example
