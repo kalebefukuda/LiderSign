@@ -56,7 +56,7 @@ function summarizeTemplate(template: TemplateDto) {
 export const listarModelos = createTool({
     id: 'listar_modelos',
     description:
-        'Lista os modelos de documento (contratos, procurações, declarações) que o escritório já tem no LíderSign. ' +
+        'Lista os modelos de documento (contratos, procurações, declarações) que o escritório já tem no módulo de contratos da LíderHub. ' +
         'Use antes de criar um documento para descobrir o id do modelo certo.',
     inputSchema: z.object({}),
     execute: async (
@@ -102,7 +102,8 @@ export const verCamposDoModelo = createTool({
 export const criarDocumentoParaAssinar = createTool({
     id: 'criar_documento_para_assinar',
     description:
-        'Gera o documento a partir de um modelo com os dados do lead e envia o link de assinatura pelo WhatsApp do signatário. ' +
+        'Gera o documento a partir de um modelo com os dados do lead e manda para assinar na própria conversa do WhatsApp ' +
+        '(o cliente digita o CPF, recebe o PDF e um resumo em áudio e toca em Assinar). Use canal "link" só se o cliente pedir. ' +
         'Preencha todas as variáveis do modelo (consulte ver_campos_do_modelo). O CPF precisa ser válido e o celular ter DDD. ' +
         'Retorna o status, o link de verificação pública e um resumo para mostrar ao advogado.',
     inputSchema: z.object({
@@ -122,8 +123,14 @@ export const criarDocumentoParaAssinar = createTool({
             .max(120)
             .optional()
             .describe('Id do lead ou da conversa na LíderHub, devolvido nos webhooks'),
+        canal: z
+            .enum(['conversa', 'link'])
+            .default('conversa')
+            .describe(
+                '"conversa": assina dentro do WhatsApp (padrão). "link": manda um link para assinar no navegador.',
+            ),
     }),
-    execute: async ({ modeloId, variaveis, signatario, referenciaExterna }, context) => {
+    execute: async ({ modeloId, variaveis, signatario, referenciaExterna, canal }, context) => {
         try {
             const problemas: string[] = []
             if (!isValidCpf(signatario.cpf)) problemas.push('CPF do signatário inválido.')
@@ -157,6 +164,7 @@ export const criarDocumentoParaAssinar = createTool({
                     },
                     externalRef: referenciaExterna,
                     send: true,
+                    channel: canal === 'link' ? 'LINK' : 'WHATSAPP',
                 },
                 context?.abortSignal,
             )
@@ -169,7 +177,7 @@ export const criarDocumentoParaAssinar = createTool({
                 codigoDeVerificacao: envelope.verificationCode,
                 expiraEm: envelope.expiresAt,
                 resumo:
-                    `"${envelope.title}" foi enviado pelo WhatsApp para ${envelope.signer.name} (${envelope.signer.phoneMasked}). ` +
+                    `"${envelope.title}" foi enviado ${canal === 'link' ? 'por link' : 'na conversa do WhatsApp'} para ${envelope.signer.name} (${envelope.signer.phoneMasked}). ` +
                     `Assim que assinar, o PDF selado fica disponível e a verificação pública fica em ${envelope.verificationUrl}.`,
             }
         } catch (error) {

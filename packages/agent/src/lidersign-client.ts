@@ -128,7 +128,7 @@ function describeError(status: number, message?: string): string {
         case 403:
             return `Acesso negado para este escritório.${detail}`
         case 404:
-            return `Não encontrado.${detail} Confira o id informado ou se o LíderSign foi ativado para o escritório.`
+            return `Não encontrado.${detail} Confira o id informado.`
         case 409:
             return `O documento não está no estado esperado.${detail}`
         case 410:

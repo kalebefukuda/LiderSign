@@ -8,14 +8,13 @@ export type EvidenceInput = {
     verificationCode: string
     verificationUrl: string
     qrDataUrl: string
-    signer: { name: string; cpfMasked: string; phoneMasked: string; phoneVerified: boolean }
+    signer: { name: string; cpfMasked: string; phoneLine: string }
     signature: { type: 'drawn'; imageDataUrl: string } | { type: 'typed'; typedName: string }
     selfieDataUrl: string | null
     selfieNote: string | null
     assuranceLabel: string
     signedAt: Date
-    ip: string | null
-    device: string
+    channelRows: [string, string][]
     geolocation: string | null
     identity: string
     consentText: string
@@ -117,9 +116,7 @@ export function buildEvidenceDefinition(input: EvidenceInput): TDocumentDefiniti
                 { text: input.signer.name, fontSize: 12, bold: true, color: '#111827' },
                 { text: `CPF ${input.signer.cpfMasked}`, fontSize: 9, color: INK, margin: [0, 4, 0, 0] },
                 {
-                    text: input.signer.phoneVerified
-                        ? `Celular ${input.signer.phoneMasked} · confirmado por código no WhatsApp`
-                        : `Celular ${input.signer.phoneMasked} · recebeu o link pessoal no WhatsApp`,
+                    text: input.signer.phoneLine,
                     fontSize: 9,
                     color: INK,
                     margin: [0, 2, 0, 0],
@@ -182,7 +179,7 @@ export function buildEvidenceDefinition(input: EvidenceInput): TDocumentDefiniti
     return {
         pageSize: 'A4',
         pageMargins: [56, 44, 56, 56],
-        info: { title: `Evidências · ${input.title}`, creator: 'LíderSign', producer: 'LíderSign' },
+        info: { title: `Evidências · ${input.title}`, creator: 'LíderHub', producer: 'LíderHub' },
         content: [
             {
                 columns: [
@@ -190,7 +187,7 @@ export function buildEvidenceDefinition(input: EvidenceInput): TDocumentDefiniti
                         width: '*',
                         stack: [
                             {
-                                text: 'LÍDERSIGN',
+                                text: 'LÍDERHUB · CONTRATOS',
                                 fontSize: 8,
                                 bold: true,
                                 color: ACCENT,
@@ -234,8 +231,7 @@ export function buildEvidenceDefinition(input: EvidenceInput): TDocumentDefiniti
                 ['Nível de garantia', input.assuranceLabel],
                 ['Identificação', input.identity],
                 ['Assinado em', `${formatDateTimeBr(input.signedAt)} (horário de Brasília)`],
-                ['Endereço IP', input.ip ?? 'Não informado'],
-                ['Dispositivo', input.device],
+                ...input.channelRows,
                 ...(input.geolocation ? ([['Geolocalização', input.geolocation]] as [string, string][]) : []),
                 ['Aceite', input.consentText],
             ]),

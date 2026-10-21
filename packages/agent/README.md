@@ -1,29 +1,29 @@
 # @lidersign/agent
 
-Duas peças de IA do LíderSign, feitas com [Mastra](https://mastra.ai) (a mesma base que a LíderHub usa):
+Duas peças de IA do módulo de contratos da LíderHub, feitas com [Mastra](https://mastra.ai) (a mesma base que a LíderHub usa):
 
 1. **Servidor MCP** com as 4 ferramentas que o modal da ZapSign promete "em breve". Assim o Assistente e os agentes da LíderHub geram e enviam contratos dentro da conversa.
 2. **Extrator de modelos**: lê um contrato de exemplo (PDF ou DOCX) e devolve um modelo com variáveis `{{snake_case}}`. A API usa quando existe `ANTHROPIC_API_KEY`; sem chave, ela cai para regras locais.
 
 ## Ferramentas do MCP
 
-| Ferramenta | O que faz |
-| --- | --- |
-| `listar_modelos` | Lista os modelos do escritório |
-| `ver_campos_do_modelo` | Mostra as variáveis que o modelo pede |
-| `criar_documento_para_assinar` | Gera o documento e manda o link pelo WhatsApp |
-| `ver_status_do_documento` | Status, últimos passos da trilha e link de verificação |
+| Ferramenta                     | O que faz                                                                                             |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| `listar_modelos`               | Lista os modelos do escritório                                                                        |
+| `ver_campos_do_modelo`         | Mostra as variáveis que o modelo pede                                                                 |
+| `criar_documento_para_assinar` | Gera o documento e manda para assinar na conversa do WhatsApp (`canal: conversa`, padrão) ou por link |
+| `ver_status_do_documento`      | Status, últimos passos da trilha e link de verificação                                                |
 
 O servidor fala as duas eras do protocolo MCP (a revisão `2026-07-28` e a anterior, com `initialize`), então funciona com clientes novos e antigos.
 
 ## Variáveis de ambiente
 
-| Variável | Para quê |
-| --- | --- |
-| `LIDERSIGN_API_URL` | Endereço da API. No Docker: `http://localhost:3000/v1`. Em desenvolvimento: `http://localhost:4000`. Pode ser com ou sem `/v1` |
-| `PARTNER_API_KEY` | Chave de parceiro, a mesma do servidor (no `docker-compose.yml` de demo: `demo-partner-key-troque-em-producao`) |
-| `LIDERSIGN_TENANT_ID` | Escritório em nome de quem o agente age, ex.: `escritorio-demo` |
-| `MCP_PORT`, `MCP_HOST`, `MCP_TOKEN` | Só no modo HTTP. Fora de `127.0.0.1`, o `MCP_TOKEN` é obrigatório |
+| Variável                            | Para quê                                                                                                                       |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `LIDERSIGN_API_URL`                 | Endereço da API. No Docker: `http://localhost:3000/v1`. Em desenvolvimento: `http://localhost:4000`. Pode ser com ou sem `/v1` |
+| `PARTNER_API_KEY`                   | Chave de parceiro, a mesma do servidor (no `docker-compose.yml` de demo: `demo-partner-key-troque-em-producao`)                |
+| `LIDERSIGN_TENANT_ID`               | Escritório em nome de quem o agente age, ex.: `escritorio-demo`                                                                |
+| `MCP_PORT`, `MCP_HOST`, `MCP_TOKEN` | Só no modo HTTP. Fora de `127.0.0.1`, o `MCP_TOKEN` é obrigatório                                                              |
 
 A chave de parceiro fica só no ambiente: o modelo nunca escolhe nem vê a credencial.
 

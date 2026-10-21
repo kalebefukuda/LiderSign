@@ -1,3 +1,2 @@
-export { officeApi, type PartnerInfo } from './api'
-export { AccessScreen } from './components/access-screen'
-export { OfficeProvider, partnerLink, useOffice, useOfficeReload } from './context'
+export { officeApi } from './api'
+export { OfficeProvider, useOffice, useOfficeReload } from './context'

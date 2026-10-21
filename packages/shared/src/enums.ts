@@ -41,10 +41,18 @@ export const VARIABLE_TYPES = [
 ] as const
 export type VariableType = (typeof VARIABLE_TYPES)[number]
 
-export const MESSAGE_KINDS = ['SIGNING_LINK', 'OTP', 'SIGNED_COPY', 'REMINDER', 'TEST'] as const
+export const MESSAGE_KINDS = [
+    'SIGNING_LINK',
+    'OTP',
+    'SIGNED_COPY',
+    'REMINDER',
+    'TEST',
+    'CONVERSATION',
+    'INBOUND',
+] as const
 export type MessageKind = (typeof MESSAGE_KINDS)[number]
 
-export const MESSAGE_STATUSES = ['SIMULATED', 'SENT', 'FAILED'] as const
+export const MESSAGE_STATUSES = ['SIMULATED', 'SENT', 'FAILED', 'RECEIVED'] as const
 export type MessageStatus = (typeof MESSAGE_STATUSES)[number]
 
 export const TIMESTAMP_STATUSES = ['OK', 'PENDING', 'FAILED', 'SKIPPED'] as const
@@ -65,6 +73,8 @@ export const AUDIT_EVENT_TYPES = [
     'DOCUMENT_GENERATED',
     'LINK_SENT',
     'REMINDER_SENT',
+    'WHATSAPP_STARTED',
+    'WHATSAPP_REPLY',
     'DOCUMENT_VIEWED',
     'IDENTITY_FAILED',
     'IDENTITY_CONFIRMED',
@@ -88,6 +98,8 @@ export const AUDIT_EVENT_LABEL: Record<AuditEventType, string> = {
     DOCUMENT_GENERATED: 'Documento gerado',
     LINK_SENT: 'Link de assinatura gerado',
     REMINDER_SENT: 'Lembrete enviado pelo WhatsApp',
+    WHATSAPP_STARTED: 'Conversa de assinatura iniciada no WhatsApp',
+    WHATSAPP_REPLY: 'Signatário respondeu pelo WhatsApp',
     DOCUMENT_VIEWED: 'Documento aberto pelo signatário',
     IDENTITY_FAILED: 'CPF informado não conferiu',
     IDENTITY_CONFIRMED: 'CPF confirmado pelo signatário',
@@ -107,3 +119,20 @@ export const AUDIT_EVENT_LABEL: Record<AuditEventType, string> = {
 
 export const REMINDER_HOURS = [24, 48, 72] as const
 export type ReminderHours = (typeof REMINDER_HOURS)[number]
+
+export const MESSAGE_TYPES = ['TEXT', 'BUTTONS', 'DOCUMENT', 'AUDIO', 'IMAGE'] as const
+export type MessageType = (typeof MESSAGE_TYPES)[number]
+
+export const SIGNING_CHANNELS = ['WHATSAPP', 'LINK'] as const
+export type SigningChannel = (typeof SIGNING_CHANNELS)[number]
+
+export const SIGNING_CHANNEL_LABEL: Record<SigningChannel, string> = {
+    WHATSAPP: 'Na conversa do WhatsApp',
+    LINK: 'Por link',
+}
+
+export const WHATSAPP_BUTTONS = {
+    SIGN: 'sign',
+    QUESTION: 'question',
+    BROWSER: 'browser',
+} as const

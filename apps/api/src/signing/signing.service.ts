@@ -46,6 +46,11 @@ const IDENTITY_MAX_ATTEMPTS = 5
 export const CONSENT_TEXT =
     'Ao tocar em "Assinar", declaro que li o documento e concordo em assiná-lo eletronicamente.'
 
+export const WHATSAPP_CONSENT_TEXT =
+    'Ao tocar em "Assinar" na conversa do WhatsApp, o signatário declarou que leu o documento e concorda em assiná-lo eletronicamente.'
+
+export const WHATSAPP_CONTEXT: RequestContext = { ip: null, userAgent: 'WhatsApp' }
+
 type EnvelopeWithTenant = Envelope & { tenant: Tenant }
 type UploadedFile = { buffer: Buffer; size: number }
 
@@ -110,12 +115,17 @@ export class SigningService {
         return envelope.assuranceLevel === 'REFORCADO'
     }
 
+    /** No navegador vale só o CPF confirmado no próprio link (link encaminhado não abre sozinho). */
     private assertIdentity(envelope: Envelope) {
+        if (!envelope.linkIdentityVerifiedAt) throw new ConflictException('Confirme seu CPF para continuar.')
+    }
+
+    private assertChatIdentity(envelope: Envelope) {
         if (!envelope.identityVerifiedAt) throw new ConflictException('Confirme seu CPF para continuar.')
     }
 
     private toSession(envelope: Envelope & { tenant: Tenant }): SigningSessionDto {
-        const identityConfirmed = Boolean(envelope.identityVerifiedAt)
+        const identityConfirmed = Boolean(envelope.linkIdentityVerifiedAt)
         return {
             title: envelope.title,
             officeName: envelope.tenant.name,
@@ -150,19 +160,11 @@ export class SigningService {
         if (envelope.status === 'CANCELED')
             throw new GoneException('Este documento foi cancelado pelo escritório.')
         if (envelope.status === 'SENT') {
-            const updated = await this.prisma.envelope.updateMany({
-                where: { id: envelope.id, status: 'SENT' },
-                data: { status: 'VIEWED', viewedAt: new Date() },
+            await this.markViewed(envelope.id, ctx)
+            envelope = await this.prisma.envelope.findUniqueOrThrow({
+                where: { id: envelope.id },
+                include: { tenant: true },
             })
-            if (updated.count === 1) {
-                envelope = await this.prisma.envelope.findUniqueOrThrow({
-                    where: { id: envelope.id },
-                    include: { tenant: true },
-                })
-                await this.audit.append(envelope.id, 'DOCUMENT_VIEWED', 'signer', {}, ctx)
-                this.webhooks.dispatch(envelope.tenant, envelope, 'envelope.viewed')
-                this.publish(envelope)
-            }
         }
         return this.toSession(envelope)
     }
@@ -185,47 +187,82 @@ export class SigningService {
     async confirmIdentity(token: string, cpf: string, ctx: RequestContext) {
         const envelope = await this.resolve(token)
         this.assertOpen(envelope)
-        if (envelope.identityVerifiedAt) return { confirmed: true as const }
-        const claimed = await this.prisma.envelope.updateMany({
-            where: {
-                id: envelope.id,
-                identityVerifiedAt: null,
-                identityAttempts: { lt: IDENTITY_MAX_ATTEMPTS },
-            },
-            data: { identityAttempts: { increment: 1 } },
-        })
-        if (claimed.count === 0) {
+        const result = await this.checkIdentity(envelope, cpf, ctx, 'link')
+        if (result.status === 'blocked') {
             throw new HttpException(
                 'Muitas tentativas. Peça um novo link ao escritório pelo WhatsApp.',
                 HttpStatus.TOO_MANY_REQUESTS,
             )
         }
-        if (!safeEqual(sha256Hex(cpf), sha256Hex(envelope.signerCpf.replace(/\D/g, '')))) {
+        if (result.status === 'wrong') {
+            throw new UnprocessableEntityException(
+                result.left > 0
+                    ? `Este CPF não confere com o do documento (${result.left} ${result.left === 1 ? 'tentativa restante' : 'tentativas restantes'}).`
+                    : 'Este CPF não confere. Peça um novo link ao escritório pelo WhatsApp.',
+            )
+        }
+        return { confirmed: true as const }
+    }
+
+    async checkIdentity(
+        envelope: Envelope,
+        cpf: string,
+        ctx: RequestContext,
+        channel: 'link' | 'whatsapp',
+    ): Promise<{ status: 'ok' } | { status: 'wrong'; left: number } | { status: 'blocked' }> {
+        const column = channel === 'link' ? 'linkIdentityVerifiedAt' : 'identityVerifiedAt'
+        if (envelope[column]) return { status: 'ok' }
+        // As tentativas são somadas entre conversa e link: 5 no total por envio
+        const claimed = await this.prisma.envelope.updateMany({
+            where: {
+                id: envelope.id,
+                [column]: null,
+                identityAttempts: { lt: IDENTITY_MAX_ATTEMPTS },
+            },
+            data: { identityAttempts: { increment: 1 } },
+        })
+        if (claimed.count === 0) return { status: 'blocked' }
+        const digits = cpf.replace(/\D/g, '')
+        if (!safeEqual(sha256Hex(digits), sha256Hex(envelope.signerCpf.replace(/\D/g, '')))) {
             const current = await this.prisma.envelope.findUnique({
                 where: { id: envelope.id },
                 select: { identityAttempts: true },
             })
             const attempts = current?.identityAttempts ?? IDENTITY_MAX_ATTEMPTS
             await this.audit.append(envelope.id, 'IDENTITY_FAILED', 'signer', { tentativa: attempts }, ctx)
-            const left = IDENTITY_MAX_ATTEMPTS - attempts
-            throw new UnprocessableEntityException(
-                left > 0
-                    ? `Este CPF não confere com o do documento (${left} ${left === 1 ? 'tentativa restante' : 'tentativas restantes'}).`
-                    : 'Este CPF não confere. Peça um novo link ao escritório pelo WhatsApp.',
-            )
+            return { status: 'wrong', left: IDENTITY_MAX_ATTEMPTS - attempts }
         }
+        const now = new Date()
         await this.prisma.envelope.update({
             where: { id: envelope.id },
-            data: { identityVerifiedAt: new Date() },
+            data:
+                channel === 'link'
+                    ? { linkIdentityVerifiedAt: now, identityVerifiedAt: envelope.identityVerifiedAt ?? now }
+                    : { identityVerifiedAt: now },
         })
         await this.audit.append(
             envelope.id,
             'IDENTITY_CONFIRMED',
             'signer',
-            { cpf: maskCpf(envelope.signerCpf) },
+            { cpf: maskCpf(envelope.signerCpf), canal: channel },
             ctx,
         )
-        return { confirmed: true as const }
+        return { status: 'ok' }
+    }
+
+    async markViewed(envelopeId: string, ctx: RequestContext, data: Record<string, unknown> = {}) {
+        const updated = await this.prisma.envelope.updateMany({
+            where: { id: envelopeId, status: 'SENT' },
+            data: { status: 'VIEWED', viewedAt: new Date() },
+        })
+        if (updated.count !== 1) return
+        const envelope = await this.prisma.envelope.findUniqueOrThrow({
+            where: { id: envelopeId },
+            include: { tenant: true },
+        })
+        await this.audit.append(envelope.id, 'DOCUMENT_VIEWED', 'signer', data, ctx)
+        this.webhooks.dispatch(envelope.tenant, envelope, 'envelope.viewed')
+        this.publish(envelope)
     }
 
     async sendOtp(token: string, ctx: RequestContext) {
@@ -340,20 +377,24 @@ export class SigningService {
             throw new ConflictException('Este documento não pede selfie.')
         this.assertIdentity(envelope)
         if (!file?.buffer?.length) throw new UnprocessableEntityException('Envie a foto no campo "selfie".')
-        if (file.size > MAX_SELFIE) throw new PayloadTooLargeException('A foto pode ter no máximo 5 MB.')
-        const ext = selfieExtension(file.buffer)
+        await this.storeSelfie(envelope, file.buffer, ctx)
+        return { captured: true as const }
+    }
+
+    async storeSelfie(envelope: Envelope, data: Buffer, ctx: RequestContext) {
+        if (data.length > MAX_SELFIE) throw new PayloadTooLargeException('A foto pode ter no máximo 5 MB.')
+        const ext = selfieExtension(data)
         if (!ext) throw new UnsupportedMediaTypeException('Envie uma foto em JPG, PNG ou WEBP.')
         const path = StorageService.envelopeKey(envelope.tenantId, envelope.id, `selfie.${ext}`)
-        await this.storage.put(path, file.buffer)
+        await this.storage.put(path, data)
         await this.prisma.envelope.update({ where: { id: envelope.id }, data: { selfiePath: path } })
         await this.audit.append(
             envelope.id,
             'SELFIE_CAPTURED',
             'signer',
-            { sha256: sha256Hex(file.buffer), bytes: file.size, formato: ext },
+            { sha256: sha256Hex(data), bytes: data.length, formato: ext },
             ctx,
         )
-        return { captured: true as const }
     }
 
     async complete(token: string, input: CompleteSigningInput, ctx: RequestContext) {
@@ -388,33 +429,100 @@ export class SigningService {
 
         const signedAt = new Date()
         const evidence = {
+            channel: 'link',
             ip: ctx.ip,
             userAgent: ctx.userAgent,
             geolocation: input.geolocation ?? null,
-            identityConfirmedAt: envelope.identityVerifiedAt!.toISOString(),
+            identityConfirmedAt: envelope.linkIdentityVerifiedAt!.toISOString(),
             phoneVerifiedAt: otpFresh ? envelope.otpVerifiedAt!.toISOString() : null,
             consentText: CONSENT_TEXT,
             signedAt: signedAt.toISOString(),
         }
+        return this.persistSignature(
+            envelope,
+            { type: input.signature.type, imagePath: signatureImagePath, typedName },
+            evidence,
+            signedAt,
+            ctx,
+            token,
+            { geolocalizacao: Boolean(input.geolocation) },
+        )
+    }
+
+    async completeFromWhatsApp(
+        envelopeId: string,
+        input: { messageId: string; phone: string; provider: 'simulator' | 'cloud_api' },
+    ) {
+        const envelope = await this.prisma.envelope.findUniqueOrThrow({
+            where: { id: envelopeId },
+            include: { tenant: true },
+        })
+        this.assertOpen(envelope)
+        this.assertChatIdentity(envelope)
+        if (envelope.assuranceLevel === 'REFORCADO' && !envelope.selfiePath) {
+            throw new ConflictException('Falta a selfie para assinar.')
+        }
+        const signedAt = new Date()
+        const evidence = {
+            channel: 'whatsapp',
+            ip: null,
+            userAgent: null,
+            geolocation: null,
+            identityConfirmedAt: envelope.identityVerifiedAt!.toISOString(),
+            phoneVerifiedAt: signedAt.toISOString(),
+            whatsapp: {
+                messageId: input.messageId,
+                phoneMasked: maskPhone(input.phone),
+                provider: input.provider,
+            },
+            consentText: WHATSAPP_CONSENT_TEXT,
+            signedAt: signedAt.toISOString(),
+        }
+        return this.persistSignature(
+            envelope,
+            { type: 'typed', imagePath: null, typedName: envelope.signerName },
+            evidence,
+            signedAt,
+            WHATSAPP_CONTEXT,
+            null,
+            { canal: 'whatsapp' },
+        )
+    }
+
+    private async persistSignature(
+        envelope: EnvelopeWithTenant,
+        signature: { type: 'typed' | 'drawn'; imagePath: string | null; typedName: string | null },
+        evidence: Record<string, unknown>,
+        signedAt: Date,
+        ctx: RequestContext,
+        token: string | null,
+        auditData: Record<string, unknown>,
+    ) {
         const updated = await this.prisma.envelope.updateMany({
             where: { id: envelope.id, status: { in: ['SENT', 'VIEWED'] } },
             data: {
                 status: 'SIGNED',
                 signedAt,
-                signatureType: input.signature.type,
-                signatureImagePath,
-                typedName,
+                signatureType: signature.type,
+                signatureImagePath: signature.imagePath,
+                typedName: signature.typedName,
                 evidence: evidence as unknown as Prisma.InputJsonValue,
             },
         })
         if (updated.count === 0) throw new ConflictException('Este documento já foi assinado.')
 
-        await this.audit.append(envelope.id, 'CONSENT_GIVEN', 'signer', { texto: CONSENT_TEXT }, ctx)
+        await this.audit.append(
+            envelope.id,
+            'CONSENT_GIVEN',
+            'signer',
+            { texto: evidence.consentText as string },
+            ctx,
+        )
         await this.audit.append(
             envelope.id,
             'DOCUMENT_SIGNED',
             'signer',
-            { tipo: input.signature.type, geolocalizacao: Boolean(input.geolocation) },
+            { tipo: signature.type, ...auditData },
             ctx,
         )
         const signed = await this.prisma.envelope.findUniqueOrThrow({

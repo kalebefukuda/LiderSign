@@ -1,13 +1,21 @@
+import * as React from 'react'
 import { ASSURANCE_LEVEL_LABEL, TEMPLATE_KIND_LABEL, type TemplateDto } from '@lidersign/shared'
 import { ChevronRight, FileText, RefreshCw } from 'lucide-react'
 import { Link } from 'react-router'
 
 import { Badge, Button, Skeleton, EmptyState, ErrorNotice, formatDateTime, useResource } from '@lidersign/ui'
 
-import { templatesApi } from '../api'
+import { templatesApi, TEMPLATES_CHANGED } from '../api'
 
 export function TemplateList() {
     const { data, error, loading, reload } = useResource<TemplateDto[]>(templatesApi.listUrl)
+
+    // O Assistente pode criar um modelo a partir de um arquivo: a lista se atualiza sozinha
+    React.useEffect(() => {
+        const onChange = () => void reload()
+        window.addEventListener(TEMPLATES_CHANGED, onChange)
+        return () => window.removeEventListener(TEMPLATES_CHANGED, onChange)
+    }, [reload])
 
     if (loading && !data) {
         return (
@@ -43,10 +51,10 @@ export function TemplateList() {
             <EmptyState
                 icon={<FileText />}
                 title="Nenhum modelo ainda"
-                description="Envie um contrato que você já usa. O LíderSign marca os dados do cliente como campos para você revisar."
+                description="Envie um contrato que você já usa. A LíderHub marca os dados do cliente como campos para você revisar."
                 action={
                     <Button asChild>
-                        <Link to="/painel/modelos/novo">Importar contrato</Link>
+                        <Link to="/modelos/novo">Importar contrato</Link>
                     </Button>
                 }
             />
@@ -58,7 +66,7 @@ export function TemplateList() {
             {data.map((template) => (
                 <li key={template.id}>
                     <Link
-                        to={`/painel/modelos/${template.id}`}
+                        to={`/modelos/${template.id}`}
                         className="group flex items-center gap-4 px-5 py-4 transition-colors hover:bg-surface/60"
                     >
                         <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-line bg-white text-muted">

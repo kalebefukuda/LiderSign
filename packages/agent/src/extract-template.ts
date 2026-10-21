@@ -50,7 +50,7 @@ export const extractionSchema = z.object({
 })
 export type RawExtraction = z.infer<typeof extractionSchema>
 
-export const EXTRACTION_INSTRUCTIONS = `Você transforma documentos jurídicos brasileiros (contratos de honorários, procurações, declarações) em MODELOS reutilizáveis para o LíderSign.
+export const EXTRACTION_INSTRUCTIONS = `Você transforma documentos jurídicos brasileiros (contratos de honorários, procurações, declarações) em MODELOS reutilizáveis para o módulo de contratos da LíderHub.
 
 Regras do formato do corpo (body):
 - "# " para o título, "## " para seções e cláusulas, "- " para itens de lista, "---" para separador.
@@ -67,7 +67,7 @@ O que virar variável:
 
 O que NÃO mudar:
 - Mantenha o texto jurídico, as cláusulas e a ordem do original. Não resuma, não reescreva, não acrescente cláusulas.
-- Não inclua linhas de assinatura, testemunhas ou campos "Assinatura: ____": o LíderSign gera a página de assinatura e de evidências.
+- Não inclua linhas de assinatura, testemunhas ou campos "Assinatura: ____": a plataforma gera a página de assinatura e de evidências.
 
 Saída:
 - variables: uma entrada por variável usada no body, com label em português, type (text, cpf, cnpj, date, money, phone, email, address, number) e um exemplo fictício (nunca copie dados reais do documento).
@@ -101,7 +101,7 @@ export async function extractTemplateWithAI(input: ExtractTemplateInput): Promis
 
     const agent = new Agent({
         id: 'lidersign-template-extractor',
-        name: 'Extrator de modelos LíderSign',
+        name: 'Extrator de modelos da LíderHub',
         description: 'Transforma um contrato de exemplo em modelo com variáveis.',
         instructions: EXTRACTION_INSTRUCTIONS,
         model,

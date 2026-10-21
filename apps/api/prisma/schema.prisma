@@ -59,6 +59,8 @@ model Envelope {
   variables        Json
   renderedBody     String
   externalRef      String?
+  channel           String  @default("LINK")
+  conversationState String?
 
   signerName       String
   signerCpf        String
@@ -76,6 +78,7 @@ model Envelope {
 
   identityAttempts   Int     @default(0)
   identityVerifiedAt DateTime?
+  linkIdentityVerifiedAt DateTime?
 
   originalPath     String
   originalSha256   String
@@ -134,6 +137,9 @@ model Message {
   tenantId          String
   envelopeId        String?
   to                String
+  direction         String   @default("OUT")
+  type              String   @default("TEXT")
+  payload           Json?
   kind              String
   body              String
   url               String?
@@ -147,6 +153,8 @@ model Message {
   envelope Envelope? @relation(fields: [envelopeId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, createdAt])
+  @@index([tenantId, to, createdAt])
+  @@index([providerMessageId])
 }
 
 model WebhookDelivery {

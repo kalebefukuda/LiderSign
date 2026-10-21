@@ -116,7 +116,7 @@ export function FileCheck({ expectedCode }: { expectedCode?: string }) {
                         >
                             {result.kind === 'match'
                                 ? 'Arquivo idêntico ao assinado'
-                                : 'Este arquivo não confere: ele foi alterado ou não foi assinado pelo LíderSign'}
+                                : 'Este arquivo não confere: ele foi alterado ou não foi assinado pela LíderHub'}
                         </p>
                         <p className="truncate text-sm text-muted">{result.fileName}</p>
                         <p className="break-all font-mono text-xs text-muted">SHA-256 {result.data.sha256}</p>

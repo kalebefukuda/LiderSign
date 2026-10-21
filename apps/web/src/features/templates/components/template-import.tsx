@@ -113,7 +113,7 @@ export function TemplateImport() {
                         Arraste o contrato de exemplo ou clique para escolher
                     </p>
                     <p className="text-sm text-muted">
-                        PDF, DOCX ou TXT, até 5 MB. Mesmo sem nenhum campo marcado, o LíderSign encontra os
+                        PDF, DOCX ou TXT, até 5 MB. Mesmo sem nenhum campo marcado, a LíderHub encontra os
                         dados do cliente e transforma em modelo.
                     </p>
                 </div>

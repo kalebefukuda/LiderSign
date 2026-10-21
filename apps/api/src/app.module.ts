@@ -4,18 +4,21 @@ import { ServeStaticModule } from '@nestjs/serve-static'
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler'
 import { existsSync } from 'node:fs'
 import { join, resolve } from 'node:path'
+import { AssistantController } from './assistant/assistant.controller'
+import { AssistantService } from './assistant/assistant.service'
 import { env } from './config/env'
+import { ContactsController } from './contacts/contacts.controller'
+import { ContactsService } from './contacts/contacts.service'
+import { ContractsController } from './contracts/contracts.controller'
 import { CoreModule } from './core.module'
-import { DemoController } from './demo/demo.controller'
 import { EnvelopesController } from './envelopes/envelopes.controller'
 import { EnvelopesService } from './envelopes/envelopes.service'
 import { ReminderService } from './envelopes/reminder.service'
 import { EventsController } from './events/events.controller'
 import { HealthController } from './health/health.controller'
-import { OfficeLoginController } from './office/office-login.controller'
-import { OfficeController, PartnerInfoController } from './office/office.controller'
+import { OfficeController } from './office/office.controller'
+import { SessionController } from './session/session.controller'
 import { SigningController } from './signing/signing.controller'
-import { SigningService } from './signing/signing.service'
 import { TemplateImportService } from './templates/template-import.service'
 import { TemplatesController } from './templates/templates.controller'
 import { TemplatesService } from './templates/templates.service'
@@ -23,11 +26,12 @@ import { TenantsController } from './tenants/tenants.controller'
 import { TenantsService } from './tenants/tenants.service'
 import { VerificationController } from './verification/verification.controller'
 import { VerificationService } from './verification/verification.service'
+import { WhatsAppController } from './whatsapp/whatsapp.controller'
 
 @Module({
     controllers: [TemplatesController],
     providers: [TemplatesService, TemplateImportService],
-    exports: [TemplatesService],
+    exports: [TemplatesService, TemplateImportService],
 })
 export class TemplatesModule {}
 
@@ -39,23 +43,29 @@ export class TemplatesModule {}
 })
 export class TenantsModule {}
 
+/** O módulo de contratos: envelopes, conversa no WhatsApp, contatos, funil e Assistente. */
 @Module({
-    imports: [TemplatesModule],
-    controllers: [EnvelopesController, EventsController],
-    providers: [EnvelopesService, ReminderService],
+    imports: [TemplatesModule, TenantsModule],
+    controllers: [
+        EnvelopesController,
+        EventsController,
+        ContactsController,
+        WhatsAppController,
+        ContractsController,
+        AssistantController,
+        SessionController,
+    ],
+    providers: [EnvelopesService, ReminderService, ContactsService, AssistantService],
 })
-export class EnvelopesModule {}
+export class ContractsModule {}
 
-@Module({ controllers: [SigningController], providers: [SigningService] })
+@Module({ controllers: [SigningController] })
 export class SigningModule {}
 
 @Module({ controllers: [VerificationController], providers: [VerificationService] })
 export class VerificationModule {}
 
-@Module({ imports: [TenantsModule], controllers: [DemoController] })
-export class DemoModule {}
-
-@Module({ controllers: [OfficeController, OfficeLoginController, PartnerInfoController] })
+@Module({ controllers: [OfficeController] })
 export class OfficeModule {}
 
 @Module({ controllers: [HealthController] })
@@ -75,7 +85,7 @@ function webStatic(): DynamicModule[] {
     return [
         ServeStaticModule.forRoot({
             rootPath: dist,
-            exclude: ['/v1/{*path}', '/entrar', '/health'],
+            exclude: ['/v1/{*path}', '/health'],
             serveStaticOptions: { index: false, maxAge: '1h' },
         }),
     ]
@@ -91,12 +101,11 @@ export class AppModule {
                 CoreModule,
                 TemplatesModule,
                 TenantsModule,
-                EnvelopesModule,
+                ContractsModule,
                 SigningModule,
                 VerificationModule,
                 OfficeModule,
                 HealthModule,
-                ...(env().DEMO_MODE ? [DemoModule] : []),
                 ...webStatic(),
             ],
             providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

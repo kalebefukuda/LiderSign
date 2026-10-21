@@ -31,7 +31,3 @@ export function useOffice(): OfficeMeDto {
 export function useOfficeReload() {
     return useOfficeContext().reload
 }
-
-export function partnerLink(office: OfficeMeDto, path = '') {
-    return office.partner.url ? `${office.partner.url}${path}` : null
-}

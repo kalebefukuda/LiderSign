@@ -41,7 +41,8 @@ export class TenantGuard implements CanActivate {
     async canActivate(context: ExecutionContext): Promise<boolean> {
         const req = context.switchToHttp().getRequest<TenantRequest>()
         const tenant = req.headers.authorization ? await this.fromPartner(req) : await this.fromSession(req)
-        if (!tenant.active) throw new ForbiddenException('LíderSign desativado para este escritório')
+        if (!tenant.active)
+            throw new ForbiddenException('Módulo de contratos desativado para este escritório')
         req.tenant = tenant
         return true
     }
@@ -53,18 +54,18 @@ export class TenantGuard implements CanActivate {
             throw new UnauthorizedException('Informe o cabeçalho X-Tenant-Id')
         }
         const tenant = await this.prisma.tenant.findUnique({ where: { externalId: externalId.trim() } })
-        if (!tenant) throw new NotFoundException('Escritório não encontrado. Ative o LíderSign primeiro.')
+        if (!tenant) throw new NotFoundException('Escritório não encontrado')
         return tenant
     }
 
     private async fromSession(req: Request): Promise<Tenant> {
         const tenantId = readSession(req)
-        if (!tenantId) throw new UnauthorizedException('Sessão expirada. Abra o LíderSign pela LíderHub.')
+        if (!tenantId) throw new UnauthorizedException('Sessão expirada. Entre de novo.')
         if (!SAFE_METHODS.has(req.method) && req.headers[CLIENT_HEADER] !== 'web') {
             throw new ForbiddenException('Requisição recusada')
         }
         const tenant = await this.prisma.tenant.findUnique({ where: { id: tenantId } })
-        if (!tenant) throw new UnauthorizedException('Sessão expirada. Abra o LíderSign pela LíderHub.')
+        if (!tenant) throw new UnauthorizedException('Sessão expirada. Entre de novo.')
         return tenant
     }
 }

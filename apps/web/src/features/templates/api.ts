@@ -4,6 +4,8 @@ import { fetchJson } from '@lidersign/ui'
 
 import { enc, API_BASE } from '@/lib/endpoints'
 
+export const TEMPLATES_CHANGED = 'liderhub:modelos-alterados'
+
 export const templatesApi = {
     listUrl: `${API_BASE}/templates`,
     itemUrl: (id: string) => `${API_BASE}/templates/${enc(id)}`,

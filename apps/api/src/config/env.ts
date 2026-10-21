@@ -19,23 +19,6 @@ const envSchema = z
             emptyToUndefined,
             z.string().min(32, 'SESSION_SECRET precisa ter pelo menos 32 caracteres').optional(),
         ),
-        PARTNER_NAME: z.string().default('LíderHub'),
-        PARTNER_APP_URL: z.preprocess(
-            emptyToUndefined,
-            z
-                .url()
-                .optional()
-                .transform((value) => value?.replace(/\/+$/, '')),
-        ),
-        EMBED_ALLOWED_ORIGINS: z
-            .string()
-            .default('http://localhost:3001')
-            .transform((value) =>
-                value
-                    .split(',')
-                    .map((origin) => origin.trim().replace(/\/+$/, ''))
-                    .filter((origin) => /^https?:\/\/[^\s/'";]+$/.test(origin)),
-            ),
         WEB_PUBLIC_URL: z
             .url('WEB_PUBLIC_URL precisa ser uma URL')
             .transform((value) => value.replace(/\/+$/, '')),
@@ -63,6 +46,8 @@ const envSchema = z
         WHATSAPP_PHONE_NUMBER_ID: z.preprocess(emptyToUndefined, z.string().optional()),
         WHATSAPP_ACCESS_TOKEN: z.preprocess(emptyToUndefined, z.string().optional()),
         WHATSAPP_API_VERSION: z.string().default('v23.0'),
+        WHATSAPP_VERIFY_TOKEN: z.preprocess(emptyToUndefined, z.string().min(16).optional()),
+        WHATSAPP_APP_SECRET: z.preprocess(emptyToUndefined, z.string().min(16).optional()),
         ANTHROPIC_API_KEY: z.preprocess(emptyToUndefined, z.string().optional()),
         AI_MODEL: z.string().default('claude-sonnet-5-5'),
         DEMO_MODE: booleanFromString.default(false),

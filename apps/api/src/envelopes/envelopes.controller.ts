@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Param, Post, Query, Res, StreamableFile, UseGuards } from '@nestjs/common'
+import { Throttle } from '@nestjs/throttler'
 import type { Tenant } from '@prisma/client'
 import { createEnvelopeSchema } from '@lidersign/shared'
 import type { Response } from 'express'
@@ -34,6 +35,12 @@ export class EnvelopesController {
     @Post(':id/resend')
     resend(@CurrentTenant() tenant: Tenant, @Param('id') id: string) {
         return this.envelopes.resend(tenant, id)
+    }
+
+    @Post(':id/nudge')
+    @Throttle({ default: { limit: 20, ttl: 60_000 } })
+    nudge(@CurrentTenant() tenant: Tenant, @Param('id') id: string) {
+        return this.envelopes.nudge(tenant, id)
     }
 
     @Post(':id/cancel')

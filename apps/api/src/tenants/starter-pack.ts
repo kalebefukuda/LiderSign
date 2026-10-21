@@ -7,7 +7,7 @@ export const STARTER_TEMPLATES: CreateTemplateInput[] = [
         assuranceLevel: 'PADRAO',
         body: `# Contrato de prestação de serviços advocatícios
 
-**Modelo de exemplo do LíderSign: revise com o advogado responsável antes de usar.**
+**Modelo de exemplo da LíderHub: revise com o advogado responsável antes de usar.**
 
 Pelo presente instrumento particular, de um lado **{{nome_cliente}}**, inscrito(a) no CPF sob o nº {{cpf_cliente}}, residente em {{endereco_cliente}}, doravante denominado(a) **CONTRATANTE**, e de outro lado **{{nome_escritorio}}**, neste ato representado por {{nome_advogado}}, inscrito(a) na {{oab_advogado}}, doravante denominado **CONTRATADO**, têm entre si justo e contratado o seguinte.
 
@@ -37,7 +37,7 @@ Este contrato vale até a conclusão do pedido e pode ser rescindido por qualque
 
 ## Cláusula 6ª · Da assinatura eletrônica
 
-As partes reconhecem a validade da assinatura eletrônica deste contrato, feita pela plataforma LíderSign, com link pessoal enviado ao WhatsApp do CONTRATANTE, confirmação do seu CPF e registro de data, hora e endereço IP.
+As partes reconhecem a validade da assinatura eletrônica deste contrato, feita pela LíderHub na conversa do WhatsApp do CONTRATANTE (ou por link pessoal enviado a ele), com confirmação do seu CPF e registro de data, hora e das evidências do canal usado.
 
 ## Cláusula 7ª · Do foro
 
@@ -82,7 +82,7 @@ Fica eleito o foro da comarca de {{cidade}} para resolver eventuais dúvidas sob
         assuranceLevel: 'REFORCADO',
         body: `# Procuração ad judicia et extra
 
-**Modelo de exemplo do LíderSign: revise com o advogado responsável antes de usar.**
+**Modelo de exemplo da LíderHub: revise com o advogado responsável antes de usar.**
 
 **OUTORGANTE:** {{nome_cliente}}, {{nacionalidade}}, {{estado_civil}}, {{profissao}}, inscrito(a) no CPF sob o nº {{cpf_cliente}}, residente em {{endereco_cliente}}.
 
@@ -98,7 +98,7 @@ Esta procuração é outorgada especialmente para a seguinte finalidade: {{final
 
 ## Declaração do outorgante
 
-O(A) OUTORGANTE declara que leu esta procuração, que confirmou sua identidade por código enviado ao seu WhatsApp e por selfie, e que concorda com a outorga destes poderes.
+O(A) OUTORGANTE declara que leu esta procuração, que confirmou sua identidade pelo CPF e por selfie, a partir do seu WhatsApp, e que concorda com a outorga destes poderes.
 
 {{cidade}}, {{data}}.`,
         variables: [

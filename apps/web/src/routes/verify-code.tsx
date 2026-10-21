@@ -49,7 +49,7 @@ export default function VerifyCodeRoute() {
                                     <>
                                         Confira se o código <span className="font-mono text-ink">{code}</span>{' '}
                                         foi digitado igual ao rodapé do PDF. Documentos que não foram
-                                        assinados pelo LíderSign não aparecem aqui.
+                                        assinados pela LíderHub não aparecem aqui.
                                     </>
                                 }
                             />

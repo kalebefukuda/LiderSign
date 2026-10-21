@@ -6,7 +6,6 @@ import {
     Get,
     HttpCode,
     NotFoundException,
-    Param,
     Patch,
     Post,
     Put,
@@ -19,7 +18,7 @@ import {
 } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { Throttle } from '@nestjs/throttler'
-import type { MessageStatus, OfficeMeDto, OfficeSettingsDto, WebhookDeliveryDto } from '@lidersign/shared'
+import type { MessageStatus, OfficeMeDto, OfficeSettingsDto } from '@lidersign/shared'
 import {
     isValidBrPhone,
     normalizeBrPhone,
@@ -28,7 +27,7 @@ import {
 } from '@lidersign/shared'
 import type { Tenant } from '@prisma/client'
 import type { Request, Response } from 'express'
-import { toOfficeSettingsDto, toTenantDto, toWebhookDeliveryDto } from '../common/mappers'
+import { toOfficeSettingsDto, toTenantDto } from '../common/mappers'
 import { ZodPipe } from '../common/zod.pipe'
 import { CurrentTenant, TenantGuard } from '../common/partner.guard'
 import { env } from '../config/env'
@@ -36,7 +35,6 @@ import { isTunnelActive, publicUrl } from '../config/public-url'
 import { MessagingService } from '../messaging/messaging.service'
 import { PrismaService } from '../prisma/prisma.service'
 import { StorageService } from '../storage/storage.service'
-import { WebhooksService } from '../webhooks/webhooks.service'
 import { logoKey, logoMime, MAX_LOGO_BYTES } from './branding'
 import { clearSessionCookie } from './session'
 
@@ -46,7 +44,6 @@ export class OfficeController {
         private readonly prisma: PrismaService,
         private readonly messaging: MessagingService,
         private readonly storage: StorageService,
-        private readonly webhooks: WebhooksService,
     ) {}
 
     @Get('me')
@@ -64,7 +61,8 @@ export class OfficeController {
                 Boolean(config.WHATSAPP_ACCESS_TOKEN),
             webPublicUrl: publicUrl(),
             tunnel: isTunnelActive(),
-            partner: { name: config.PARTNER_NAME, url: config.PARTNER_APP_URL ?? null },
+            demo: config.DEMO_MODE,
+            aiEnabled: Boolean(config.ANTHROPIC_API_KEY),
         }
     }
 
@@ -115,26 +113,6 @@ export class OfficeController {
         return toOfficeSettingsDto(updated)
     }
 
-    @Get('webhooks')
-    @UseGuards(TenantGuard)
-    async deliveries(@CurrentTenant() tenant: Tenant): Promise<WebhookDeliveryDto[]> {
-        const items = await this.prisma.webhookDelivery.findMany({
-            where: { tenantId: tenant.id },
-            orderBy: { createdAt: 'desc' },
-            take: 50,
-        })
-        return items.map(toWebhookDeliveryDto)
-    }
-
-    @Post('webhooks/:id/retry')
-    @HttpCode(202)
-    @Throttle({ default: { limit: 10, ttl: 60_000 } })
-    @UseGuards(TenantGuard)
-    async retry(@CurrentTenant() tenant: Tenant, @Param('id') id: string) {
-        await this.webhooks.redeliver(tenant, id)
-        return { accepted: true }
-    }
-
     @Post('logout')
     @HttpCode(204)
     logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
@@ -155,16 +133,8 @@ export class OfficeController {
             envelopeId: null,
             to: normalizeBrPhone(phone),
             kind: 'TEST',
-            body: 'Teste do LíderSign: a conexão com o WhatsApp está funcionando.',
+            body: 'Teste da LíderHub: a conexão com o WhatsApp está funcionando.',
         })
         return { status: message.status as MessageStatus, error: message.error, provider: message.provider }
-    }
-}
-
-@Controller('v1/public/partner')
-export class PartnerInfoController {
-    @Get()
-    info() {
-        return { name: env().PARTNER_NAME, url: env().PARTNER_APP_URL ?? null }
     }
 }

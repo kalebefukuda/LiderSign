@@ -1,0 +1,5 @@
+export { assistantApi } from './api'
+export { AssistantButton, AssistantHint } from './components/assistant-button'
+export { AssistantPanel } from './components/assistant-panel'
+export { RichText } from './components/rich-text'
+export { AssistantProvider, useAssistant } from './context'

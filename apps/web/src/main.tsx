@@ -10,8 +10,8 @@ import { configureDocumentTitle, configureHttp } from '@lidersign/ui'
 import { router } from './router'
 
 configureDocumentTitle({
-    suffix: 'LíderSign',
-    fallback: 'LíderSign · Assinatura eletrônica nativa da LíderHub',
+    suffix: 'LíderHub',
+    fallback: 'LíderHub · Contratos assinados na conversa do WhatsApp',
 })
 configureHttp({ headers: { 'X-LiderSign-Client': 'web' } })
 

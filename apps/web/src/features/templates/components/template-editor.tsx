@@ -87,7 +87,7 @@ export function TemplateEditor({
             const payload = { ...draft, variables }
             const saved = await templatesApi.save(payload, templateId)
             toast.success(templateId ? `Modelo salvo · versão ${saved.version}` : 'Modelo criado')
-            navigate('/painel/modelos')
+            navigate('/modelos')
         } catch (err) {
             setError(errorMessage(err))
         } finally {
@@ -291,7 +291,7 @@ export function TemplateEditor({
 
             <div className="flex flex-col-reverse gap-3 border-t border-line pt-6 sm:flex-row sm:items-center sm:justify-end">
                 {error ? <p className="text-sm text-red-600 sm:mr-auto">{error}</p> : null}
-                <Button variant="ghost" onClick={() => navigate('/painel/modelos')}>
+                <Button variant="ghost" onClick={() => navigate('/modelos')}>
                     Cancelar
                 </Button>
                 <Button onClick={save} loading={saving}>

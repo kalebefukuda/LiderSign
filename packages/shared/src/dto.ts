@@ -4,6 +4,8 @@ import type {
     EnvelopeStatus,
     MessageKind,
     MessageStatus,
+    MessageType,
+    SigningChannel,
     TemplateKind,
     TimestampStatus,
     WebhookEvent,
@@ -25,11 +27,6 @@ export type ConnectTenantResponse = {
     webhookSecret?: string
 }
 
-export type OfficeSessionResponse = {
-    path: string
-    expiresAt: string
-}
-
 export type OfficeSettingsDto = {
     brandColor: string | null
     hasLogo: boolean
@@ -46,7 +43,13 @@ export type OfficeMeDto = {
     whatsappConfigured: boolean
     webPublicUrl: string
     tunnel: boolean
-    partner: { name: string; url: string | null }
+    demo: boolean
+    aiEnabled: boolean
+}
+
+export type SessionInfoDto = {
+    loginAvailable: boolean
+    officeName: string
 }
 
 export type TemplateDto = {
@@ -89,6 +92,7 @@ export type EnvelopeDto = {
     assuranceLevel: AssuranceLevel
     templateId: string
     externalRef: string | null
+    channel: SigningChannel
     signer: SignerDto
     signingUrl: string | null
     verificationCode: string
@@ -99,9 +103,54 @@ export type EnvelopeDto = {
     createdAt: string
     sentAt: string | null
     viewedAt: string | null
+    identityConfirmedAt: string | null
+    remindedAt: string | null
     signedAt: string | null
     completedAt: string | null
     expiresAt: string
+}
+
+export type ContactDto = {
+    id: string
+    name: string
+    initials: string
+    cpfMasked: string
+    phoneMasked: string
+    city: string
+    topic: string
+    stage: string
+    lastMessage: { body: string; direction: 'IN' | 'OUT'; createdAt: string } | null
+    contract: EnvelopeDto | null
+}
+
+export type ConversationDto = {
+    contact: ContactDto
+    messages: MessageDto[]
+}
+
+export type ImportedContractDto = {
+    id: string
+    provider: 'zapsign'
+    title: string
+    signerName: string
+    status: 'SENT' | 'VIEWED' | 'SIGNED' | 'EXPIRED'
+    sentAt: string
+    viewedAt: string | null
+    signedAt: string | null
+}
+
+export type AssistantAction =
+    | { type: 'template.created'; templateId: string; name: string }
+    | { type: 'contracts.nudged'; count: number }
+    | { type: 'navigate'; to: string; label: string }
+
+export type AssistantReply = {
+    reply: string
+    actions: AssistantAction[]
+    engine: 'ai' | 'scripted'
+    thoughtMs: number
+    lookups: number
+    steps: string[]
 }
 
 export type AuditEventDto = {
@@ -117,10 +166,21 @@ export type AuditEventDto = {
     createdAt: string
 }
 
+export type MessagePayload = {
+    author?: 'agent' | 'team'
+    buttons?: { id: string; title: string }[]
+    document?: { filename: string; file: 'original' | 'signed' }
+    audio?: { text: string; seconds: number }
+    image?: { caption: string | null }
+}
+
 export type MessageDto = {
     id: string
     envelopeId: string | null
     toMasked: string
+    direction: 'OUT' | 'IN'
+    type: MessageType
+    payload: MessagePayload | null
     kind: MessageKind
     body: string
     url: string | null
@@ -206,6 +266,7 @@ export type StreamEvent =
     | { type: 'envelope.updated'; envelope: EnvelopeDto }
     | { type: 'message.created'; message: MessageDto }
     | { type: 'webhook.delivered'; envelopeId: string | null; delivery: WebhookDeliveryDto }
+    | { type: 'contacts.updated' }
 
 export type ApiErrorDto = {
     statusCode: number

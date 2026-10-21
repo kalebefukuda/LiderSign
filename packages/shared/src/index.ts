@@ -1,5 +1,6 @@
 export * from './br'
 export * from './dto'
 export * from './enums'
+export * from './funnel'
 export * from './schemas'
 export * from './template'

@@ -24,7 +24,7 @@ export function TemplateEditLoader({ id }: { id: string }) {
                 description="Ele pode ter sido arquivado ou apagado ao reiniciar a demonstração."
                 action={
                     <Button asChild variant="secondary">
-                        <Link to="/painel/modelos">Voltar para modelos</Link>
+                        <Link to="/modelos">Voltar para modelos</Link>
                     </Button>
                 }
             />

@@ -394,7 +394,7 @@ function Shell({ children, branding }: { children: React.ReactNode; branding?: B
                     ) : (
                         <span className="inline-flex items-center gap-2">
                             <LogoMark className="size-6" />
-                            <span className="text-[15px] font-semibold tracking-[-0.02em]">LíderSign</span>
+                            <span className="text-[15px] font-semibold tracking-[-0.02em]">LíderHub</span>
                         </span>
                     )}
                     <span className="inline-flex shrink-0 items-center gap-1.5 text-[13px] text-muted">
@@ -406,7 +406,7 @@ function Shell({ children, branding }: { children: React.ReactNode; branding?: B
             <main className="mx-auto w-full max-w-md flex-1 px-5 pb-10 pt-6">{children}</main>
             {branding ? (
                 <footer className="mx-auto flex max-w-md items-center gap-1.5 px-5 pb-6 text-xs text-subtle">
-                    <LogoMark className="size-4" /> Assinatura eletrônica por LíderSign
+                    <LogoMark className="size-4" /> Assinatura eletrônica pela LíderHub
                 </footer>
             ) : null}
         </div>

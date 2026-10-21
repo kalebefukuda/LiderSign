@@ -36,7 +36,6 @@ export default defineConfig({
         host: true,
         proxy: {
             '/v1': proxied,
-            '/entrar': proxied,
             '/health': proxied,
         },
     },
@@ -45,7 +44,6 @@ export default defineConfig({
         strictPort: true,
         proxy: {
             '/v1': proxied,
-            '/entrar': proxied,
             '/health': proxied,
         },
     },

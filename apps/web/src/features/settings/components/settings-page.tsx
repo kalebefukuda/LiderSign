@@ -67,7 +67,7 @@ export function SettingsPage() {
                         <p className="font-semibold">
                             {official
                                 ? 'WhatsApp oficial (Meta Cloud API)'
-                                : 'Modo demonstração, sem WhatsApp'}
+                                : 'WhatsApp simulado (demonstração)'}
                         </p>
                         {official ? (
                             configured ? (
@@ -85,8 +85,9 @@ export function SettingsPage() {
                     {official ? (
                         <>
                             <p className="max-w-2xl text-[15px] leading-relaxed text-ink/80">
-                                O link, o código e a cópia assinada saem pelo número da Meta. Envie um teste
-                                para conferir a conexão antes de mandar um contrato.
+                                A conversa de assinatura sai pelo número da Meta e as respostas do cliente
+                                chegam pelo webhook. Envie um teste para conferir a conexão antes de mandar um
+                                contrato.
                             </p>
                             <form onSubmit={sendTest} className="flex max-w-lg flex-wrap items-end gap-3">
                                 <Field
@@ -120,18 +121,25 @@ export function SettingsPage() {
                     ) : (
                         <>
                             <p className="max-w-2xl text-[15px] leading-relaxed text-ink/80">
-                                Nenhuma mensagem sai daqui. Depois de enviar, o escritório manda o link pelo
-                                próprio WhatsApp, no botão "Enviar pelo WhatsApp". Na LíderHub, quem envia é o
-                                WhatsApp oficial dela. O código por WhatsApp só é pedido nos modelos com
-                                selfie; sem a Meta configurada, ele aparece na tela de assinatura.
+                                Nenhuma mensagem sai daqui: a conversa aparece no celular simulado da Caixa de
+                                entrada, e cada toque nele passa pelo mesmo motor que atende o WhatsApp
+                                oficial.
                             </p>
                             <div className="space-y-2">
                                 <p className="text-sm font-medium">
-                                    Para usar um número de teste da Meta, no .env:
+                                    Para usar o WhatsApp oficial (Meta Cloud API), no .env:
                                 </p>
                                 <Code>{`WHATSAPP_PROVIDER=cloud_api
 WHATSAPP_PHONE_NUMBER_ID=<Phone number ID>
-WHATSAPP_ACCESS_TOKEN=<token da Meta>`}</Code>
+WHATSAPP_ACCESS_TOKEN=<token da Meta>
+WHATSAPP_VERIFY_TOKEN=<texto seu, 16+ caracteres>
+WHATSAPP_APP_SECRET=<App secret do app da Meta>`}</Code>
+                                <p className="text-[13px] text-muted">
+                                    Na Meta, cadastre o webhook{' '}
+                                    <span className="break-all font-mono">{`${publicUrl}/v1/whatsapp/webhook`}</span>{' '}
+                                    com o mesmo verify token e assine o campo{' '}
+                                    <span className="font-mono">messages</span>.
+                                </p>
                                 <p className="text-[13px] text-muted">
                                     Depois rode{' '}
                                     <span className="whitespace-nowrap font-mono">docker compose up -d</span>.

@@ -1,66 +1,34 @@
+import type { ComponentType } from 'react'
 import { createBrowserRouter, Navigate } from 'react-router'
 
 import { RootLayout } from './routes/root-layout'
+
+const page = (load: () => Promise<{ default: ComponentType }>) => () =>
+    load().then((module) => ({ Component: module.default }))
 
 export const router = createBrowserRouter([
     {
         Component: RootLayout,
         children: [
-            { index: true, element: <Navigate to="/painel" replace /> },
+            { index: true, element: <Navigate to="/atendimento" replace /> },
+            { path: 'entrar', lazy: page(() => import('./routes/entrar')) },
             {
-                path: 'painel',
-                lazy: () => import('./routes/painel/layout').then((m) => ({ Component: m.default })),
+                lazy: page(() => import('./routes/app/layout')),
                 children: [
-                    {
-                        index: true,
-                        lazy: () => import('./routes/painel/inicio').then((m) => ({ Component: m.default })),
-                    },
-                    {
-                        path: 'envelopes',
-                        lazy: () =>
-                            import('./routes/painel/envelopes').then((m) => ({ Component: m.default })),
-                    },
-                    {
-                        path: 'envelopes/:id',
-                        lazy: () =>
-                            import('./routes/painel/envelope').then((m) => ({ Component: m.default })),
-                    },
-                    {
-                        path: 'enviar',
-                        lazy: () => import('./routes/painel/enviar').then((m) => ({ Component: m.default })),
-                    },
-                    {
-                        path: 'desenvolvedores',
-                        lazy: () =>
-                            import('./routes/painel/desenvolvedores').then((m) => ({ Component: m.default })),
-                    },
-                    {
-                        path: 'configuracoes',
-                        lazy: () =>
-                            import('./routes/painel/configuracoes').then((m) => ({ Component: m.default })),
-                    },
-                    {
-                        path: 'modelos',
-                        lazy: () => import('./routes/painel/modelos').then((m) => ({ Component: m.default })),
-                    },
-                    {
-                        path: 'modelos/novo',
-                        lazy: () =>
-                            import('./routes/painel/modelo-novo').then((m) => ({ Component: m.default })),
-                    },
-                    {
-                        path: 'modelos/:id',
-                        lazy: () => import('./routes/painel/modelo').then((m) => ({ Component: m.default })),
-                    },
+                    { path: 'atendimento', lazy: page(() => import('./routes/app/atendimento')) },
+                    { path: 'contratos', lazy: page(() => import('./routes/app/contratos')) },
+                    { path: 'contratos/:id', lazy: page(() => import('./routes/app/contrato')) },
+                    { path: 'modelos', lazy: page(() => import('./routes/app/modelos')) },
+                    { path: 'modelos/novo', lazy: page(() => import('./routes/app/modelo-novo')) },
+                    { path: 'modelos/:id', lazy: page(() => import('./routes/app/modelo')) },
+                    { path: 'configuracoes', lazy: page(() => import('./routes/app/configuracoes')) },
                 ],
             },
-            { path: 's/:token', lazy: () => import('./routes/sign').then((m) => ({ Component: m.default })) },
-            { path: 'v', lazy: () => import('./routes/verify').then((m) => ({ Component: m.default })) },
-            {
-                path: 'v/:code',
-                lazy: () => import('./routes/verify-code').then((m) => ({ Component: m.default })),
-            },
-            { path: '*', lazy: () => import('./routes/not-found').then((m) => ({ Component: m.default })) },
+            { path: 'painel/*', element: <Navigate to="/atendimento" replace /> },
+            { path: 's/:token', lazy: page(() => import('./routes/sign')) },
+            { path: 'v', lazy: page(() => import('./routes/verify')) },
+            { path: 'v/:code', lazy: page(() => import('./routes/verify-code')) },
+            { path: '*', lazy: page(() => import('./routes/not-found')) },
         ],
     },
 ])

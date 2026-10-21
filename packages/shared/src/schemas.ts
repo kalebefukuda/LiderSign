@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { isReadableBrandColor, isValidBrPhone, isValidCpf, normalizeBrPhone, onlyDigits } from './br'
-import { ASSURANCE_LEVELS, REMINDER_HOURS, TEMPLATE_KINDS, VARIABLE_TYPES } from './enums'
+import { ASSURANCE_LEVELS, REMINDER_HOURS, SIGNING_CHANNELS, TEMPLATE_KINDS, VARIABLE_TYPES } from './enums'
 
 export const connectTenantSchema = z.object({
     externalId: z
@@ -11,17 +11,6 @@ export const connectTenantSchema = z.object({
     starterPack: z.boolean().default(true),
 })
 export type ConnectTenantInput = z.infer<typeof connectTenantSchema>
-
-export const OFFICE_PATH_PATTERN = /^\/painel(?:\/[A-Za-z0-9_-]+)*\/?$/
-
-export const createOfficeSessionSchema = z.object({
-    to: z
-        .string()
-        .max(200)
-        .regex(OFFICE_PATH_PATTERN, 'Use um caminho do painel, como /painel/modelos')
-        .default('/painel'),
-})
-export type CreateOfficeSessionInput = z.infer<typeof createOfficeSessionSchema>
 
 export const updateOfficeSettingsSchema = z
     .object({
@@ -81,6 +70,7 @@ export const createEnvelopeSchema = z.object({
     signer: signerSchema,
     externalRef: z.string().max(120).optional(),
     send: z.boolean().default(true),
+    channel: z.enum(SIGNING_CHANNELS).default('LINK'),
 })
 export type CreateEnvelopeInput = z.input<typeof createEnvelopeSchema>
 
@@ -122,3 +112,52 @@ export const completeSigningSchema = z
     })
     .strict()
 export type CompleteSigningInput = z.infer<typeof completeSigningSchema>
+
+export const sendContractSchema = z.object({
+    templateId: z.string().min(1).max(64),
+    channel: z.enum(SIGNING_CHANNELS).default('WHATSAPP'),
+    phone: z
+        .string()
+        .max(30)
+        .optional()
+        .refine((value) => !value || isValidBrPhone(value), 'Informe o WhatsApp com DDD')
+        .transform((value) => (value ? normalizeBrPhone(value) : undefined)),
+})
+export type SendContractInput = z.input<typeof sendContractSchema>
+
+export const simulatorInboundSchema = z.discriminatedUnion('type', [
+    z.object({
+        type: z.literal('text'),
+        contactId: z.string().min(1).max(64),
+        text: z.string().trim().min(1).max(2_000),
+    }),
+    z.object({
+        type: z.literal('button'),
+        contactId: z.string().min(1).max(64),
+        buttonId: z.string().min(1).max(64),
+    }),
+    z.object({
+        type: z.literal('image'),
+        contactId: z.string().min(1).max(64),
+        imageDataUrl: z
+            .string()
+            .max(7_000_000)
+            .regex(/^data:image\/(png|jpeg|webp);base64,/, 'Envie uma foto em PNG, JPG ou WEBP'),
+    }),
+])
+export type SimulatorInboundInput = z.infer<typeof simulatorInboundSchema>
+
+export const assistantMessageSchema = z.object({
+    message: z.string().trim().min(1).max(2_000),
+    page: z.enum(['atendimento', 'contratos', 'modelos', 'configuracoes']).default('atendimento'),
+    history: z
+        .array(z.object({ role: z.enum(['user', 'assistant']), text: z.string().max(4_000) }))
+        .max(20)
+        .default([]),
+})
+export type AssistantMessageInput = z.input<typeof assistantMessageSchema>
+
+export const officeMessageSchema = z.object({
+    text: z.string().trim().min(1).max(2_000),
+})
+export type OfficeMessageInput = z.infer<typeof officeMessageSchema>

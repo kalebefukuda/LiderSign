@@ -35,8 +35,9 @@ async function bootstrap() {
                     imgSrc: ["'self'", 'data:', 'blob:'],
                     fontSrc: ["'self'", 'data:'],
                     connectSrc: ["'self'"],
+                    mediaSrc: ["'self'", 'blob:'],
                     frameSrc: ["'self'", 'blob:'],
-                    frameAncestors: ["'self'", ...env.EMBED_ALLOWED_ORIGINS],
+                    frameAncestors: ["'self'"],
                     objectSrc: ["'none'"],
                     baseUri: ["'self'"],
                     formAction: ["'self'"],
@@ -44,19 +45,31 @@ async function bootstrap() {
                 },
             },
             crossOriginEmbedderPolicy: false,
-            frameguard: false,
+            frameguard: { action: 'sameorigin' },
         }),
     )
 
-    app.use(express.json({ limit: '1mb' }))
+    // O webhook da Meta é conferido pelo HMAC do corpo cru; as demais rotas só recebem JSON
+    // Só o celular simulado manda foto (selfie) em JSON; o resto fica no limite de 1 MB
+    app.use('/v1/whatsapp/simulator', express.json({ limit: '8mb' }))
+    app.use(
+        express.json({
+            limit: '1mb',
+            verify: (req, _res, buf) => {
+                if ((req as { url?: string }).url?.startsWith('/v1/whatsapp/webhook')) {
+                    ;(req as { rawBody?: Buffer }).rawBody = Buffer.from(buf)
+                }
+            },
+        }),
+    )
 
     app.useGlobalFilters(new HttpExceptionFilter())
     app.enableShutdownHooks()
     await app.listen(env.PORT, '0.0.0.0')
     startTunnelDiscovery()
     Logger.log(
-        `No ar em :${env.PORT} · WhatsApp: ${env.WHATSAPP_PROVIDER} · demo: ${env.DEMO_MODE ? 'sim' : 'não'}`,
-        'LíderSign',
+        `No ar em :${env.PORT} · WhatsApp: ${env.WHATSAPP_PROVIDER} · IA: ${env.ANTHROPIC_API_KEY ? 'ligada' : 'roteiro reserva'} · demo: ${env.DEMO_MODE ? 'sim' : 'não'}`,
+        'LíderHub',
     )
 }
 

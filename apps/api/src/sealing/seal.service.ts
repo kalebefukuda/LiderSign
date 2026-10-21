@@ -11,6 +11,7 @@ import { pdflibAddPlaceholder } from '@signpdf/placeholder-pdf-lib'
 import signpdf from '@signpdf/signpdf'
 import { P12Signer } from '@signpdf/signer-p12'
 import { SUBFILTER_ETSI_CADES_DETACHED } from '@signpdf/utils'
+import type { Envelope } from '@prisma/client'
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib'
 import QRCode from 'qrcode'
 import { AuditService } from '../audit/audit.service'
@@ -38,6 +39,8 @@ const RETRY_DELAYS_MS = [0, 3_000, 10_000, 30_000, 60_000, 120_000]
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 type Evidence = {
+    channel?: 'link' | 'whatsapp'
+    whatsapp?: { messageId: string; phoneMasked: string; provider?: 'simulator' | 'cloud_api' }
     ip: string | null
     userAgent: string | null
     geolocation: { lat: number; lng: number; accuracy?: number } | null
@@ -102,6 +105,17 @@ function imageMime(data: Buffer): 'image/png' | 'image/jpeg' | 'image/webp' | nu
 export class SealService implements OnApplicationBootstrap {
     private readonly logger = new Logger('Selagem')
     private readonly running = new Set<string>()
+    private whatsappDelivery?: (
+        envelope: Envelope,
+        verifyUrl: string,
+    ) => Promise<{ provider: string; status: string }>
+
+    /** A conversa do WhatsApp registra aqui como entregar a via assinada (evita dependência circular). */
+    onWhatsAppCompleted(
+        handler: (envelope: Envelope, verifyUrl: string) => Promise<{ provider: string; status: string }>,
+    ) {
+        this.whatsappDelivery = handler
+    }
 
     constructor(
         private readonly prisma: PrismaService,
@@ -230,6 +244,7 @@ export class SealService implements OnApplicationBootstrap {
                   ? 'Desligado nesta instalação'
                   : `Indisponível no momento da selagem${envelope.timestampTsa ? ` (${envelope.timestampTsa})` : ''}`
         const geo = evidence.geolocation
+        const viaWhatsApp = evidence.channel === 'whatsapp'
         const qrDataUrl = await QRCode.toDataURL(verifyUrl, {
             margin: 1,
             width: 288,
@@ -246,8 +261,11 @@ export class SealService implements OnApplicationBootstrap {
                 signer: {
                     name: envelope.signerName,
                     cpfMasked: maskCpf(envelope.signerCpf),
-                    phoneMasked: maskPhone(envelope.signerPhone),
-                    phoneVerified: Boolean(evidence.phoneVerifiedAt),
+                    phoneLine: viaWhatsApp
+                        ? `WhatsApp ${maskPhone(envelope.signerPhone)} · assinou na própria conversa`
+                        : evidence.phoneVerifiedAt
+                          ? `Celular ${maskPhone(envelope.signerPhone)} · confirmado por código no WhatsApp`
+                          : `Celular ${maskPhone(envelope.signerPhone)} · recebeu o link pessoal no WhatsApp`,
                 },
                 signature,
                 selfieDataUrl,
@@ -256,16 +274,38 @@ export class SealService implements OnApplicationBootstrap {
                     ASSURANCE_LEVEL_LABEL[envelope.assuranceLevel as AssuranceLevel] ??
                     envelope.assuranceLevel,
                 signedAt: envelope.signedAt ?? new Date(),
-                ip: evidence.ip ?? null,
-                device: summarizeUserAgent(evidence.userAgent ?? null),
+                channelRows: viaWhatsApp
+                    ? [
+                          [
+                              'Canal',
+                              evidence.whatsapp?.provider === 'simulator'
+                                  ? 'Conversa de WhatsApp SIMULADA (demonstração, sem valor de prova)'
+                                  : 'Conversa no WhatsApp oficial, iniciada pelo escritório para o número do signatário',
+                          ],
+                          [
+                              'Aceite registrado',
+                              `Toque no botão "Assinar" · mensagem ${evidence.whatsapp?.messageId ?? 'não informada'}`,
+                          ],
+                      ]
+                    : [
+                          ['Endereço IP', evidence.ip ?? 'Não informado'],
+                          ['Dispositivo', summarizeUserAgent(evidence.userAgent ?? null)],
+                      ],
                 geolocation: geo
                     ? `${geo.lat.toFixed(5)}, ${geo.lng.toFixed(5)}${geo.accuracy ? ` (precisão de ${Math.round(geo.accuracy)} m)` : ''}`
                     : null,
-                identity: [
-                    evidence.identityConfirmedAt ? 'CPF digitado e conferido pelo signatário' : null,
-                    evidence.phoneVerifiedAt ? 'celular confirmado por código no WhatsApp' : null,
-                    'link pessoal enviado ao WhatsApp do signatário',
-                ]
+                identity: (viaWhatsApp
+                    ? [
+                          'CPF digitado e conferido na conversa',
+                          'posse do WhatsApp cadastrado (a conversa só acontece com aquele número)',
+                          envelope.selfiePath ? 'selfie enviada pela câmera do WhatsApp' : null,
+                      ]
+                    : [
+                          evidence.identityConfirmedAt ? 'CPF digitado e conferido pelo signatário' : null,
+                          evidence.phoneVerifiedAt ? 'celular confirmado por código no WhatsApp' : null,
+                          'link pessoal enviado ao WhatsApp do signatário',
+                      ]
+                )
                     .filter(Boolean)
                     .join(' · '),
                 consentText: evidence.consentText ?? '',
@@ -308,7 +348,7 @@ export class SealService implements OnApplicationBootstrap {
         pages.forEach((page) => doc.addPage(page))
         const helvetica = await doc.embedFont(StandardFonts.Helvetica)
         const stamp = winAnsi(
-            `Assinado eletronicamente via LíderSign · Código ${envelope.verificationCode} · Verifique em ${verifyUrl}`,
+            `Assinado eletronicamente via LíderHub · Código ${envelope.verificationCode} · Verifique em ${verifyUrl}`,
         )
         for (const page of doc.getPages()) {
             const { width } = page.getSize()
@@ -324,18 +364,18 @@ export class SealService implements OnApplicationBootstrap {
             })
         }
         doc.setTitle(envelope.title)
-        doc.setProducer('LíderSign')
-        doc.setCreator('LíderSign')
+        doc.setProducer('LíderHub')
+        doc.setCreator('LíderHub')
 
         pdflibAddPlaceholder({
             pdfDoc: doc,
-            reason: 'Selo de integridade LíderSign',
+            reason: 'Selo de integridade LíderHub',
             contactInfo: verifyUrl,
-            name: 'LíderSign',
+            name: 'LíderHub',
             location: 'Brasil',
             signatureLength: 16_384,
             subFilter: SUBFILTER_ETSI_CADES_DETACHED,
-            appName: 'LíderSign',
+            appName: 'LíderHub',
         })
         const prepared = Buffer.from(await doc.save({ useObjectStreams: false }))
         const signer = new P12Signer(await this.certificate.getP12(), {
@@ -368,7 +408,17 @@ export class SealService implements OnApplicationBootstrap {
         })
         this.events.emit(envelope.tenantId, { type: 'envelope.updated', envelope: toEnvelopeDto(envelope) })
         this.webhooks.dispatch(envelope.tenant, envelope, 'envelope.completed')
-        if (rawToken) {
+        if (envelope.channel === 'WHATSAPP' && this.whatsappDelivery) {
+            const message = await this.whatsappDelivery(
+                envelope,
+                verificationUrlFor(envelope.verificationCode),
+            )
+            await this.audit.append(envelope.id, 'COPY_SENT', 'system', {
+                provider: message.provider,
+                status: message.status,
+                canal: 'whatsapp',
+            })
+        } else if (rawToken) {
             const copyUrl = signingUrlFor(rawToken)
             const message = await this.messaging.send({
                 tenantId: envelope.tenantId,

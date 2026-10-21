@@ -53,12 +53,12 @@ export function PreferencesForm() {
     return (
         <form onSubmit={save} className="space-y-12">
             <section aria-labelledby="marca" className="space-y-4">
-                <Kicker id="marca">Marca no link de assinatura</Kicker>
+                <Kicker id="marca">Marca do escritório</Kicker>
                 <div className="grid gap-8 rounded-2xl border border-line p-5 sm:p-6 lg:grid-cols-[1fr_300px]">
                     <div className="space-y-6">
                         <p className="max-w-xl text-[15px] leading-relaxed text-ink/80">
-                            O cliente vê o logo e a cor do escritório quando abre o link. Ajuda a confiar no
-                            que recebeu pelo WhatsApp.
+                            O cliente vê o logo e a cor do escritório quando prefere assinar pelo navegador.
+                            Ajuda a confiar no que recebeu pelo WhatsApp.
                         </p>
                         <LogoField />
                         <Field
@@ -112,7 +112,7 @@ export function PreferencesForm() {
                     <Field
                         label="Validade do link"
                         htmlFor="validity"
-                        hint="Depois disso o link expira e o documento precisa de um novo envio."
+                        hint="Depois disso a assinatura expira, na conversa e no link, e o documento precisa de um novo envio."
                         className="max-w-xs"
                     >
                         <NativeSelect
@@ -141,8 +141,9 @@ export function PreferencesForm() {
                                 Lembrete automático pelo WhatsApp
                             </label>
                             <p id="reminder-help" className="max-w-xl text-sm leading-relaxed text-muted">
-                                Se o cliente não assinar, o LíderSign manda um lembrete uma vez, com um link
-                                novo. O anterior deixa de valer.
+                                Se o cliente não assinar, a LíderHub lembra uma vez, na própria conversa e de
+                                acordo com a etapa em que ele parou. Por link, vai um link novo e o anterior
+                                deixa de valer.
                             </p>
                             <div className={cn('flex items-center gap-2 text-sm', !reminder && 'opacity-50')}>
                                 <span>Enviar depois de</span>

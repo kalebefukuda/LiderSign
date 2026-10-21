@@ -34,13 +34,18 @@ import { PdfRenderService, roleForKind } from '../sealing/pdf-render.service'
 import { StorageService } from '../storage/storage.service'
 import { TemplatesService } from '../templates/templates.service'
 import { WebhooksService } from '../webhooks/webhooks.service'
+import { ConversationService } from '../whatsapp/conversation.service'
+import { env } from '../config/env'
 
 const DAY_MS = 24 * 60 * 60 * 1000
-type ParsedCreateEnvelope = Omit<CreateEnvelopeInput, 'variables' | 'send' | 'signer'> & {
+type ParsedCreateEnvelope = Omit<CreateEnvelopeInput, 'variables' | 'send' | 'signer' | 'channel'> & {
     variables: Record<string, string>
     send: boolean
+    channel?: 'WHATSAPP' | 'LINK'
     signer: { name: string; cpf: string; phone: string; email?: string }
 }
+
+const MANUAL_NUDGE_COOLDOWN_MS = 2 * 60 * 1000
 
 @Injectable()
 export class EnvelopesService {
@@ -54,6 +59,7 @@ export class EnvelopesService {
         private readonly webhooks: WebhooksService,
         private readonly events: EventsService,
         private readonly expiration: ExpirationService,
+        private readonly conversation: ConversationService,
     ) {}
 
     expireOverdue(where: Prisma.EnvelopeWhereInput = {}) {
@@ -134,10 +140,16 @@ export class EnvelopesService {
         )
         await this.audit.append(envelope.id, 'DOCUMENT_GENERATED', 'system', { sha256: originalSha256 })
 
-        const final = input.send ? await this.sendLink(tenant, envelope, token, false) : envelope
+        const viaWhatsApp = input.channel === 'WHATSAPP'
+        const final = !input.send
+            ? envelope
+            : viaWhatsApp
+              ? await this.conversation.start(tenant, envelope)
+              : await this.sendLink(tenant, envelope, token, false)
         this.events.emit(tenant.id, { type: 'envelope.updated', envelope: toEnvelopeDto(final) })
         this.webhooks.dispatch(tenant, final, 'envelope.sent')
-        return toEnvelopeDto(final, token)
+        // Na conversa do WhatsApp o link não sai: ele só existe se o cliente pedir "Ver no navegador"
+        return toEnvelopeDto(final, viaWhatsApp ? null : token)
     }
 
     private async sendLink(tenant: Tenant, envelope: Envelope, token: string, resend: boolean) {
@@ -159,12 +171,26 @@ export class EnvelopesService {
         return this.prisma.envelope.update({ where: { id: envelope.id }, data: { sentAt: new Date() } })
     }
 
-    async remind(tenant: Tenant, envelope: Envelope) {
+    /** Lembrete: na conversa do WhatsApp, de acordo com a etapa; por link, com um link novo. */
+    async remind(tenant: Tenant, envelope: Envelope, manual = false): Promise<boolean> {
+        const cutoff = new Date(Date.now() - MANUAL_NUDGE_COOLDOWN_MS)
         const claimed = await this.prisma.envelope.updateMany({
-            where: { id: envelope.id, remindedAt: null, status: { in: ['SENT', 'VIEWED'] } },
+            where: {
+                id: envelope.id,
+                status: { in: ['SENT', 'VIEWED'] },
+                ...(manual
+                    ? { OR: [{ remindedAt: null }, { remindedAt: { lt: cutoff } }] }
+                    : { remindedAt: null }),
+            },
             data: { remindedAt: new Date() },
         })
-        if (claimed.count === 0) return
+        if (claimed.count === 0) return false
+        if (envelope.channel === 'WHATSAPP') {
+            const fresh = await this.prisma.envelope.findUniqueOrThrow({ where: { id: envelope.id } })
+            await this.conversation.nudge(fresh)
+            this.events.emit(tenant.id, { type: 'envelope.updated', envelope: toEnvelopeDto(fresh) })
+            return true
+        }
         const token = randomToken(32)
         const rotated = await this.prisma.envelope.update({
             where: { id: envelope.id },
@@ -175,7 +201,7 @@ export class EnvelopesService {
             tenantId: tenant.id,
             envelopeId: envelope.id,
             to: envelope.signerPhone,
-            kind: 'SIGNING_LINK',
+            kind: 'REMINDER',
             body: reminderText(envelope.signerName, tenant.name, envelope.title, url),
             url,
             secrets: [token],
@@ -183,8 +209,57 @@ export class EnvelopesService {
         await this.audit.append(envelope.id, 'REMINDER_SENT', 'system', {
             provider: message.provider,
             status: message.status,
+            ...(manual ? { manual: true } : {}),
         })
         this.events.emit(tenant.id, { type: 'envelope.updated', envelope: toEnvelopeDto(rotated) })
+        return true
+    }
+
+    async nudge(tenant: Tenant, id: string) {
+        await this.expireOverdue({ id, tenantId: tenant.id })
+        const envelope = await this.findOwned(tenant, id)
+        if (!['SENT', 'VIEWED'].includes(envelope.status)) {
+            throw new ConflictException('Só dá para lembrar quem ainda não assinou')
+        }
+        const sent = await this.remind(tenant, envelope, true)
+        if (!sent) {
+            throw new ConflictException('Já mandamos um lembrete há pouco. Tente de novo em alguns minutos.')
+        }
+        return toEnvelopeDto(await this.prisma.envelope.findUniqueOrThrow({ where: { id } }))
+    }
+
+    /** Quem está aguardando assinatura sem nenhuma movimentação recente. */
+    async stalled(tenant: Tenant) {
+        await this.expireOverdue({ tenantId: tenant.id })
+        const minutes = env().DEMO_MODE ? 1 : 60
+        const limit = Date.now() - minutes * 60 * 1000
+        const open = await this.prisma.envelope.findMany({
+            where: { tenantId: tenant.id, status: { in: ['SENT', 'VIEWED'] } },
+            orderBy: { createdAt: 'asc' },
+            take: 200,
+        })
+        return open.filter((envelope) => {
+            const last = Math.max(
+                ...[
+                    envelope.sentAt,
+                    envelope.viewedAt,
+                    envelope.identityVerifiedAt,
+                    envelope.remindedAt,
+                    envelope.createdAt,
+                ]
+                    .filter((date): date is Date => Boolean(date))
+                    .map((date) => date.getTime()),
+            )
+            return last < limit
+        })
+    }
+
+    async nudgeStalled(tenant: Tenant) {
+        const nudged: Envelope[] = []
+        for (const envelope of await this.stalled(tenant)) {
+            if (await this.remind(tenant, envelope, true)) nudged.push(envelope)
+        }
+        return nudged
     }
 
     async list(tenant: Tenant, status?: string) {

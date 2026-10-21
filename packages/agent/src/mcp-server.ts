@@ -14,8 +14,8 @@ function packageVersion(): string {
 export function createLiderSignMcpServer(): MCPServer {
     return new MCPServer({
         id: 'lidersign',
-        name: 'LíderSign',
-        title: 'LíderSign',
+        name: 'LíderHub Contratos',
+        title: 'LíderHub Contratos',
         version: packageVersion(),
         description: 'Assinatura eletrônica nativa da LíderHub: modelos, envio pelo WhatsApp e status.',
         instructions:
