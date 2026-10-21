@@ -1,6 +1,6 @@
 # ADR 004 · Chave de parceiro e o "back da LíderHub" na demo
 
-**Status:** aceita
+**Status:** substituída pela [ADR 005](005-produto-unico-e-assinatura-na-conversa.md)
 
 ## Contexto
 

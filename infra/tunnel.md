@@ -2,7 +2,7 @@
 
 **Com o `docker compose up` isso já é automático:** o compose sobe um túnel rápido da Cloudflare (serviço `tunnel`, sem conta) e o app lê a URL `https://….trycloudflare.com` nas métricas dele e usa nos links. Nada para configurar. A URL é pública enquanto o túnel roda e muda a cada vez que ele sobe; `docker compose stop tunnel` desliga e os links voltam para o `WEB_PUBLIC_URL`.
 
-O resto deste guia é para rodar sem o compose (ex.: `pnpm dev`), quando o link usa o `WEB_PUBLIC_URL`. Com `http://localhost:3000`, ele só abre no seu computador. Há dois jeitos de o celular abrir. No painel, **Desenvolvedores** mostra os dois, com os comandos prontos para copiar.
+Na demonstração, o cliente assina no celular simulado da Caixa de entrada, sem link. O link só aparece no plano B (**Ver no navegador**). O resto deste guia é para rodar sem o compose (ex.: `pnpm dev`), quando o link usa o `WEB_PUBLIC_URL`. Com `http://localhost:3000`, ele só abre no seu computador. Em **Configurações** estão os dois jeitos de o celular abrir, com os comandos prontos para copiar.
 
 O Nest serve a API e o site na mesma porta, então basta apontar para ela (3000, ou a do `APP_PORT`).
 
@@ -22,7 +22,7 @@ Depois `docker compose up -d` e envie um documento novo: o QR code já sai com e
 
 ## Opção B: túnel HTTPS (qualquer rede)
 
-> **Atenção:** com o túnel aberto, qualquer pessoa com a URL acessa a demo (inclusive o painel, que não tem login). Use só durante a gravação e feche o túnel (Ctrl+C) depois.
+> **Atenção:** com o túnel aberto, qualquer pessoa com a URL abre a página de assinatura (que pede o CPF) e a verificação pública. A área do escritório não abre pelo túnel: a entrada de demonstração só vale no próprio computador. Mesmo assim, feche o túnel depois da gravação.
 
 ### 1. Suba o túnel (sem conta)
 
@@ -45,15 +45,19 @@ Os envelopes criados depois disso já saem com o link público.
 
 ## WhatsApp oficial (opcional, número de teste da Meta)
 
-Sem isso, tudo funciona no modo demonstração: o escritório manda o link pelo próprio WhatsApp e, no nível Reforçado, o código aparece na tela de assinatura. Se tiver acesso à Meta, no `.env` da raiz:
+Sem isso, tudo funciona no modo demonstração, com o celular simulado. Se tiver acesso à Meta, no `.env` da raiz:
 
 ```bash
 WHATSAPP_PROVIDER=cloud_api
 WHATSAPP_PHONE_NUMBER_ID=<Phone Number ID da tela "Configuração da API">
 WHATSAPP_ACCESS_TOKEN=<token temporário; nunca versione>
+WHATSAPP_VERIFY_TOKEN=<texto seu, 16+ caracteres>
+WHATSAPP_APP_SECRET=<App secret, em Configurações do app > Básico>
 ```
 
-Depois: `docker compose up -d` de novo. No painel, em **Desenvolvedores**, "Enviar mensagem de teste" confere a conexão.
+Depois: `docker compose up -d` de novo. Em **Configurações**, "Enviar mensagem de teste" confere o envio.
+
+Para receber as respostas (CPF, botões, selfie), no painel do app da Meta, em WhatsApp > Configuração, cadastre o webhook `https://<sua URL do túnel>/v1/whatsapp/webhook` com o mesmo verify token e assine o campo `messages`. A URL do quick tunnel muda a cada subida: para algo estável, use um túnel nomeado da Cloudflare. Em **Enviar contrato**, no modo demonstração, dá para informar o seu número no lugar do número fictício do contato.
 
 Antes de enviar, mande um "oi" do seu celular para o número de teste: isso abre a janela de 24 h e libera mensagens em texto livre, sem modelo aprovado.
 

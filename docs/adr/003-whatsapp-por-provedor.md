@@ -10,7 +10,7 @@ O link de assinatura e o código de confirmação vão pelo WhatsApp. Quem avali
 
 Uma interface de envio com dois provedores, escolhida por `WHATSAPP_PROVIDER`:
 
-- `simulator` (padrão): grava a mensagem no banco e mostra no celular simulado da `/demo`. Roda sem conta nenhuma.
+- `simulator` (padrão): grava a mensagem no banco e mostra no celular simulado da Caixa de entrada. Roda sem conta nenhuma.
 - `cloud_api`: API oficial da Meta (Graph API `/{phone-number-id}/messages`), para testar no celular de verdade.
 
 Toda mensagem é persistida, nos dois casos, e entra no painel do envelope.
@@ -21,4 +21,4 @@ Não usamos API não oficial: a LíderHub é parceira certificada da Meta, e uma
 
 - O projeto roda e é testado sem dependências externas.
 - Para o celular de verdade, basta o número de teste da Meta e um túnel HTTPS (`infra/tunnel.md`).
-- Na LíderHub, um terceiro provedor delegaria o envio à própria plataforma, via webhook.
+- O recebimento segue o mesmo desenho: o celular simulado e o webhook da Meta entram pelo mesmo motor de conversa (ADR 005).
