@@ -36,8 +36,6 @@ jobs:
             SEAL_CERT_PASSPHRASE: ci-seal-${{ github.run_id }}
             TSA_URL: https://freetsa.org/tsr
             WEBHOOK_ALLOWED_HOSTS: localhost,127.0.0.1
-            PARTNER_APP_URL: http://localhost:3001
-            EMBED_ALLOWED_ORIGINS: http://localhost:3001
             WHATSAPP_PROVIDER: simulator
             DEMO_MODE: 'true'
             DEMO_TENANT_ID: escritorio-demo
@@ -71,17 +69,6 @@ jobs:
                   for i in $(seq 1 30); do curl -sf http://localhost:3000/health && exit 0; sleep 2; done
                   cat ../../app.log; exit 1
 
-            - name: Subir a simulação da LíderHub
-              working-directory: apps/liderhub-demo
-              env:
-                  LIDERHUB_SERVER_PORT: 3001
-                  LIDERSIGN_API_URL: http://localhost:3000
-                  LIDERSIGN_PUBLIC_URL: http://localhost:3000
-              run: |
-                  nohup node dist/server/main.js > ../../liderhub.log 2>&1 &
-                  for i in $(seq 1 30); do curl -sf http://localhost:3001/health && exit 0; sleep 1; done
-                  cat ../../liderhub.log; exit 1
-
             - name: Navegador do Playwright
               run: pnpm exec playwright install --with-deps chromium
 
@@ -90,7 +77,7 @@ jobs:
 
             - name: Logs
               if: failure()
-              run: cat app.log liderhub.log
+              run: cat app.log
 
             - uses: actions/upload-artifact@v4
               if: failure()
