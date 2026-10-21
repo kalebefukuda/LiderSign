@@ -2,7 +2,7 @@
 
 **Com o `docker compose up` isso já é automático:** o compose sobe um túnel rápido da Cloudflare (serviço `tunnel`, sem conta) e o app lê a URL `https://….trycloudflare.com` nas métricas dele e usa nos links. Nada para configurar. A URL é pública enquanto o túnel roda e muda a cada vez que ele sobe; `docker compose stop tunnel` desliga e os links voltam para o `WEB_PUBLIC_URL`.
 
-O resto deste guia é para rodar sem o compose (ex.: `pnpm dev`), quando o link usa o `WEB_PUBLIC_URL`. Com `http://localhost:3000`, ele só abre no seu computador. Há dois jeitos de o celular abrir. A página `/desenvolvedores` mostra os dois, com os comandos prontos para copiar.
+O resto deste guia é para rodar sem o compose (ex.: `pnpm dev`), quando o link usa o `WEB_PUBLIC_URL`. Com `http://localhost:3000`, ele só abre no seu computador. Há dois jeitos de o celular abrir. No painel, **Desenvolvedores** mostra os dois, com os comandos prontos para copiar.
 
 O Nest serve a API e o site na mesma porta, então basta apontar para ela (3000, ou a do `APP_PORT`).
 
@@ -53,7 +53,7 @@ WHATSAPP_PHONE_NUMBER_ID=<Phone Number ID da tela "Configuração da API">
 WHATSAPP_ACCESS_TOKEN=<token temporário; nunca versione>
 ```
 
-Depois: `docker compose up -d` de novo. Em `/desenvolvedores`, "Enviar mensagem de teste" confere a conexão.
+Depois: `docker compose up -d` de novo. No painel, em **Desenvolvedores**, "Enviar mensagem de teste" confere a conexão.
 
 Antes de enviar, mande um "oi" do seu celular para o número de teste: isso abre a janela de 24 h e libera mensagens em texto livre, sem modelo aprovado.
 
