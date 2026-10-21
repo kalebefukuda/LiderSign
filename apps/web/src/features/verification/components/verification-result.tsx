@@ -2,10 +2,7 @@ import { ASSURANCE_LEVEL_LABEL, type PublicVerificationDto } from '@lidersign/sh
 import type * as React from 'react'
 import { Check, CheckCircle2, ChevronDown, Clock3, ShieldAlert } from 'lucide-react'
 
-import { Kicker } from '@/components/ui/primitives'
-import { CopyButton } from '@/components/ui/states'
-import { cn } from '@/lib/cn'
-import { formatDateTimeLong } from '@/lib/format'
+import { Kicker, CopyButton, cn, formatDateTimeLong } from '@lidersign/ui'
 
 const TIMESTAMP_LABEL = {
     OK: 'Emitido',

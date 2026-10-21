@@ -1,7 +1,8 @@
 import { useParams } from 'react-router'
 
+import { useDocumentTitle } from '@lidersign/ui'
+
 import { EnvelopeDetail } from '@/features/envelopes'
-import { useDocumentTitle } from '@/lib/use-document-title'
 
 export default function EnvelopeRoute() {
     useDocumentTitle('Envelope · Painel')

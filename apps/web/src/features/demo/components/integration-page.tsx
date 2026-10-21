@@ -1,8 +1,7 @@
 import { Bot } from 'lucide-react'
 import { Link } from 'react-router'
 
-import { Kicker } from '@/components/ui/primitives'
-import { CopyButton } from '@/components/ui/states'
+import { Kicker, CopyButton } from '@lidersign/ui'
 
 import { CallLog } from './call-log'
 

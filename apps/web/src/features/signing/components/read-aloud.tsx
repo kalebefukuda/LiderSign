@@ -1,7 +1,7 @@
 import { Pause, Play, Square, Volume2 } from 'lucide-react'
 import * as React from 'react'
 
-import { Button } from '@/components/ui/button'
+import { Button } from '@lidersign/ui'
 
 type Status = 'idle' | 'speaking' | 'paused'
 

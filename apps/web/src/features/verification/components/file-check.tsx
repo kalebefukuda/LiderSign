@@ -3,8 +3,7 @@ import { CheckCircle2, FileSearch, XCircle } from 'lucide-react'
 import { Link } from 'react-router'
 import * as React from 'react'
 
-import { cn } from '@/lib/cn'
-import { errorMessage } from '@/lib/http'
+import { cn, errorMessage } from '@lidersign/ui'
 
 import { verificationApi } from '../api'
 

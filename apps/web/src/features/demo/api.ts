@@ -1,7 +1,8 @@
 import type { ConnectTenantResponse, MessageStatus, TenantDto, WebhookPayload } from '@lidersign/shared'
 
+import { fetchJson } from '@lidersign/ui'
+
 import { DEMO_HOST_BASE, PARTNER_BASE } from '@/lib/endpoints'
-import { fetchJson } from '@/lib/http'
 
 export type DemoStatus = {
     active: boolean

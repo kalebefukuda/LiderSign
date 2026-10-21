@@ -27,6 +27,7 @@ export default defineConfig({
         alias: {
             '@': path.resolve(root, 'src'),
             '@lidersign/shared': path.resolve(root, '../../packages/shared/src/index.ts'),
+            '@lidersign/ui': path.resolve(root, '../../packages/ui/src/index.ts'),
         },
     },
     server: {

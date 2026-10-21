@@ -1,8 +1,9 @@
 import { ArrowLeft } from 'lucide-react'
 import { Link } from 'react-router'
 
+import { useDocumentTitle } from '@lidersign/ui'
+
 import { TemplateImport } from '@/features/templates'
-import { useDocumentTitle } from '@/lib/use-document-title'
 
 export default function NewTemplateRoute() {
     useDocumentTitle('Novo modelo · Painel')

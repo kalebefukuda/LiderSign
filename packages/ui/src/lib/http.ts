@@ -21,6 +21,12 @@ const FALLBACK_BY_STATUS: Record<number, string> = {
     502: 'Não foi possível falar com o LíderSign agora. Tente de novo em alguns segundos.',
 }
 
+let defaultHeaders: Record<string, string> = {}
+
+export function configureHttp(options: { headers?: Record<string, string> }) {
+    defaultHeaders = options.headers ?? {}
+}
+
 export async function fetchJson<T>(url: string, init: RequestInit = {}): Promise<T> {
     let response: Response
     try {
@@ -28,6 +34,7 @@ export async function fetchJson<T>(url: string, init: RequestInit = {}): Promise
             ...init,
             headers: {
                 Accept: 'application/json',
+                ...defaultHeaders,
                 ...(init.body && !(init.body instanceof FormData)
                     ? { 'Content-Type': 'application/json' }
                     : {}),

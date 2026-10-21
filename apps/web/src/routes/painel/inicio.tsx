@@ -2,11 +2,10 @@ import type { EnvelopeDto } from '@lidersign/shared'
 import { ArrowRight, ArrowUpRight, CheckCircle2 } from 'lucide-react'
 import { Link } from 'react-router'
 
+import { formatDateTime, useDocumentTitle, useResource } from '@lidersign/ui'
+
 import { EnvelopeTable, useEnvelopes } from '@/features/envelopes'
 import { demoApi, type DemoStatus } from '@/features/demo'
-import { formatDateTime } from '@/lib/format'
-import { useDocumentTitle } from '@/lib/use-document-title'
-import { useResource } from '@/lib/use-resource'
 
 function count(envelopes: EnvelopeDto[] | undefined, statuses: string[]) {
     return envelopes?.filter((envelope) => statuses.includes(envelope.status)).length ?? 0

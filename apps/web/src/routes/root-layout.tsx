@@ -1,7 +1,7 @@
 import { Outlet, ScrollRestoration } from 'react-router'
 import { Toaster } from 'sonner'
 
-import { TooltipProvider } from '@/components/ui/tooltip'
+import { TooltipProvider } from '@lidersign/ui'
 
 export function RootLayout() {
     return (

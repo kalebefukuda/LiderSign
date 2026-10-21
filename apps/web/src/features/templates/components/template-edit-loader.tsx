@@ -1,10 +1,7 @@
 import type { TemplateDto } from '@lidersign/shared'
 import { Link } from 'react-router'
 
-import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/primitives'
-import { EmptyState, ErrorNotice } from '@/components/ui/states'
-import { useResource } from '@/lib/use-resource'
+import { Button, Skeleton, EmptyState, ErrorNotice, useResource } from '@lidersign/ui'
 
 import { templatesApi } from '../api'
 import { TemplateEditor } from './template-editor'

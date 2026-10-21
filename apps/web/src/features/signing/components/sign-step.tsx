@@ -2,10 +2,7 @@ import type { CompleteSigningInput } from '@lidersign/shared'
 import { PenLine, Type } from 'lucide-react'
 import * as React from 'react'
 
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/primitives'
-import { cn } from '@/lib/cn'
-import { errorMessage } from '@/lib/http'
+import { Button, Input, cn, errorMessage } from '@lidersign/ui'
 
 import { signingApi } from '../api'
 import { SignatureCanvas, type SignatureCanvasHandle } from './signature-canvas'

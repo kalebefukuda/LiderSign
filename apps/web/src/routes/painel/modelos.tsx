@@ -1,9 +1,9 @@
 import { FileUp } from 'lucide-react'
 import { Link } from 'react-router'
 
-import { Button } from '@/components/ui/button'
+import { Button, useDocumentTitle } from '@lidersign/ui'
+
 import { TemplateList } from '@/features/templates'
-import { useDocumentTitle } from '@/lib/use-document-title'
 
 export default function TemplatesRoute() {
     useDocumentTitle('Modelos · Painel')

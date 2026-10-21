@@ -2,13 +2,10 @@ import type { PublicVerificationDto } from '@lidersign/shared'
 import { SearchX, ServerCrash } from 'lucide-react'
 import { useParams } from 'react-router'
 
-import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/primitives'
-import { EmptyState } from '@/components/ui/states'
+import { Button, Skeleton, EmptyState, useDocumentTitle, useResource } from '@lidersign/ui'
+
 import { SiteHeader } from '@/features/brand'
 import { CodeForm, FileCheck, VerificationResult, verificationApi } from '@/features/verification'
-import { useDocumentTitle } from '@/lib/use-document-title'
-import { useResource } from '@/lib/use-resource'
 
 export default function VerifyCodeRoute() {
     useDocumentTitle('Verificação de documento')

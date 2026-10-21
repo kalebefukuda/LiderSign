@@ -1,7 +1,7 @@
-import { Kicker } from '@/components/ui/primitives'
+import { Kicker, useDocumentTitle } from '@lidersign/ui'
+
 import { SiteHeader } from '@/features/brand'
 import { IntegrationPage, SettingsPage } from '@/features/demo'
-import { useDocumentTitle } from '@/lib/use-document-title'
 
 export default function DevelopersRoute() {
     useDocumentTitle('Para desenvolvedores')

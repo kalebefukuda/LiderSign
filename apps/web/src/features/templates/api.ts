@@ -1,7 +1,8 @@
 import type { CreateTemplateInput, TemplateDto, TemplateImportResponse } from '@lidersign/shared'
 
+import { fetchJson } from '@lidersign/ui'
+
 import { enc, PARTNER_BASE } from '@/lib/endpoints'
-import { fetchJson } from '@/lib/http'
 
 export const templatesApi = {
     listUrl: `${PARTNER_BASE}/templates`,

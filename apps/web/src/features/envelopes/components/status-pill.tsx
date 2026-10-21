@@ -1,6 +1,6 @@
 import { ENVELOPE_STATUS_LABEL, type EnvelopeStatus } from '@lidersign/shared'
 
-import { Badge, type BadgeProps } from '@/components/ui/badge'
+import { Badge, type BadgeProps } from '@lidersign/ui'
 
 const TONE: Record<EnvelopeStatus, BadgeProps['tone']> = {
     SENT: 'warning',

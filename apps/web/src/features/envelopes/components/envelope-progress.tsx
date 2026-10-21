@@ -1,7 +1,6 @@
 import type { EnvelopeDto } from '@lidersign/shared'
 
-import { cn } from '@/lib/cn'
-import { formatTime } from '@/lib/format'
+import { cn, formatTime } from '@lidersign/ui'
 
 export function EnvelopeProgress({ envelope, className }: { envelope: EnvelopeDto; className?: string }) {
     const steps = [

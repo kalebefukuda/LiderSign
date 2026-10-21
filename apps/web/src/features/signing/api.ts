@@ -1,7 +1,8 @@
 import type { CompleteSigningInput, SigningSessionDto } from '@lidersign/shared'
 
+import { fetchJson } from '@lidersign/ui'
+
 import { enc, SIGN_BASE } from '@/lib/endpoints'
-import { fetchJson } from '@/lib/http'
 
 const base = (token: string) => `${SIGN_BASE}/${enc(token)}`
 

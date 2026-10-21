@@ -2,12 +2,7 @@ import { ASSURANCE_LEVEL_LABEL, TEMPLATE_KIND_LABEL, type TemplateDto } from '@l
 import { ChevronRight, FileText, RefreshCw } from 'lucide-react'
 import { Link } from 'react-router'
 
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/primitives'
-import { EmptyState, ErrorNotice } from '@/components/ui/states'
-import { formatDateTime } from '@/lib/format'
-import { useResource } from '@/lib/use-resource'
+import { Badge, Button, Skeleton, EmptyState, ErrorNotice, formatDateTime, useResource } from '@lidersign/ui'
 
 import { templatesApi } from '../api'
 

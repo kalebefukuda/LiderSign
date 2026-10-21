@@ -2,8 +2,7 @@ import { ArrowRight } from 'lucide-react'
 import { useNavigate } from 'react-router'
 import * as React from 'react'
 
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/primitives'
+import { Button, Input } from '@lidersign/ui'
 
 export function CodeForm({ defaultValue = '' }: { defaultValue?: string }) {
     const navigate = useNavigate()

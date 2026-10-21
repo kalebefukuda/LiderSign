@@ -1,4 +1,4 @@
-import { todayLong } from '@/lib/format'
+import { todayLong } from '@lidersign/ui'
 
 export const SAMPLE_SIGNER = {
     name: 'Maria Aparecida dos Santos',

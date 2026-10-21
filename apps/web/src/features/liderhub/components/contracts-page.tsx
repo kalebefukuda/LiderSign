@@ -2,12 +2,9 @@ import type { EnvelopeDto } from '@lidersign/shared'
 import { Download, ExternalLink, FileSignature, FileText, MessagesSquare, Search } from 'lucide-react'
 import * as React from 'react'
 
-import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/primitives'
-import { EmptyState } from '@/components/ui/states'
+import { Button, Skeleton, EmptyState, cn, formatDateTime } from '@lidersign/ui'
+
 import { envelopesApi, StatusPill, useEnvelopes } from '@/features/envelopes'
-import { cn } from '@/lib/cn'
-import { formatDateTime } from '@/lib/format'
 
 import { PageHeader, Tabs } from './page-header'
 

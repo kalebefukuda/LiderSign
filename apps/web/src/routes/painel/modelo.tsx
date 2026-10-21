@@ -1,8 +1,9 @@
 import { ArrowLeft } from 'lucide-react'
 import { Link, useParams } from 'react-router'
 
+import { useDocumentTitle } from '@lidersign/ui'
+
 import { TemplateEditLoader } from '@/features/templates'
-import { useDocumentTitle } from '@/lib/use-document-title'
 
 export default function EditTemplateRoute() {
     useDocumentTitle('Editar modelo · Painel')

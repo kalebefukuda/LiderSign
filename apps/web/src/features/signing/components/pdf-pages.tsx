@@ -1,6 +1,6 @@
 import * as React from 'react'
 
-import { Skeleton } from '@/components/ui/primitives'
+import { Skeleton } from '@lidersign/ui'
 
 type State = { kind: 'loading' } | { kind: 'ready'; pages: number } | { kind: 'error' }
 

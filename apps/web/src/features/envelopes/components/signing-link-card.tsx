@@ -3,12 +3,10 @@ import QRCode from 'qrcode'
 import * as React from 'react'
 import { toast } from 'sonner'
 
-import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/primitives'
+import { Button, Skeleton, errorMessage, useResource } from '@lidersign/ui'
+
 import { DEMO_HOST_BASE } from '@/lib/endpoints'
-import { errorMessage } from '@/lib/http'
 import { isLocalUrl } from '@/lib/url'
-import { useResource } from '@/lib/use-resource'
 
 import { envelopesApi } from '../api'
 import { recallLink, rememberLink, whatsappShareUrl, type StoredLink } from '../link-store'

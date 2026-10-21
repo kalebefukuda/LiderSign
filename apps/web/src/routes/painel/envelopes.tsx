@@ -1,9 +1,9 @@
 import { FilePlus2 } from 'lucide-react'
 import { Link } from 'react-router'
 
-import { Button } from '@/components/ui/button'
+import { Button, useDocumentTitle } from '@lidersign/ui'
+
 import { EnvelopeTable } from '@/features/envelopes'
-import { useDocumentTitle } from '@/lib/use-document-title'
 
 export default function EnvelopesRoute() {
     useDocumentTitle('Documentos · LíderSign')

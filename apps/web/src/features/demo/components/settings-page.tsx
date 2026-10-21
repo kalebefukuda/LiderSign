@@ -3,14 +3,23 @@ import { MessageCircle, RotateCcw, Smartphone } from 'lucide-react'
 import * as React from 'react'
 import { toast } from 'sonner'
 
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
-import { Field, Input, Kicker, Skeleton } from '@/components/ui/primitives'
-import { CopyButton } from '@/components/ui/states'
-import { errorMessage } from '@/lib/http'
+import {
+    Badge,
+    Button,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogTitle,
+    Field,
+    Input,
+    Kicker,
+    Skeleton,
+    CopyButton,
+    errorMessage,
+    useResource,
+} from '@lidersign/ui'
+
 import { isLocalUrl } from '@/lib/url'
-import { useResource } from '@/lib/use-resource'
 
 import { demoApi, type DemoStatus } from '../api'
 

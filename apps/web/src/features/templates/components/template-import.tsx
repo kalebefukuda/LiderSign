@@ -2,12 +2,7 @@ import type { TemplateImportResponse } from '@lidersign/shared'
 import { FileUp, PenLine } from 'lucide-react'
 import * as React from 'react'
 
-import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/primitives'
-import { ErrorNotice } from '@/components/ui/states'
-import { cn } from '@/lib/cn'
-import { formatBytes } from '@/lib/format'
-import { errorMessage } from '@/lib/http'
+import { Button, Skeleton, ErrorNotice, cn, formatBytes, errorMessage } from '@lidersign/ui'
 
 import { templatesApi } from '../api'
 import { BLANK_TEMPLATE_BODY } from '../utils'

@@ -1,7 +1,7 @@
 import { FileSignature, FileText, Home } from 'lucide-react'
 import { Link, useLocation } from 'react-router'
 
-import { cn } from '@/lib/cn'
+import { cn } from '@lidersign/ui'
 
 const items = [
     { href: '/painel', label: 'Início', icon: Home, exact: true },

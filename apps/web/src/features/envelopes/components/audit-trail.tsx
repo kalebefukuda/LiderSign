@@ -1,9 +1,6 @@
 import type { AuditEventDto } from '@lidersign/shared'
 
-import { Badge } from '@/components/ui/badge'
-import { CopyButton } from '@/components/ui/states'
-import { cn } from '@/lib/cn'
-import { formatDateTimeLong, shortHash } from '@/lib/format'
+import { Badge, CopyButton, cn, formatDateTimeLong, shortHash } from '@lidersign/ui'
 
 const ACTOR_LABEL: Record<AuditEventDto['actor'], string> = {
     system: 'Sistema',

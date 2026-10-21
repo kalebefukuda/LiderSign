@@ -11,14 +11,22 @@ import * as React from 'react'
 import { Link, useNavigate } from 'react-router'
 import { toast } from 'sonner'
 
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Field, Input, Kicker, NativeSelect, Skeleton } from '@/components/ui/primitives'
-import { EmptyState, ErrorNotice } from '@/components/ui/states'
+import {
+    Badge,
+    Button,
+    Field,
+    Input,
+    Kicker,
+    NativeSelect,
+    Skeleton,
+    EmptyState,
+    ErrorNotice,
+    errorMessage,
+    useResource,
+} from '@lidersign/ui'
+
 import { templatesApi } from '@/features/templates'
 import { DEMO_HOST_BASE } from '@/lib/endpoints'
-import { errorMessage } from '@/lib/http'
-import { useResource } from '@/lib/use-resource'
 
 import { envelopesApi } from '../api'
 import { rememberLink } from '../link-store'

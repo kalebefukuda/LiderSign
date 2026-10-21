@@ -18,16 +18,28 @@ import { Link } from 'react-router'
 import * as React from 'react'
 import { toast } from 'sonner'
 
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
-import { Card, Kicker, Skeleton } from '@/components/ui/primitives'
-import { CopyButton, EmptyState, ErrorNotice } from '@/components/ui/states'
+import {
+    Badge,
+    Button,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogTitle,
+    Card,
+    Kicker,
+    Skeleton,
+    CopyButton,
+    EmptyState,
+    ErrorNotice,
+    cn,
+    errorMessage,
+    firstName,
+    formatDateTime,
+    formatDateTimeLong,
+    useResource,
+} from '@lidersign/ui'
+
 import { useLiveEvents } from '@/features/realtime'
-import { cn } from '@/lib/cn'
-import { errorMessage } from '@/lib/http'
-import { firstName, formatDateTime, formatDateTimeLong } from '@/lib/format'
-import { useResource } from '@/lib/use-resource'
 
 import { envelopesApi } from '../api'
 import { rememberLink } from '../link-store'

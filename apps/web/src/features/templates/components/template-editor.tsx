@@ -14,11 +14,18 @@ import { useNavigate } from 'react-router'
 import * as React from 'react'
 import { toast } from 'sonner'
 
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, Field, Input, Kicker, NativeSelect, Textarea } from '@/components/ui/primitives'
-import { cn } from '@/lib/cn'
-import { errorMessage } from '@/lib/http'
+import {
+    Badge,
+    Button,
+    Card,
+    Field,
+    Input,
+    Kicker,
+    NativeSelect,
+    Textarea,
+    cn,
+    errorMessage,
+} from '@lidersign/ui'
 
 import { templatesApi } from '../api'
 import { syncVariables, VARIABLE_TYPE_LABEL } from '../utils'

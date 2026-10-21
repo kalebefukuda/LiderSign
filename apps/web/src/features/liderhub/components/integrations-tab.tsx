@@ -3,11 +3,10 @@ import * as React from 'react'
 import { Link } from 'react-router'
 import { toast } from 'sonner'
 
-import { Badge } from '@/components/ui/badge'
-import { Switch } from '@/components/ui/switch'
-import { LogoMark } from '@/features/brand'
+import { Badge, Switch, errorMessage } from '@lidersign/ui'
+
+import { LogoMark } from '@lidersign/ui'
 import { CallLog, demoApi, ZapSignDialog, type DemoStatus } from '@/features/demo'
-import { errorMessage } from '@/lib/http'
 
 import { PageHeader } from './page-header'
 

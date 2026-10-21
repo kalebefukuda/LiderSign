@@ -3,12 +3,9 @@ import { ArrowLeft, CheckCircle2, Download, Link2Off, Lock, ShieldCheck } from '
 import { Link } from 'react-router'
 import * as React from 'react'
 
-import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/primitives'
-import { LogoMark } from '@/features/brand'
-import { cn } from '@/lib/cn'
-import { firstName } from '@/lib/format'
-import { HttpError } from '@/lib/http'
+import { Button, Skeleton, cn, firstName, HttpError } from '@lidersign/ui'
+
+import { LogoMark } from '@lidersign/ui'
 
 import { signingApi } from '../api'
 import { DocumentText } from './document-text'

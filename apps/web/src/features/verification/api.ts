@@ -1,7 +1,8 @@
 import type { FileCheckResponse, PublicVerificationDto } from '@lidersign/shared'
 
+import { fetchJson } from '@lidersign/ui'
+
 import { enc, VERIFY_BASE } from '@/lib/endpoints'
-import { fetchJson } from '@/lib/http'
 
 export const verificationApi = {
     lookupUrl: (code: string) => `${VERIFY_BASE}/${enc(code)}`,

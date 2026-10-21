@@ -11,10 +11,9 @@ import {
 import * as React from 'react'
 import { Link, useSearchParams } from 'react-router'
 
-import { Skeleton } from '@/components/ui/primitives'
+import { Skeleton, cn, useResource } from '@lidersign/ui'
+
 import { demoApi, type DemoStatus } from '@/features/demo'
-import { cn } from '@/lib/cn'
-import { useResource } from '@/lib/use-resource'
 
 import { ContractsPage } from './contracts-page'
 import { InboxPage } from './inbox-page'

@@ -15,14 +15,10 @@ import * as React from 'react'
 import { Link } from 'react-router'
 import { toast } from 'sonner'
 
-import { Button } from '@/components/ui/button'
-import { Input, NativeSelect } from '@/components/ui/primitives'
+import { Button, Input, NativeSelect, cn, formatTime, errorMessage, useResource } from '@lidersign/ui'
+
 import { envelopesApi, sampleValues, whatsappShareUrl } from '@/features/envelopes'
 import { templatesApi } from '@/features/templates'
-import { cn } from '@/lib/cn'
-import { formatTime } from '@/lib/format'
-import { errorMessage } from '@/lib/http'
-import { useResource } from '@/lib/use-resource'
 
 import { LEADS, loadSent, saveSent, type Lead, type SentContract } from '../data'
 

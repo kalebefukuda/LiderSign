@@ -2,12 +2,10 @@ import { ArrowUpRight, PlugZap, RefreshCw, ServerCrash, ShieldCheck } from 'luci
 import * as React from 'react'
 import { Link, Outlet } from 'react-router'
 
-import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/primitives'
-import { EmptyState } from '@/components/ui/states'
+import { Button, Skeleton, EmptyState, useResource } from '@lidersign/ui'
+
 import { Logo, PanelNav } from '@/features/brand'
 import { demoApi, onDemoStatusChange, type DemoStatus } from '@/features/demo'
-import { useResource } from '@/lib/use-resource'
 
 export default function PanelLayout() {
     const status = useResource<DemoStatus>(demoApi.statusUrl)

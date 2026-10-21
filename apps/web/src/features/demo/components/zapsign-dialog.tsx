@@ -1,9 +1,16 @@
 import { Check, ExternalLink, Info } from 'lucide-react'
 import * as React from 'react'
 
-import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
-import { Input, Label, NativeSelect } from '@/components/ui/primitives'
+import {
+    Button,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogTitle,
+    Input,
+    Label,
+    NativeSelect,
+} from '@lidersign/ui'
 
 const PROMISES = [
     'Listar modelos',

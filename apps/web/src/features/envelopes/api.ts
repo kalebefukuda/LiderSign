@@ -1,7 +1,8 @@
 import type { CreateEnvelopeInput, EnvelopeDto } from '@lidersign/shared'
 
+import { fetchJson } from '@lidersign/ui'
+
 import { enc, PARTNER_BASE } from '@/lib/endpoints'
-import { fetchJson } from '@/lib/http'
 
 export type EnvelopeFile = 'original' | 'signed' | 'timestamp'
 

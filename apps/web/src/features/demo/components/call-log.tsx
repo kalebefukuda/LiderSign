@@ -1,9 +1,6 @@
 import { ArrowLeft, ArrowRight } from 'lucide-react'
 
-import { EmptyState } from '@/components/ui/states'
-import { cn } from '@/lib/cn'
-import { formatTime } from '@/lib/format'
-import { useResource } from '@/lib/use-resource'
+import { EmptyState, cn, formatTime, useResource } from '@lidersign/ui'
 
 import { demoApi, type CallLogEntry } from '../api'
 

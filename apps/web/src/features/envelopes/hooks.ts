@@ -1,7 +1,8 @@
 import type { EnvelopeDto, StreamEvent } from '@lidersign/shared'
 import * as React from 'react'
 
-import { useResource } from '@/lib/use-resource'
+import { useResource } from '@lidersign/ui'
+
 import { useLiveEvents } from '@/features/realtime'
 
 import { envelopesApi } from './api'

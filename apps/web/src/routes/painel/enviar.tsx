@@ -1,5 +1,6 @@
+import { useDocumentTitle } from '@lidersign/ui'
+
 import { SendForm } from '@/features/envelopes'
-import { useDocumentTitle } from '@/lib/use-document-title'
 
 export default function SendRoute() {
     useDocumentTitle('Envio avulso · LíderSign')

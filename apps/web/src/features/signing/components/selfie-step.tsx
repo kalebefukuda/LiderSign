@@ -1,8 +1,7 @@
 import { Camera, RotateCcw, ShieldCheck } from 'lucide-react'
 import * as React from 'react'
 
-import { Button } from '@/components/ui/button'
-import { errorMessage } from '@/lib/http'
+import { Button, errorMessage } from '@lidersign/ui'
 
 import { signingApi } from '../api'
 

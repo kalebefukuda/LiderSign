@@ -1,7 +1,7 @@
 import { parseTemplate, type TemplateSpan, type TemplateVariable } from '@lidersign/shared'
 import * as React from 'react'
 
-import { cn } from '@/lib/cn'
+import { cn } from '@lidersign/ui'
 
 const VAR_SPLIT = /\{\{\s*([a-z][a-z0-9_]*)\s*\}\}/g
 
