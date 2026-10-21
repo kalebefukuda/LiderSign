@@ -1,27 +1,12 @@
 import { isValidBrPhone } from '@lidersign/shared'
-import { MessageCircle, RotateCcw, Smartphone } from 'lucide-react'
+import { MessageCircle, Smartphone } from 'lucide-react'
 import * as React from 'react'
-import { toast } from 'sonner'
 
-import {
-    Badge,
-    Button,
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogTitle,
-    Field,
-    Input,
-    Kicker,
-    Skeleton,
-    CopyButton,
-    errorMessage,
-    useResource,
-} from '@lidersign/ui'
+import { Badge, Button, CopyButton, Field, Input, Kicker, errorMessage } from '@lidersign/ui'
 
 import { isLocalUrl } from '@/lib/url'
 
-import { demoApi, type DemoStatus } from '../api'
+import { officeApi, useOffice } from '@/features/office'
 
 function Code({ children }: { children: string }) {
     return (
@@ -39,29 +24,15 @@ function Code({ children }: { children: string }) {
 }
 
 export function SettingsPage() {
-    const status = useResource<DemoStatus>(demoApi.statusUrl)
+    const data = useOffice()
     const [phone, setPhone] = React.useState('')
     const [testing, setTesting] = React.useState(false)
     const [result, setResult] = React.useState<{ ok: boolean; text: string } | null>(null)
-    const [confirmReset, setConfirmReset] = React.useState(false)
-    const [resetting, setResetting] = React.useState(false)
-
-    if (status.loading && !status.data) {
-        return (
-            <div className="space-y-6">
-                <Skeleton className="h-8 w-56" />
-                <Skeleton className="h-48 w-full rounded-2xl" />
-                <Skeleton className="h-48 w-full rounded-2xl" />
-            </div>
-        )
-    }
-
-    const data = status.data
-    const official = data?.whatsappProvider === 'cloud_api'
-    const configured = Boolean(data?.whatsappConfigured)
-    const publicUrl = data?.webPublicUrl ?? window.location.origin
+    const official = data.whatsappProvider === 'cloud_api'
+    const configured = data.whatsappConfigured
+    const publicUrl = data.webPublicUrl
     const local = isLocalUrl(publicUrl)
-    const tunnel = Boolean(data?.tunnel)
+    const tunnel = data.tunnel
     const port = window.location.port || '3000'
 
     async function sendTest(event: React.FormEvent) {
@@ -73,7 +44,7 @@ export function SettingsPage() {
         setTesting(true)
         setResult(null)
         try {
-            const response = await demoApi.whatsappTest(phone)
+            const response = await officeApi.whatsappTest(phone)
             setResult(
                 response.status === 'FAILED'
                     ? { ok: false, text: response.error ?? 'A Meta recusou a mensagem.' }
@@ -83,20 +54,6 @@ export function SettingsPage() {
             setResult({ ok: false, text: errorMessage(error) })
         } finally {
             setTesting(false)
-        }
-    }
-
-    async function reset() {
-        setResetting(true)
-        try {
-            await demoApi.reset()
-            toast.success('Demonstração reiniciada')
-            setConfirmReset(false)
-            await status.reload()
-        } catch (error) {
-            toast.error(errorMessage(error))
-        } finally {
-            setResetting(false)
         }
     }
 
@@ -246,36 +203,6 @@ cloudflared tunnel --url http://localhost:${port}`}</Code>
                     )}
                 </div>
             </section>
-
-            <section aria-labelledby="demo" className="space-y-4">
-                <Kicker id="demo">Demonstração</Kicker>
-                <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-line p-5 sm:p-6">
-                    <p className="max-w-xl text-[15px] leading-relaxed text-ink/80">
-                        Apaga o escritório de demonstração, os documentos e o registro, para começar do zero.
-                    </p>
-                    <Button variant="secondary" onClick={() => setConfirmReset(true)}>
-                        <RotateCcw aria-hidden /> Reiniciar demonstração
-                    </Button>
-                </div>
-            </section>
-
-            <Dialog open={confirmReset} onOpenChange={setConfirmReset}>
-                <DialogContent>
-                    <DialogTitle>Reiniciar a demonstração?</DialogTitle>
-                    <DialogDescription>
-                        Os documentos enviados e o escritório de demonstração serão apagados. Depois é só
-                        ativar de novo.
-                    </DialogDescription>
-                    <div className="mt-6 flex justify-end gap-2">
-                        <Button variant="secondary" onClick={() => setConfirmReset(false)}>
-                            Cancelar
-                        </Button>
-                        <Button variant="danger" loading={resetting} onClick={() => void reset()}>
-                            Reiniciar
-                        </Button>
-                    </div>
-                </DialogContent>
-            </Dialog>
         </div>
     )
 }

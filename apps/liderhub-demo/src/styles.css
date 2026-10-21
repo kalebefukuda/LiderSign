@@ -1,0 +1,11 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/inter';
+@import '../../../packages/ui/src/theme.css';
+
+@source '../../../packages/ui/src';
+
+@layer base {
+    body {
+        background: #fafafa;
+    }
+}

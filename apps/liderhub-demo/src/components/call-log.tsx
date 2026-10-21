@@ -2,17 +2,17 @@ import { ArrowLeft, ArrowRight } from 'lucide-react'
 
 import { EmptyState, cn, formatTime, useResource } from '@lidersign/ui'
 
-import { demoApi, type CallLogEntry } from '../api'
+import { hubApi, type CallLogEntry } from '@/lib/api'
 
 export function CallLog() {
-    const { data } = useResource<CallLogEntry[]>(demoApi.callsUrl, { refreshMs: 2000 })
+    const { data } = useResource<CallLogEntry[]>(hubApi.callsUrl, { refreshMs: 2000 })
     const entries = data ?? []
 
     if (!entries.length) {
         return (
             <EmptyState
                 title="Nenhuma chamada ainda"
-                description="Ligue o LíderSign acima ou envie um documento pelo painel: cada chamada aparece aqui."
+                description="Ative o LíderSign em Integrações ou envie um contrato pelo Atendimento: cada chamada aparece aqui."
             />
         )
     }

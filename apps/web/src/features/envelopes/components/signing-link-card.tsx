@@ -3,15 +3,13 @@ import QRCode from 'qrcode'
 import * as React from 'react'
 import { toast } from 'sonner'
 
-import { Button, Skeleton, errorMessage, useResource } from '@lidersign/ui'
+import { Button, Skeleton, errorMessage } from '@lidersign/ui'
 
-import { DEMO_HOST_BASE } from '@/lib/endpoints'
+import { useOffice } from '@/features/office'
 import { isLocalUrl } from '@/lib/url'
 
 import { envelopesApi } from '../api'
 import { recallLink, rememberLink, whatsappShareUrl, type StoredLink } from '../link-store'
-
-type HostStatus = { whatsappProvider: 'simulator' | 'cloud_api'; tenant: { name: string } | null }
 
 type Props = { envelopeId: string; signerFirstName: string; documentTitle: string; phoneMasked: string }
 
@@ -20,7 +18,7 @@ export function SigningLinkCard({ envelopeId, signerFirstName, documentTitle, ph
     const [qr, setQr] = React.useState<string | null>(null)
     const [regenerating, setRegenerating] = React.useState(false)
     const [copied, setCopied] = React.useState(false)
-    const host = useResource<HostStatus>(`${DEMO_HOST_BASE}/status`)
+    const office = useOffice()
     const url = link?.url ?? null
 
     React.useEffect(() => {
@@ -64,10 +62,10 @@ export function SigningLinkCard({ envelopeId, signerFirstName, documentTitle, ph
         }
     }
 
-    const sentByPlatform = host.data?.whatsappProvider === 'cloud_api'
-    const office = host.data?.tenant?.name ?? 'O escritório'
+    const sentByPlatform = office.whatsappProvider === 'cloud_api'
+    const officeName = office.tenant.name
     const message = url
-        ? `Olá, ${signerFirstName}! ${office} enviou "${documentTitle}" para você assinar pelo celular. É rápido: ${url}`
+        ? `Olá, ${signerFirstName}! ${officeName} enviou "${documentTitle}" para você assinar pelo celular. É rápido: ${url}`
         : ''
 
     if (!url) {

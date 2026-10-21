@@ -2,17 +2,10 @@ import { Link } from 'react-router'
 
 import { cn } from '@lidersign/ui'
 
-import { isOfficeHost } from '@/lib/url'
-
 import { Logo } from './logo'
 
-const officeLinks = [
-    { href: '/liderhub', label: 'LíderHub (simulação)' },
-    { href: '/painel', label: 'Painel' },
-]
-
 export function SiteHeader({ className }: { className?: string }) {
-    const links = [...(isOfficeHost() ? officeLinks : []), { href: '/v', label: 'Verificar documento' }]
+    const links = [{ href: '/v', label: 'Verificar documento' }]
     return (
         <header className={cn('border-b border-line bg-white/90 backdrop-blur-sm', className)}>
             <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-6 px-5 sm:px-8">

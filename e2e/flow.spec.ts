@@ -1,37 +1,45 @@
-import type {
-    EnvelopeDetailDto,
-    EnvelopeDto,
-    FileCheckResponse,
-    MessageDto,
-    TemplateDto,
-} from '@lidersign/shared'
-import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
+import type { EnvelopeDetailDto, EnvelopeDto, FileCheckResponse, TemplateDto } from '@lidersign/shared'
+import {
+    expect,
+    request as playwrightRequest,
+    test,
+    type APIRequestContext,
+    type Page,
+} from '@playwright/test'
 
-const SIGNER = { name: 'Maria Aparecida dos Santos', cpf: '52998224725', phone: '47999990000' }
+const HUB_URL = process.env.E2E_LIDERHUB_URL ?? 'http://localhost:3001'
+const SIGNER = { name: 'Maria Aparecida dos Santos' }
+const CPF = '529.982.247-25'
 
-async function resetDemo(request: APIRequestContext) {
-    const reset = await request.post('/demo-host/v1/demo/reset')
+let hub: APIRequestContext
+
+test.beforeAll(async () => {
+    hub = await playwrightRequest.newContext({
+        baseURL: HUB_URL,
+        extraHTTPHeaders: { 'X-LiderHub-Client': 'web' },
+    })
+})
+
+test.afterAll(async () => {
+    await hub.dispose()
+})
+
+async function resetDemo() {
+    const reset = await hub.post('/api/reset')
     expect([204, 404]).toContain(reset.status())
 }
 
-async function activate(request: APIRequestContext) {
-    const response = await request.post('/demo-host/activate')
+async function activate() {
+    const response = await hub.post('/api/lidersign/activate')
     expect(response.ok()).toBeTruthy()
 }
 
-async function createEnvelope(request: APIRequestContext, kind: 'CONTRATO' | 'PROCURACAO') {
-    const templates: TemplateDto[] = await (await request.get('/demo-host/v1/templates')).json()
+async function createEnvelope(kind: 'CONTRATO' | 'PROCURACAO') {
+    const templates: TemplateDto[] = await (await hub.get('/api/templates')).json()
     const template = templates.find((item) => item.kind === kind)
     expect(template, `modelo ${kind} do pacote inicial`).toBeTruthy()
-
-    const variables = Object.fromEntries(
-        template!.variables.map((variable) => [variable.key, variable.example ?? variable.label]),
-    )
-    variables.nome_cliente = SIGNER.name
-    variables.cpf_cliente = '529.982.247-25'
-
-    const response = await request.post('/demo-host/v1/envelopes', {
-        data: { templateId: template!.id, variables, signer: SIGNER, externalRef: 'lead-e2e' },
+    const response = await hub.post('/api/contracts', {
+        data: { contactId: 'maria', templateId: template!.id, phone: '(47) 99999-0000' },
     })
     expect(response.status()).toBe(201)
     const envelope: EnvelopeDto = await response.json()
@@ -40,28 +48,16 @@ async function createEnvelope(request: APIRequestContext, kind: 'CONTRATO' | 'PR
     return envelope
 }
 
-const CPF = '529.982.247-25'
-
 async function confirmCpf(page: Page) {
     await page.getByLabel('Para abrir, digite seu CPF').fill(CPF)
     await page.getByRole('button', { name: 'Abrir documento' }).click()
 }
 
-async function latestOtp(request: APIRequestContext) {
-    const messages: MessageDto[] = await (await request.get('/demo-host/v1/demo/messages')).json()
-    const otp = [...messages].reverse().find((message) => message.kind === 'OTP')
-    const code = otp?.body.match(/\b(\d{6})\b/)?.[1]
-    expect(code, 'código no WhatsApp simulado').toBeTruthy()
-    return code!
-}
-
-async function waitCompleted(request: APIRequestContext, envelopeId: string) {
+async function waitCompleted(envelopeId: string) {
     await expect
         .poll(
             async () => {
-                const detail: EnvelopeDetailDto = await (
-                    await request.get(`/demo-host/v1/envelopes/${envelopeId}`)
-                ).json()
+                const detail: EnvelopeDetailDto = await (await hub.get(`/api/contracts/${envelopeId}`)).json()
                 return detail.status
             },
             { timeout: 45_000 },
@@ -69,27 +65,27 @@ async function waitCompleted(request: APIRequestContext, envelopeId: string) {
         .toBe('COMPLETED')
 }
 
-test.beforeEach(async ({ request }) => {
-    await resetDemo(request)
+test.beforeEach(async () => {
+    await resetDemo()
 })
 
-test('na LíderHub, ativar o LíderSign é um switch e o contrato sai pela conversa', async ({
+test('na LíderHub, o LíderSign ativa em um clique e o contrato sai pela conversa', async ({
     browser,
+    context,
     page,
-    request,
 }) => {
-    await page.goto('/')
-    await expect(page).toHaveURL(/\/liderhub/)
-    const toggle = page.getByRole('switch', { name: 'Ativar LíderSign' })
-    await expect(toggle).toBeEnabled()
-    await expect(toggle).toHaveAttribute('aria-checked', 'false')
-    await toggle.click()
-    await expect(toggle).toHaveAttribute('aria-checked', 'true')
-    await expect(page.getByText('Conta do escritório criada, com os modelos de exemplo')).toBeVisible()
+    await page.goto(HUB_URL)
+    await expect(page).toHaveURL(/\/integracoes/)
+    const card = page.getByRole('article', { name: 'LíderSign' })
+    await card.getByRole('button', { name: 'Ativar' }).click()
+    await expect(card.getByText('Conectado')).toBeVisible()
+    await page.getByRole('tab', { name: /Conectadas/ }).click()
+    await expect(page.getByRole('article')).toHaveCount(1)
 
     await page
         .getByRole('navigation', { name: 'LíderHub' })
-        .getByRole('button', { name: 'Atendimento' })
+        .first()
+        .getByRole('link', { name: 'Atendimento' })
         .click()
     await page.getByLabel('WhatsApp da Maria').fill('(47) 98888-7777')
     await page.getByRole('button', { name: 'Enviar para assinatura' }).click()
@@ -118,7 +114,8 @@ test('na LíderHub, ativar o LíderSign é um switch e o contrato sai pela conve
 
     await page
         .getByRole('navigation', { name: 'LíderHub' })
-        .getByRole('button', { name: /Contratos/ })
+        .first()
+        .getByRole('link', { name: /Contratos/ })
         .click()
     await expect(page.getByRole('cell', { name: /Maria Aparecida dos Santos/ })).toBeVisible()
     await page.getByRole('button', { name: /Assinados/ }).click()
@@ -128,40 +125,56 @@ test('na LíderHub, ativar o LíderSign é um switch e o contrato sai pela conve
         page.frameLocator('iframe[title="Modelos do LíderSign"]').getByRole('heading', { name: 'Modelos' }),
     ).toBeVisible()
 
-    await page.goto('/painel')
-    await expect(page.getByText('Conectado à LíderHub')).toBeVisible()
-    await expect(page.getByRole('navigation', { name: 'Painel' }).getByRole('link')).toHaveText([
+    const [panel] = await Promise.all([
+        context.waitForEvent('page'),
+        page.getByRole('link', { name: 'Abrir o LíderSign' }).click(),
+    ])
+    await expect(panel.getByText('Conectado à LíderHub')).toBeVisible()
+    await expect(panel.getByRole('navigation', { name: 'Painel' }).getByRole('link')).toHaveText([
         'Início',
         'Documentos',
         'Modelos',
+        'Configurações',
     ])
 
-    await page.goto('/painel/enviar')
-    await page.getByLabel('Celular (WhatsApp)').fill('(47) 98888-7777')
-    await page.getByRole('button', { name: 'Enviar para assinatura' }).click()
-    await expect(page.getByRole('heading', { name: 'Envie o link para Maria' })).toBeVisible()
-    await expect(page.getByAltText('QR code do link de assinatura')).toBeVisible()
+    await panel.goto('/painel/enviar')
+    await panel.getByLabel('Celular (WhatsApp)').fill('(47) 98888-7777')
+    await panel.getByRole('button', { name: 'Enviar para assinatura' }).click()
+    await expect(panel.getByRole('heading', { name: 'Envie o link para Maria' })).toBeVisible()
+    await expect(panel.getByAltText('QR code do link de assinatura')).toBeVisible()
 
-    await page.goto('/desenvolvedores')
+    await page.goto(`${HUB_URL}/docs`)
     await expect(page.getByText('envelope.completed · HMAC válido')).toBeVisible({ timeout: 15_000 })
-    void request
 })
 
-test('pelo endereço público só abrem a assinatura e a verificação', async ({ request }) => {
-    const viaTunnel = { 'cf-ray': 'teste', 'cf-connecting-ip': '203.0.113.7' }
-    expect((await request.get('/demo-host/status', { headers: viaTunnel })).status()).toBe(404)
-    for (const path of ['/', '/painel', '/painel/envelopes', '/liderhub', '/desenvolvedores']) {
-        const response = await request.get(path, { headers: viaTunnel, maxRedirects: 0 })
-        expect(response.status(), path).toBe(302)
-        expect(response.headers().location).toBe('/v')
-    }
-    expect((await request.get('/v', { headers: viaTunnel })).status()).toBe(200)
-    expect((await request.get('/demo-host/status')).status()).toBe(200)
+test('o painel só abre com a sessão criada pela LíderHub', async ({ page, request }) => {
+    await activate()
+    expect((await request.get('/v1/office/me')).status()).toBe(401)
+    expect((await request.get('/v1/templates')).status()).toBe(401)
+
+    const open = await hub.get('/api/lidersign/open?to=/painel/modelos', { maxRedirects: 0 })
+    expect(open.status()).toBe(302)
+    const entry = new URL(open.headers().location)
+    expect(entry.pathname).toBe('/entrar')
+
+    const enter = await request.get(`${entry.pathname}${entry.search}`, { maxRedirects: 0 })
+    expect(enter.status()).toBe(302)
+    expect(enter.headers().location).toBe('/painel/modelos')
+    expect(enter.headers()['set-cookie']).toMatch(/ls_session=.+HttpOnly; SameSite=Lax/i)
+
+    expect((await request.get('/v1/office/me')).status()).toBe(200)
+    const forged = await request.post('/v1/envelopes', { data: {} })
+    expect(forged.status()).toBe(403)
+
+    const reused = await page.request.get(`${entry.pathname}${entry.search}`, { maxRedirects: 0 })
+    expect(reused.headers().location).toBe('/painel?acesso=expirado')
+    await page.goto('/painel')
+    await expect(page.getByRole('heading', { name: 'Entre pela LíderHub' })).toBeVisible()
 })
 
 test('lead assina pelo celular e o escritório recebe o PDF selado', async ({ browser, request }) => {
-    await activate(request)
-    const envelope = await createEnvelope(request, 'CONTRATO')
+    await activate()
+    const envelope = await createEnvelope('CONTRATO')
     const token = new URL(envelope.signingUrl!).pathname.split('/').pop()!
 
     const before = await (await request.get(`/v1/sign/${token}`)).json()
@@ -181,9 +194,7 @@ test('lead assina pelo celular e o escritório recebe o PDF selado', async ({ br
     await expect(phone.getByLabel('Texto do documento')).toContainText(SIGNER.name)
     await phone.getByRole('button', { name: 'Continuar para assinar' }).click()
 
-    const officeView = JSON.stringify(
-        await (await request.get(`/demo-host/v1/envelopes/${envelope.id}`)).json(),
-    )
+    const officeView = JSON.stringify(await (await hub.get(`/api/contracts/${envelope.id}`)).json())
     expect(officeView).not.toContain(token)
 
     await phone.getByRole('button', { name: 'Prefiro desenhar' }).click()
@@ -191,12 +202,12 @@ test('lead assina pelo celular e o escritório recebe o PDF selado', async ({ br
     await phone.getByRole('button', { name: 'Assinar', exact: true }).click()
 
     await expect(phone.getByRole('heading', { name: 'Pronto! Documento assinado' })).toBeVisible()
-    await waitCompleted(request, envelope.id)
+    await waitCompleted(envelope.id)
     await expect(phone.getByRole('link', { name: /Baixar documento assinado/ })).toBeVisible({
         timeout: 30_000,
     })
 
-    const signed = await (await request.get(`/demo-host/v1/envelopes/${envelope.id}/files/signed`)).body()
+    const signed = await (await hub.get(`/api/contracts/${envelope.id}/pdf`)).body()
     expect(signed.subarray(0, 5).toString()).toBe('%PDF-')
 
     const check = async (bytes: Buffer): Promise<FileCheckResponse> =>
@@ -213,10 +224,10 @@ test('lead assina pelo celular e o escritório recebe o PDF selado', async ({ br
 
     await expect
         .poll(async () => {
-            const received: { verified: boolean; payload: { event: string } }[] = await (
-                await request.get('/demo-host/webhooks')
+            const received: { verified: boolean; event: string | null }[] = await (
+                await hub.get('/api/webhooks')
             ).json()
-            return received.some((item) => item.payload.event === 'envelope.completed' && item.verified)
+            return received.some((item) => item.event === 'envelope.completed' && item.verified)
         })
         .toBe(true)
 
@@ -227,21 +238,20 @@ test('lead assina pelo celular e o escritório recebe o PDF selado', async ({ br
 })
 
 test('procuração exige selfie no nível Reforçado', async ({ request }) => {
-    await activate(request)
-    const envelope = await createEnvelope(request, 'PROCURACAO')
+    await activate()
+    const envelope = await createEnvelope('PROCURACAO')
     expect(envelope.assuranceLevel).toBe('REFORCADO')
     const token = new URL(envelope.signingUrl!).pathname.split('/').pop()!
 
     expect((await request.post(`/v1/sign/${token}/otp`)).status()).toBe(409)
     expect((await request.post(`/v1/sign/${token}/identity`, { data: { cpf: CPF } })).ok()).toBeTruthy()
-    await request.post(`/v1/sign/${token}/otp`)
-    const verify = await request.post(`/v1/sign/${token}/otp/verify`, {
-        data: { code: await latestOtp(request) },
-    })
+    const otp: { demoCode?: string } = await (await request.post(`/v1/sign/${token}/otp`)).json()
+    expect(otp.demoCode, 'código do WhatsApp simulado').toMatch(/^\d{6}$/)
+    const verify = await request.post(`/v1/sign/${token}/otp/verify`, { data: { code: otp.demoCode } })
     expect(verify.ok()).toBeTruthy()
 
-    const secret = await request.get('/demo-host/v1/partner/tenants/escritorio-demo/webhook-secret')
-    expect(secret.status()).toBe(404)
+    const secret = await request.get('/v1/partner/tenants/escritorio-demo/webhook-secret')
+    expect(secret.status()).toBe(401)
 
     const withoutSelfie = await request.post(`/v1/sign/${token}/complete`, {
         data: { signature: { type: 'typed', typedName: SIGNER.name }, consent: true },

@@ -1,6 +1,6 @@
 import {
-    ArrowUpRight,
     Bell,
+    BookOpen,
     ChevronsUpDown,
     FileSignature,
     MessageSquare,
@@ -9,59 +9,54 @@ import {
     Search,
 } from 'lucide-react'
 import * as React from 'react'
-import { Link, useSearchParams } from 'react-router'
+import { NavLink, Outlet, useLocation } from 'react-router'
+import { Toaster } from 'sonner'
 
-import { Skeleton, cn, useResource } from '@lidersign/ui'
+import { cn, Skeleton, TooltipProvider } from '@lidersign/ui'
 
-import { demoApi, type DemoStatus } from '@/features/demo'
+import { StatusProvider, useHostStatus } from '@/lib/status'
 
-import { ContractsPage } from './contracts-page'
-import { InboxPage } from './inbox-page'
-import { IntegrationsTab } from './integrations-tab'
-import { PageHeader } from './page-header'
+type NavItem = { to: string; label: string; icon: typeof MessageSquare; badge?: string }
 
-type Page = 'atendimento' | 'contratos' | 'integracoes'
-
-const SECTIONS: {
-    title: string
-    items: { id: Page; label: string; icon: typeof MessageSquare; badge?: string }[]
-}[] = [
+const SECTIONS: { title: string; items: NavItem[] }[] = [
     {
         title: 'Operação',
         items: [
-            { id: 'atendimento', label: 'Atendimento', icon: MessageSquare },
-            { id: 'contratos', label: 'Contratos', icon: FileSignature, badge: 'Novo' },
+            { to: '/atendimento', label: 'Atendimento', icon: MessageSquare },
+            { to: '/contratos', label: 'Contratos', icon: FileSignature, badge: 'Novo' },
         ],
     },
-    { title: 'Conexões', items: [{ id: 'integracoes', label: 'Integrações', icon: Puzzle }] },
+    { title: 'Conexões', items: [{ to: '/integracoes', label: 'Integrações', icon: Puzzle }] },
 ]
 
-export function LiderHubSim() {
-    const status = useResource<DemoStatus>(demoApi.statusUrl)
-    const [params, setParams] = useSearchParams()
-    const [collapsed, setCollapsed] = React.useState(false)
-    const active = Boolean(status.data?.active)
+export function Shell() {
+    return (
+        <StatusProvider>
+            <TooltipProvider delayDuration={200}>
+                <Frame />
+                <Toaster position="bottom-right" richColors closeButton />
+            </TooltipProvider>
+        </StatusProvider>
+    )
+}
 
-    const [initial, setInitial] = React.useState<Page | null>(null)
-    React.useEffect(() => {
-        if (status.data && !initial) setInitial(status.data.active ? 'atendimento' : 'integracoes')
-    }, [status.data, initial])
-    const raw = params.get('aba')
-    const page: Page =
-        raw === 'conversas' ? 'atendimento' : ((raw as Page | null) ?? initial ?? 'integracoes')
-    const go = (next: Page) => setParams({ aba: next }, { replace: true })
+function Frame() {
+    const { status, loading } = useHostStatus()
+    const [collapsed, setCollapsed] = React.useState(false)
+    const { pathname } = useLocation()
+    const wide = pathname.startsWith('/atendimento')
+    const officeName = status?.office.name ?? 'Escritório'
 
     return (
-        <div className="min-h-dvh bg-[#fafafa] text-ink">
+        <div className="min-h-dvh text-ink">
             <div className="flex h-8 items-center justify-center gap-1 bg-amber-100 px-4 text-center text-xs text-amber-950">
                 <strong className="font-semibold">Simulação da LíderHub</strong>
-                <span className="hidden sm:inline">· mostra como o escritório usa o LíderSign ·</span>
-                <Link
-                    to="/painel"
-                    className="inline-flex items-center gap-0.5 font-semibold underline underline-offset-2"
-                >
-                    Abrir o LíderSign <ArrowUpRight className="size-3" aria-hidden />
-                </Link>
+                <span className="hidden sm:inline">
+                    · o LíderSign é outro sistema e conversa com ela só pela API ·
+                </span>
+                <NavLink to="/docs" className="font-semibold underline underline-offset-2">
+                    Como funciona
+                </NavLink>
             </div>
 
             <div className="flex">
@@ -73,9 +68,9 @@ export function LiderHubSim() {
                 >
                     <div className="flex h-14 items-center gap-2 px-3">
                         <span className="flex size-7 items-center justify-center rounded-md bg-ink text-[11px] font-bold text-white">
-                            SA
+                            {initials(officeName)}
                         </span>
-                        <span className="min-w-0 flex-1 truncate text-sm font-medium">Souza Advocacia</span>
+                        <span className="min-w-0 flex-1 truncate text-sm font-medium">{officeName}</span>
                         <ChevronsUpDown className="size-4 text-subtle" aria-hidden />
                         <Search className="ml-1 size-4 text-subtle" aria-hidden />
                     </div>
@@ -85,17 +80,17 @@ export function LiderHubSim() {
                                 <p className="px-2.5 pb-1.5 text-xs text-muted">{section.title}</p>
                                 <div className="space-y-0.5">
                                     {section.items.map((item) => (
-                                        <button
-                                            key={item.id}
-                                            type="button"
-                                            onClick={() => go(item.id)}
-                                            aria-current={page === item.id ? 'page' : undefined}
-                                            className={cn(
-                                                'flex h-9 w-full items-center gap-2.5 rounded-lg px-2.5 text-sm transition-colors',
-                                                page === item.id
-                                                    ? 'bg-[#ebebed] font-medium text-ink'
-                                                    : 'text-ink/80 hover:bg-[#efeff1]',
-                                            )}
+                                        <NavLink
+                                            key={item.to}
+                                            to={item.to}
+                                            className={({ isActive }) =>
+                                                cn(
+                                                    'flex h-9 w-full items-center gap-2.5 rounded-lg px-2.5 text-sm transition-colors',
+                                                    isActive
+                                                        ? 'bg-[#ebebed] font-medium text-ink'
+                                                        : 'text-ink/80 hover:bg-[#efeff1]',
+                                                )
+                                            }
                                         >
                                             <item.icon className="size-4" aria-hidden />
                                             {item.label}
@@ -104,21 +99,30 @@ export function LiderHubSim() {
                                                     {item.badge}
                                                 </span>
                                             ) : null}
-                                        </button>
+                                        </NavLink>
                                     ))}
                                 </div>
                             </div>
                         ))}
                     </nav>
+                    <NavLink
+                        to="/docs"
+                        className={({ isActive }) =>
+                            cn(
+                                'mx-2 mb-2 flex h-9 items-center gap-2.5 rounded-lg px-2.5 text-sm transition-colors',
+                                isActive ? 'bg-[#ebebed] font-medium' : 'text-muted hover:bg-[#efeff1]',
+                            )
+                        }
+                    >
+                        <BookOpen className="size-4" aria-hidden /> Docs da integração
+                    </NavLink>
                     <div className="flex items-center gap-2.5 border-t border-line px-3 py-3">
                         <span className="flex size-8 items-center justify-center rounded-full bg-brand-soft text-xs font-semibold text-brand">
                             AP
                         </span>
                         <span className="min-w-0 flex-1">
                             <span className="block truncate text-sm font-medium">Ana Paula Souza</span>
-                            <span className="block truncate text-xs text-muted">
-                                ana@souzaadvocacia.com.br
-                            </span>
+                            <span className="block truncate text-xs text-muted">Administradora</span>
                         </span>
                         <ChevronsUpDown className="size-4 text-subtle" aria-hidden />
                     </div>
@@ -135,21 +139,22 @@ export function LiderHubSim() {
                             >
                                 <PanelLeft className="size-4" />
                             </button>
-                            <div className="flex gap-1 lg:hidden">
+                            <nav aria-label="LíderHub" className="flex gap-1 lg:hidden">
                                 {SECTIONS.flatMap((section) => section.items).map((item) => (
-                                    <button
-                                        key={item.id}
-                                        type="button"
-                                        onClick={() => go(item.id)}
-                                        className={cn(
-                                            'h-8 rounded-lg px-2.5 text-sm',
-                                            page === item.id ? 'bg-surface font-medium' : 'text-muted',
-                                        )}
+                                    <NavLink
+                                        key={item.to}
+                                        to={item.to}
+                                        className={({ isActive }) =>
+                                            cn(
+                                                'flex h-8 items-center rounded-lg px-2.5 text-sm',
+                                                isActive ? 'bg-surface font-medium' : 'text-muted',
+                                            )
+                                        }
                                     >
                                         {item.label}
-                                    </button>
+                                    </NavLink>
                                 ))}
-                            </div>
+                            </nav>
                         </div>
                         <div className="flex items-center gap-2">
                             <Bell className="size-4 text-muted" aria-hidden />
@@ -162,31 +167,22 @@ export function LiderHubSim() {
                     <main
                         className={cn(
                             'mx-auto px-4 py-7 sm:px-8',
-                            page === 'atendimento' ? 'max-w-[1400px]' : 'max-w-[1200px]',
+                            wide ? 'max-w-[1400px]' : 'max-w-[1200px]',
                         )}
                     >
-                        {status.loading && !status.data ? (
-                            <Skeleton className="h-[520px] w-full rounded-xl" />
-                        ) : page === 'integracoes' ? (
-                            <IntegrationsTab status={status.data} onChanged={() => void status.reload()} />
-                        ) : page === 'contratos' ? (
-                            <ContractsPage
-                                active={active}
-                                onOpenIntegrations={() => go('integracoes')}
-                                onOpenInbox={() => go('atendimento')}
-                            />
-                        ) : (
-                            <div className="space-y-5">
-                                <PageHeader
-                                    title="Atendimento"
-                                    description="Conversas do WhatsApp com os seus leads."
-                                />
-                                <InboxPage active={active} onOpenIntegrations={() => go('integracoes')} />
-                            </div>
-                        )}
+                        {loading ? <Skeleton className="h-[520px] w-full rounded-xl" /> : <Outlet />}
                     </main>
                 </div>
             </div>
         </div>
     )
+}
+
+function initials(name: string) {
+    return name
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part[0]?.toUpperCase())
+        .join('')
 }

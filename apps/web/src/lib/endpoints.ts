@@ -1,7 +1,7 @@
-export const PARTNER_BASE = '/demo-host/v1'
-export const DEMO_HOST_BASE = '/demo-host'
+export const API_BASE = '/v1'
+export const OFFICE_BASE = '/v1/office'
 export const SIGN_BASE = '/v1/sign'
 export const VERIFY_BASE = '/v1/public/verify'
-export const EVENTS_URL = `${PARTNER_BASE}/events`
+export const EVENTS_URL = '/v1/events'
 
 export const enc = (value: string) => encodeURIComponent(value)

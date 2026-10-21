@@ -15,7 +15,7 @@ export function PageHeader({
                 <h1 className="text-[22px] font-semibold tracking-[-0.02em]">{title}</h1>
                 <p className="mt-1 text-sm text-muted">{description}</p>
             </div>
-            {action}
+            {action ? <div className="shrink-0 self-start">{action}</div> : null}
         </div>
     )
 }

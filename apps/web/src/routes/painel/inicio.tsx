@@ -2,10 +2,10 @@ import type { EnvelopeDto } from '@lidersign/shared'
 import { ArrowRight, ArrowUpRight, CheckCircle2 } from 'lucide-react'
 import { Link } from 'react-router'
 
-import { formatDateTime, useDocumentTitle, useResource } from '@lidersign/ui'
+import { formatDateTime, useDocumentTitle } from '@lidersign/ui'
 
 import { EnvelopeTable, useEnvelopes } from '@/features/envelopes'
-import { demoApi, type DemoStatus } from '@/features/demo'
+import { partnerLink, useOffice } from '@/features/office'
 
 function count(envelopes: EnvelopeDto[] | undefined, statuses: string[]) {
     return envelopes?.filter((envelope) => statuses.includes(envelope.status)).length ?? 0
@@ -13,14 +13,15 @@ function count(envelopes: EnvelopeDto[] | undefined, statuses: string[]) {
 
 export default function HomeRoute() {
     useDocumentTitle('Início · LíderSign')
-    const status = useResource<DemoStatus>(demoApi.statusUrl)
+    const office = useOffice()
     const { data } = useEnvelopes()
-    const connectedAt = status.data?.tenant?.createdAt
+    const connectedAt = office.tenant.createdAt
+    const partnerInbox = partnerLink(office, '/atendimento')
 
     const stats = [
         { label: 'Aguardando assinatura', value: count(data, ['SENT', 'VIEWED']), href: '/painel/envelopes' },
         { label: 'Assinados', value: count(data, ['SIGNED', 'COMPLETED']), href: '/painel/envelopes' },
-        { label: 'Modelos de contrato', value: status.data?.templatesCount ?? 0, href: '/painel/modelos' },
+        { label: 'Modelos de contrato', value: office.templatesCount, href: '/painel/modelos' },
     ]
 
     return (
@@ -37,19 +38,22 @@ export default function HomeRoute() {
                 <div className="flex items-start gap-3">
                     <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-emerald-600" aria-hidden />
                     <div>
-                        <p className="font-semibold">Conectado à LíderHub</p>
+                        <p className="font-semibold">Conectado à {office.partner.name}</p>
                         <p className="mt-0.5 text-sm text-ink/75">
-                            {connectedAt ? `Desde ${formatDateTime(connectedAt)}. ` : ''}Sem token: a LíderHub
-                            cuida da conexão.
+                            Desde {formatDateTime(connectedAt)}. Sem token: a {office.partner.name} cuida da
+                            conexão.
                         </p>
                     </div>
                 </div>
-                <Link
-                    to="/liderhub?aba=conversas"
-                    className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-brand hover:underline"
-                >
-                    Enviar um contrato pela LíderHub <ArrowUpRight className="size-4" aria-hidden />
-                </Link>
+                {partnerInbox ? (
+                    <a
+                        href={partnerInbox}
+                        className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-brand hover:underline"
+                    >
+                        Enviar um contrato pela {office.partner.name}{' '}
+                        <ArrowUpRight className="size-4" aria-hidden />
+                    </a>
+                ) : null}
             </section>
 
             <div className="grid gap-4 sm:grid-cols-3">

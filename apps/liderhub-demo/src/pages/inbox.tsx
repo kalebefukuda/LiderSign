@@ -15,12 +15,23 @@ import * as React from 'react'
 import { Link } from 'react-router'
 import { toast } from 'sonner'
 
-import { Button, Input, NativeSelect, cn, formatTime, errorMessage, useResource } from '@lidersign/ui'
+import {
+    Button,
+    Input,
+    NativeSelect,
+    cn,
+    errorMessage,
+    formatTime,
+    useDocumentTitle,
+    useResource,
+} from '@lidersign/ui'
 
-import { envelopesApi, sampleValues, whatsappShareUrl } from '@/features/envelopes'
-import { templatesApi } from '@/features/templates'
-
-import { LEADS, loadSent, saveSent, type Lead, type SentContract } from '../data'
+import { PageHeader } from '@/components/page-header'
+import { LEADS, loadSent, saveSent, type Lead, type SentContract } from '@/data/leads'
+import { hubApi, openLiderSign } from '@/lib/api'
+import { useHubEvents } from '@/lib/live'
+import { useHostStatus } from '@/lib/status'
+import { whatsappShareUrl } from '@/lib/whatsapp'
 
 type ContractState = 'none' | 'sent' | 'viewed' | 'signed' | 'done'
 
@@ -39,17 +50,17 @@ const STATE_BADGE: Record<Exclude<ContractState, 'none'>, { label: string; class
     done: { label: 'Assinado', className: 'bg-emerald-50 text-emerald-700' },
 }
 
-export function InboxPage({
-    active,
-    onOpenIntegrations,
-}: {
-    active: boolean
-    onOpenIntegrations: () => void
-}) {
+export function InboxPage() {
+    useDocumentTitle('Atendimento')
+    const { active } = useHostStatus()
     const [leadId, setLeadId] = React.useState(LEADS[0].id)
     const [sent, setSent] = React.useState<SentContract | null>(() => loadSent())
-    const detail = useResource<EnvelopeDetailDto>(sent ? envelopesApi.detailUrl(sent.envelopeId) : null, {
-        refreshMs: 3000,
+    const detail = useResource<EnvelopeDetailDto>(sent ? hubApi.contractUrl(sent.envelopeId) : null, {
+        refreshMs: 5000,
+    })
+    const { reload } = detail
+    useHubEvents((event) => {
+        if (event.type === 'contract.updated' && event.envelopeId === sent?.envelopeId) void reload()
     })
     const lead = LEADS.find((item) => item.id === leadId) ?? LEADS[0]
     const state = contractState(sent, detail.data)
@@ -73,27 +84,29 @@ export function InboxPage({
     }
 
     return (
-        <div className="grid h-[calc(100dvh-215px)] min-h-[560px] overflow-hidden rounded-xl border border-line bg-white lg:grid-cols-[272px_1fr_300px]">
-            <ConversationList
-                selected={lead.id}
-                onSelect={setLeadId}
-                badge={state === 'none' ? null : STATE_BADGE[state]}
-            />
-            <Chat
-                lead={lead}
-                sent={lead.interactive ? sent : null}
-                envelope={lead.interactive ? detail.data : undefined}
-                onRestart={restart}
-            />
-            <ContactPanel
-                lead={lead}
-                active={active}
-                sent={lead.interactive ? sent : null}
-                envelope={lead.interactive ? detail.data : undefined}
-                state={lead.interactive ? state : 'none'}
-                onSent={onSent}
-                onOpenIntegrations={onOpenIntegrations}
-            />
+        <div className="space-y-5">
+            <PageHeader title="Atendimento" description="Conversas do WhatsApp com os seus leads." />
+            <div className="grid h-[calc(100dvh-215px)] min-h-[560px] overflow-hidden rounded-xl border border-line bg-white lg:grid-cols-[272px_1fr_300px]">
+                <ConversationList
+                    selected={lead.id}
+                    onSelect={setLeadId}
+                    badge={state === 'none' ? null : STATE_BADGE[state]}
+                />
+                <Chat
+                    lead={lead}
+                    sent={lead.interactive ? sent : null}
+                    envelope={lead.interactive ? detail.data : undefined}
+                    onRestart={restart}
+                />
+                <ContactPanel
+                    lead={lead}
+                    active={active}
+                    sent={lead.interactive ? sent : null}
+                    envelope={lead.interactive ? detail.data : undefined}
+                    state={lead.interactive ? state : 'none'}
+                    onSent={onSent}
+                />
+            </div>
         </div>
     )
 }
@@ -218,7 +231,7 @@ function Chat({
                         {envelope?.status === 'COMPLETED' ? (
                             <Bubble from="agent" time={formatTime(envelope.completedAt!)}>
                                 <a
-                                    href={envelopesApi.fileUrl(envelope.id, 'signed')}
+                                    href={hubApi.pdfUrl(envelope.id)}
                                     download
                                     className="mb-2 flex items-center gap-3 rounded-lg bg-black/5 px-3 py-2.5"
                                 >
@@ -259,7 +272,6 @@ function ContactPanel({
     envelope,
     state,
     onSent,
-    onOpenIntegrations,
 }: {
     lead: Lead
     active: boolean
@@ -267,7 +279,6 @@ function ContactPanel({
     envelope: EnvelopeDetailDto | undefined
     state: ContractState
     onSent: (value: SentContract) => void
-    onOpenIntegrations: () => void
 }) {
     return (
         <aside className="min-h-0 overflow-y-auto border-t border-line lg:border-l lg:border-t-0">
@@ -299,8 +310,8 @@ function ContactPanel({
                         <p className="text-sm text-muted">
                             Ative o LíderSign em Integrações para enviar contratos daqui.
                         </p>
-                        <Button size="sm" variant="secondary" className="w-full" onClick={onOpenIntegrations}>
-                            Ir para Integrações
+                        <Button asChild size="sm" variant="secondary" className="w-full">
+                            <Link to="/integracoes">Ir para Integrações</Link>
                         </Button>
                     </div>
                 ) : sent ? (
@@ -314,7 +325,7 @@ function ContactPanel({
 }
 
 function SendContract({ lead, onSent }: { lead: Lead; onSent: (value: SentContract) => void }) {
-    const templates = useResource<TemplateDto[]>(templatesApi.listUrl)
+    const templates = useResource<TemplateDto[]>(hubApi.templatesUrl)
     const [templateId, setTemplateId] = React.useState('')
     const [phone, setPhone] = React.useState('')
     const [sending, setSending] = React.useState(false)
@@ -337,20 +348,7 @@ function SendContract({ lead, onSent }: { lead: Lead; onSent: (value: SentContra
         setError(null)
         setSending(true)
         try {
-            const sample = sampleValues()
-            const variables = Object.fromEntries(
-                template.variables.map((variable) => [
-                    variable.key,
-                    sample[variable.key] ?? variable.example ?? '',
-                ]),
-            )
-            const envelope = await envelopesApi.create({
-                templateId: template.id,
-                variables,
-                signer: { name: lead.name, cpf: lead.cpf, phone },
-                externalRef: 'lead-maria-aparecida-bpc',
-                send: true,
-            })
+            const envelope = await hubApi.sendContract({ contactId: lead.id, templateId: template.id, phone })
             onSent({
                 envelopeId: envelope.id,
                 url: envelope.signingUrl ?? '',
@@ -444,19 +442,19 @@ function ContractStatus({
             <div className="space-y-2">
                 {state === 'done' && envelope ? (
                     <Button asChild className="w-full">
-                        <a href={envelopesApi.fileUrl(envelope.id, 'signed')} download>
+                        <a href={hubApi.pdfUrl(envelope.id)} download>
                             <Download aria-hidden /> Baixar PDF assinado
                         </a>
                     </Button>
                 ) : null}
                 {envelope ? (
                     <Button asChild variant="secondary" className="w-full">
-                        <Link to={`/liderhub?aba=contratos`}>Ver em Contratos</Link>
+                        <Link to="/contratos">Ver em Contratos</Link>
                     </Button>
                 ) : null}
                 {envelope ? (
                     <a
-                        href={`/painel/envelopes/${envelope.id}`}
+                        href={openLiderSign(`/painel/envelopes/${envelope.id}`)}
                         target="_blank"
                         rel="noreferrer"
                         className="flex items-center justify-center gap-1 text-xs text-muted hover:text-ink"

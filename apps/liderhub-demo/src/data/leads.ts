@@ -1,5 +1,3 @@
-import { SAMPLE_SIGNER } from '@/features/envelopes'
-
 export type Message = { from: 'lead' | 'agent'; text: string; time: string }
 
 export type Lead = {
@@ -17,10 +15,10 @@ export type Lead = {
 export const LEADS: Lead[] = [
     {
         id: 'maria',
-        name: SAMPLE_SIGNER.name,
+        name: 'Maria Aparecida dos Santos',
         initials: 'MA',
         topic: 'BPC/LOAS',
-        cpf: SAMPLE_SIGNER.cpf,
+        cpf: '***.982.247-**',
         city: 'Joinville/SC',
         stage: 'Qualificado',
         interactive: true,
@@ -84,7 +82,7 @@ export const LEADS: Lead[] = [
 
 export type SentContract = { envelopeId: string; url: string; phone: string; at: string }
 
-const STORE_KEY = 'lidersign:liderhub-sim:sent'
+const STORE_KEY = 'liderhub:sent-contract'
 
 export function loadSent(): SentContract | null {
     try {

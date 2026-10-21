@@ -2,11 +2,23 @@ import type { EnvelopeDto } from '@lidersign/shared'
 import { Download, ExternalLink, FileSignature, FileText, MessagesSquare, Search } from 'lucide-react'
 import * as React from 'react'
 
-import { Button, Skeleton, EmptyState, cn, formatDateTime } from '@lidersign/ui'
+import { Link } from 'react-router'
 
-import { envelopesApi, StatusPill, useEnvelopes } from '@/features/envelopes'
+import {
+    Button,
+    EmptyState,
+    Skeleton,
+    cn,
+    formatDateTime,
+    useDocumentTitle,
+    useResource,
+} from '@lidersign/ui'
 
-import { PageHeader, Tabs } from './page-header'
+import { PageHeader, Tabs } from '@/components/page-header'
+import { StatusPill } from '@/components/status-pill'
+import { hubApi, openLiderSign } from '@/lib/api'
+import { useHubEvents } from '@/lib/live'
+import { useHostStatus } from '@/lib/status'
 
 type Tab = 'documentos' | 'modelos'
 type Filter = 'todos' | 'aguardando' | 'assinados' | 'encerrados'
@@ -30,15 +42,9 @@ const FILTERS: { value: Filter; label: string; match: (envelope: EnvelopeDto) =>
     },
 ]
 
-export function ContractsPage({
-    active,
-    onOpenIntegrations,
-    onOpenInbox,
-}: {
-    active: boolean
-    onOpenIntegrations: () => void
-    onOpenInbox: () => void
-}) {
+export function ContractsPage() {
+    useDocumentTitle('Contratos')
+    const { active } = useHostStatus()
     const [tab, setTab] = React.useState<Tab>('documentos')
 
     return (
@@ -49,7 +55,7 @@ export function ContractsPage({
                 action={
                     active ? (
                         <Button asChild variant="secondary" size="sm">
-                            <a href="/painel" target="_blank" rel="noreferrer">
+                            <a href={openLiderSign('/painel')} target="_blank" rel="noreferrer">
                                 Abrir o LíderSign <ExternalLink aria-hidden />
                             </a>
                         </Button>
@@ -62,7 +68,11 @@ export function ContractsPage({
                     icon={<FileSignature />}
                     title="Ative o LíderSign para ver os contratos aqui"
                     description="É um clique em Integrações: sem conta e sem token."
-                    action={<Button onClick={onOpenIntegrations}>Ir para Integrações</Button>}
+                    action={
+                        <Button asChild>
+                            <Link to="/integracoes">Ir para Integrações</Link>
+                        </Button>
+                    }
                 />
             ) : (
                 <>
@@ -75,7 +85,7 @@ export function ContractsPage({
                         ]}
                     />
                     {tab === 'documentos' ? (
-                        <Documents onOpenInbox={onOpenInbox} />
+                        <Documents />
                     ) : (
                         <div className="space-y-3">
                             <p className="text-sm text-muted">
@@ -84,7 +94,7 @@ export function ContractsPage({
                             </p>
                             <iframe
                                 title="Modelos do LíderSign"
-                                src="/painel/modelos"
+                                src={openLiderSign('/painel/modelos')}
                                 className="h-[calc(100dvh-300px)] min-h-[560px] w-full rounded-xl border border-line bg-white"
                             />
                         </div>
@@ -95,8 +105,11 @@ export function ContractsPage({
     )
 }
 
-function Documents({ onOpenInbox }: { onOpenInbox: () => void }) {
-    const { data, loading } = useEnvelopes()
+function Documents() {
+    const { data, loading, reload } = useResource<EnvelopeDto[]>(hubApi.contractsUrl, { refreshMs: 15000 })
+    useHubEvents((event) => {
+        if (event.type === 'contract.updated') void reload()
+    })
     const [filter, setFilter] = React.useState<Filter>('todos')
     const [query, setQuery] = React.useState('')
 
@@ -160,8 +173,8 @@ function Documents({ onOpenInbox }: { onOpenInbox: () => void }) {
                     title="Nenhum contrato ainda"
                     description="Os contratos enviados pelas conversas aparecem aqui, com o andamento ao vivo."
                     action={
-                        <Button variant="secondary" onClick={onOpenInbox}>
-                            Ir para o Atendimento
+                        <Button asChild variant="secondary">
+                            <Link to="/atendimento">Ir para o Atendimento</Link>
                         </Button>
                     }
                 />
@@ -205,7 +218,7 @@ function Documents({ onOpenInbox }: { onOpenInbox: () => void }) {
                                         <div className="flex justify-end gap-1">
                                             {envelope.status === 'COMPLETED' ? (
                                                 <IconLink
-                                                    href={envelopesApi.fileUrl(envelope.id, 'signed')}
+                                                    href={hubApi.pdfUrl(envelope.id)}
                                                     label="Baixar PDF assinado"
                                                     download
                                                 >
@@ -213,18 +226,17 @@ function Documents({ onOpenInbox }: { onOpenInbox: () => void }) {
                                                 </IconLink>
                                             ) : null}
                                             {envelope.externalRef === 'lead-maria-aparecida-bpc' ? (
-                                                <button
-                                                    type="button"
-                                                    onClick={onOpenInbox}
+                                                <Link
+                                                    to="/atendimento"
                                                     aria-label="Ver conversa"
                                                     title="Ver conversa"
                                                     className="flex size-8 items-center justify-center rounded-lg text-muted hover:bg-surface hover:text-ink"
                                                 >
                                                     <MessagesSquare className="size-4" />
-                                                </button>
+                                                </Link>
                                             ) : null}
                                             <IconLink
-                                                href={`/painel/envelopes/${envelope.id}`}
+                                                href={openLiderSign(`/painel/envelopes/${envelope.id}`)}
                                                 label="Detalhes e trilha de auditoria"
                                                 external
                                             >

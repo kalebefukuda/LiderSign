@@ -26,7 +26,7 @@ import {
 } from '@lidersign/ui'
 
 import { templatesApi } from '@/features/templates'
-import { DEMO_HOST_BASE } from '@/lib/endpoints'
+import { useOffice } from '@/features/office'
 
 import { envelopesApi } from '../api'
 import { rememberLink } from '../link-store'
@@ -41,7 +41,7 @@ function pickDefault(templates: TemplateDto[]) {
 export function SendForm() {
     const navigate = useNavigate()
     const { data: templates, error, loading, reload } = useResource<TemplateDto[]>(templatesApi.listUrl)
-    const host = useResource<{ whatsappProvider: 'simulator' | 'cloud_api' }>(`${DEMO_HOST_BASE}/status`)
+    const office = useOffice()
     const [templateId, setTemplateId] = React.useState('')
     const [values, setValues] = React.useState<Record<string, string>>({})
     const [signer, setSigner] = React.useState({
@@ -54,7 +54,7 @@ export function SendForm() {
 
     const template = templates?.find((item) => item.id === templateId)
     const contractFields = template?.variables.filter((variable) => !(variable.key in FROM_SIGNER)) ?? []
-    const viaWhatsApp = host.data?.whatsappProvider === 'cloud_api'
+    const viaWhatsApp = office.whatsappProvider === 'cloud_api'
 
     React.useEffect(() => {
         if (!templates?.length || templateId) return

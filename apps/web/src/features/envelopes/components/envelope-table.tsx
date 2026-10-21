@@ -3,11 +3,15 @@ import { Link } from 'react-router'
 
 import { Button, Skeleton, EmptyState, ErrorNotice, formatDateTime } from '@lidersign/ui'
 
+import { partnerLink, useOffice } from '@/features/office'
+
 import { useEnvelopes } from '../hooks'
 import { StatusPill } from './status-pill'
 
 export function EnvelopeTable({ limit }: { limit?: number } = {}) {
     const { data, error, loading, reload, live } = useEnvelopes()
+    const office = useOffice()
+    const partnerInbox = partnerLink(office, '/atendimento')
 
     if (loading && !data) {
         return (
@@ -44,11 +48,18 @@ export function EnvelopeTable({ limit }: { limit?: number } = {}) {
             <EmptyState
                 icon={<FileSignature />}
                 title="Nenhum documento ainda"
-                description="Os contratos enviados pelas conversas da LíderHub aparecem aqui, com o andamento ao vivo."
+                description={`Os contratos enviados pelas conversas da ${office.partner.name} aparecem aqui, com o andamento ao vivo.`}
                 action={
-                    <Button asChild variant="secondary">
-                        <Link to="/liderhub?aba=conversas">Enviar pela LíderHub (simulação)</Link>
-                    </Button>
+                    <div className="flex flex-wrap justify-center gap-2">
+                        {partnerInbox ? (
+                            <Button asChild variant="secondary">
+                                <a href={partnerInbox}>Ir para a {office.partner.name}</a>
+                            </Button>
+                        ) : null}
+                        <Button asChild variant="ghost">
+                            <Link to="/painel/enviar">Envio avulso</Link>
+                        </Button>
+                    </div>
                 }
             />
         )
