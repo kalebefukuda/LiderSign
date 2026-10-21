@@ -1,6 +1,6 @@
 import { z } from 'zod'
-import { isValidBrPhone, isValidCpf, normalizeBrPhone, onlyDigits } from './br'
-import { ASSURANCE_LEVELS, TEMPLATE_KINDS, VARIABLE_TYPES } from './enums'
+import { isReadableBrandColor, isValidBrPhone, isValidCpf, normalizeBrPhone, onlyDigits } from './br'
+import { ASSURANCE_LEVELS, REMINDER_HOURS, TEMPLATE_KINDS, VARIABLE_TYPES } from './enums'
 
 export const connectTenantSchema = z.object({
     externalId: z
@@ -22,6 +22,27 @@ export const createOfficeSessionSchema = z.object({
         .default('/painel'),
 })
 export type CreateOfficeSessionInput = z.infer<typeof createOfficeSessionSchema>
+
+export const updateOfficeSettingsSchema = z
+    .object({
+        brandColor: z
+            .string()
+            .regex(/^#[0-9a-fA-F]{6}$/, 'Use uma cor no formato #RRGGBB')
+            .refine(isReadableBrandColor, 'Escolha uma cor mais escura: o texto branco precisa ficar legível')
+            .transform((value) => value.toLowerCase())
+            .nullable(),
+        linkValidityDays: z.number().int().min(1).max(30),
+        reminderEnabled: z.boolean(),
+        reminderAfterHours: z
+            .number()
+            .int()
+            .refine(
+                (value) => (REMINDER_HOURS as readonly number[]).includes(value),
+                'Escolha 24, 48 ou 72 horas',
+            ),
+    })
+    .partial()
+export type UpdateOfficeSettingsInput = z.infer<typeof updateOfficeSettingsSchema>
 
 export const templateVariableSchema = z.object({
     key: z.string().regex(/^[a-z][a-z0-9_]{0,47}$/, 'Chave em snake_case, começando por letra'),

@@ -36,5 +36,6 @@ export const signingApi = {
             body: JSON.stringify(input),
         }),
     documentUrl: (token: string) => `${base(token)}/document`,
+    logoUrl: (token: string) => `${base(token)}/logo`,
     signedUrl: (token: string) => `${base(token)}/signed`,
 }

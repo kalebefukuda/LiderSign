@@ -8,6 +8,7 @@ import {
     type EnvelopeDto,
     type EnvelopeStatus,
     type MessageDto,
+    type OfficeSettingsDto,
     type MessageKind,
     type MessageStatus,
     type TemplateDto,
@@ -128,9 +129,20 @@ export function toMessageDto(message: Message): MessageDto {
     }
 }
 
+export function toOfficeSettingsDto(tenant: Tenant): OfficeSettingsDto {
+    return {
+        brandColor: tenant.brandColor,
+        hasLogo: Boolean(tenant.logoPath),
+        linkValidityDays: tenant.linkValidityDays,
+        reminderEnabled: tenant.reminderEnabled,
+        reminderAfterHours: tenant.reminderAfterHours,
+    }
+}
+
 export function toWebhookDeliveryDto(delivery: WebhookDelivery): WebhookDeliveryDto {
     return {
         id: delivery.id,
+        envelopeId: delivery.envelopeId,
         event: delivery.event as WebhookEvent,
         url: delivery.url,
         statusCode: delivery.statusCode,

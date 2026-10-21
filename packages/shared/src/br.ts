@@ -71,3 +71,20 @@ export function formatDateTimeBr(date: Date | string): string {
         timeZone: 'America/Sao_Paulo',
     }).format(d)
 }
+
+function channel(value: number): number {
+    const c = value / 255
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+}
+
+export function contrastWithWhite(hex: string): number {
+    const match = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex)
+    if (!match) return 0
+    const [r, g, b] = match.slice(1).map((part) => channel(parseInt(part, 16)))
+    const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b
+    return 1.05 / (luminance + 0.05)
+}
+
+export function isReadableBrandColor(hex: string): boolean {
+    return contrastWithWhite(hex) >= 4.5
+}

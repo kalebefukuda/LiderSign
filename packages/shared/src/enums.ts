@@ -64,6 +64,7 @@ export const AUDIT_EVENT_TYPES = [
     'ENVELOPE_CREATED',
     'DOCUMENT_GENERATED',
     'LINK_SENT',
+    'REMINDER_SENT',
     'DOCUMENT_VIEWED',
     'IDENTITY_FAILED',
     'IDENTITY_CONFIRMED',
@@ -86,6 +87,7 @@ export const AUDIT_EVENT_LABEL: Record<AuditEventType, string> = {
     ENVELOPE_CREATED: 'Envelope criado',
     DOCUMENT_GENERATED: 'Documento gerado',
     LINK_SENT: 'Link de assinatura gerado',
+    REMINDER_SENT: 'Lembrete enviado pelo WhatsApp',
     DOCUMENT_VIEWED: 'Documento aberto pelo signatário',
     IDENTITY_FAILED: 'CPF informado não conferiu',
     IDENTITY_CONFIRMED: 'CPF confirmado pelo signatário',
@@ -102,3 +104,6 @@ export const AUDIT_EVENT_LABEL: Record<AuditEventType, string> = {
     ENVELOPE_CANCELED: 'Envelope cancelado',
     ENVELOPE_EXPIRED: 'Link expirado sem assinatura',
 }
+
+export const REMINDER_HOURS = [24, 48, 72] as const
+export type ReminderHours = (typeof REMINDER_HOURS)[number]

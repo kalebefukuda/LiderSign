@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common'
+import { Injectable, Logger, NotFoundException } from '@nestjs/common'
 import type { Envelope, Prisma, Tenant } from '@prisma/client'
 import type { EnvelopeStatus, WebhookEvent, WebhookPayload } from '@lidersign/shared'
 import { env } from '../config/env'
@@ -41,7 +41,6 @@ export class WebhooksService {
     }
 
     private async deliver(tenant: Tenant, envelope: Envelope, event: WebhookEvent) {
-        const url = tenant.webhookUrl as string
         const payload: WebhookPayload = {
             id: `evt_${randomHex(12)}`,
             event,
@@ -53,10 +52,34 @@ export class WebhooksService {
                 verificationUrl: verificationUrlFor(envelope.verificationCode),
             },
         }
+        await this.send(tenant, envelope.id, event, payload)
+    }
+
+    async redeliver(tenant: Tenant, deliveryId: string) {
+        const previous = await this.prisma.webhookDelivery.findFirst({
+            where: { id: deliveryId, tenantId: tenant.id },
+        })
+        if (!previous) throw new NotFoundException('Entrega não encontrada')
+        if (!tenant.webhookUrl) throw new NotFoundException('Nenhum endereço de webhook configurado')
+        void this.send(
+            tenant,
+            previous.envelopeId,
+            previous.event as WebhookEvent,
+            previous.payload as unknown as WebhookPayload,
+        ).catch((error) => this.logger.error(`Falha ao reenviar o webhook: ${(error as Error).message}`))
+    }
+
+    private async send(
+        tenant: Tenant,
+        envelopeId: string | null,
+        event: WebhookEvent,
+        payload: WebhookPayload,
+    ) {
+        const url = tenant.webhookUrl as string
         let delivery = await this.prisma.webhookDelivery.create({
             data: {
                 tenantId: tenant.id,
-                envelopeId: envelope.id,
+                envelopeId,
                 event,
                 url,
                 payload: payload as unknown as Prisma.InputJsonValue,
@@ -70,7 +93,7 @@ export class WebhooksService {
             })
             this.events.emit(tenant.id, {
                 type: 'webhook.delivered',
-                envelopeId: envelope.id,
+                envelopeId,
                 delivery: toWebhookDeliveryDto(delivery),
             })
             return
@@ -113,7 +136,7 @@ export class WebhooksService {
             if (ok || attempt === RETRY_DELAYS_MS.length - 1) {
                 this.events.emit(tenant.id, {
                     type: 'webhook.delivered',
-                    envelopeId: envelope.id,
+                    envelopeId,
                     delivery: toWebhookDeliveryDto(delivery),
                 })
                 if (!ok)

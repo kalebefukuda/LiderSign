@@ -131,7 +131,7 @@ export function SigningFlow({ token }: { token: string }) {
 
     if (step === 'done') {
         return (
-            <Shell>
+            <Shell branding={brandingOf(token, session)}>
                 <DoneScreen token={token} initial={session} />
             </Shell>
         )
@@ -143,7 +143,7 @@ export function SigningFlow({ token }: { token: string }) {
         previous && previous !== 'identity' && step !== 'selfie' && !(step === 'otp' && session.otpVerified)
 
     return (
-        <Shell>
+        <Shell branding={brandingOf(token, session)}>
             <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                     {canGoBack ? (
@@ -355,21 +355,60 @@ function DoneScreen({ token, initial }: { token: string; initial: SigningSession
     )
 }
 
-function Shell({ children }: { children: React.ReactNode }) {
+type Branding = { token: string; officeName: string; color: string | null; hasLogo: boolean }
+
+function brandingOf(token: string, session: SigningSessionDto): Branding {
+    return { token, officeName: session.officeName, ...session.branding }
+}
+
+function brandStyle(color: string | null): React.CSSProperties | undefined {
+    if (!color) return undefined
+    return {
+        '--color-brand': color,
+        '--color-brand-hover': `color-mix(in srgb, ${color} 86%, black)`,
+        '--color-brand-soft': `color-mix(in srgb, ${color} 9%, white)`,
+    } as React.CSSProperties
+}
+
+function Shell({ children, branding }: { children: React.ReactNode; branding?: Branding }) {
+    const [logoFailed, setLogoFailed] = React.useState(false)
+    const showLogo = Boolean(branding?.hasLogo) && !logoFailed
     return (
-        <div className="min-h-dvh bg-white">
+        <div className="flex min-h-dvh flex-col bg-white" style={brandStyle(branding?.color ?? null)}>
             <header className="sticky top-0 z-10 border-b border-line bg-white/95 backdrop-blur-sm">
-                <div className="mx-auto flex h-14 max-w-md items-center justify-between px-5">
-                    <span className="inline-flex items-center gap-2">
-                        <LogoMark className="size-6" />
-                        <span className="text-[15px] font-semibold tracking-[-0.02em]">LíderSign</span>
-                    </span>
-                    <span className="inline-flex items-center gap-1.5 text-[13px] text-muted">
-                        <Lock className="size-3.5" aria-hidden /> Assinatura segura
+                <div className="mx-auto flex h-14 max-w-md items-center justify-between gap-3 px-5">
+                    {branding ? (
+                        <span className="inline-flex min-w-0 items-center gap-2">
+                            {showLogo ? (
+                                <img
+                                    src={signingApi.logoUrl(branding.token)}
+                                    alt=""
+                                    onError={() => setLogoFailed(true)}
+                                    className="h-7 max-w-24 shrink-0 object-contain"
+                                />
+                            ) : null}
+                            <span className="truncate text-[15px] font-semibold tracking-[-0.02em]">
+                                {branding.officeName}
+                            </span>
+                        </span>
+                    ) : (
+                        <span className="inline-flex items-center gap-2">
+                            <LogoMark className="size-6" />
+                            <span className="text-[15px] font-semibold tracking-[-0.02em]">LíderSign</span>
+                        </span>
+                    )}
+                    <span className="inline-flex shrink-0 items-center gap-1.5 text-[13px] text-muted">
+                        <Lock className="size-3.5" aria-hidden />
+                        <span className={branding ? 'sr-only' : undefined}>Assinatura segura</span>
                     </span>
                 </div>
             </header>
-            <main className="mx-auto max-w-md px-5 pb-10 pt-6">{children}</main>
+            <main className="mx-auto w-full max-w-md flex-1 px-5 pb-10 pt-6">{children}</main>
+            {branding ? (
+                <footer className="mx-auto flex max-w-md items-center gap-1.5 px-5 pb-6 text-xs text-subtle">
+                    <LogoMark className="size-4" /> Assinatura eletrônica por LíderSign
+                </footer>
+            ) : null}
         </div>
     )
 }

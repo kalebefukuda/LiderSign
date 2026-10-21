@@ -9,6 +9,7 @@ import { CoreModule } from './core.module'
 import { DemoController } from './demo/demo.controller'
 import { EnvelopesController } from './envelopes/envelopes.controller'
 import { EnvelopesService } from './envelopes/envelopes.service'
+import { ReminderService } from './envelopes/reminder.service'
 import { EventsController } from './events/events.controller'
 import { HealthController } from './health/health.controller'
 import { OfficeLoginController } from './office/office-login.controller'
@@ -41,7 +42,7 @@ export class TenantsModule {}
 @Module({
     imports: [TemplatesModule],
     controllers: [EnvelopesController, EventsController],
-    providers: [EnvelopesService],
+    providers: [EnvelopesService, ReminderService],
 })
 export class EnvelopesModule {}
 

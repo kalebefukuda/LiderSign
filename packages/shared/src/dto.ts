@@ -30,8 +30,17 @@ export type OfficeSessionResponse = {
     expiresAt: string
 }
 
+export type OfficeSettingsDto = {
+    brandColor: string | null
+    hasLogo: boolean
+    linkValidityDays: number
+    reminderEnabled: boolean
+    reminderAfterHours: number
+}
+
 export type OfficeMeDto = {
     tenant: TenantDto
+    settings: OfficeSettingsDto
     templatesCount: number
     whatsappProvider: 'simulator' | 'cloud_api'
     whatsappConfigured: boolean
@@ -123,6 +132,7 @@ export type MessageDto = {
 
 export type WebhookDeliveryDto = {
     id: string
+    envelopeId: string | null
     event: WebhookEvent
     url: string
     statusCode: number | null
@@ -142,6 +152,7 @@ export type EnvelopeDetailDto = EnvelopeDto & {
 export type SigningSessionDto = {
     title: string
     officeName: string
+    branding: { color: string | null; hasLogo: boolean }
     status: EnvelopeStatus
     assuranceLevel: AssuranceLevel
     requiresSelfie: boolean

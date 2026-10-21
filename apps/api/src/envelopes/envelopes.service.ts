@@ -28,14 +28,14 @@ import type { RequestContext } from '../common/request-context'
 import { EventsService } from '../events/events.service'
 import { ExpirationService } from './expiration.service'
 import { MessagingService } from '../messaging/messaging.service'
-import { signingLinkText } from '../messaging/texts'
+import { reminderText, signingLinkText } from '../messaging/texts'
 import { PrismaService } from '../prisma/prisma.service'
 import { PdfRenderService, roleForKind } from '../sealing/pdf-render.service'
 import { StorageService } from '../storage/storage.service'
 import { TemplatesService } from '../templates/templates.service'
 import { WebhooksService } from '../webhooks/webhooks.service'
 
-const VALIDITY_DAYS = 7
+const DAY_MS = 24 * 60 * 60 * 1000
 type ParsedCreateEnvelope = Omit<CreateEnvelopeInput, 'variables' | 'send' | 'signer'> & {
     variables: Record<string, string>
     send: boolean
@@ -121,7 +121,7 @@ export class EnvelopesService {
                 verificationCode: await this.uniqueCode(),
                 originalPath,
                 originalSha256,
-                expiresAt: new Date(Date.now() + VALIDITY_DAYS * 24 * 60 * 60 * 1000),
+                expiresAt: new Date(Date.now() + tenant.linkValidityDays * DAY_MS),
             },
         })
 
@@ -157,6 +157,34 @@ export class EnvelopesService {
             ...(resend ? { reenvio: true } : {}),
         })
         return this.prisma.envelope.update({ where: { id: envelope.id }, data: { sentAt: new Date() } })
+    }
+
+    async remind(tenant: Tenant, envelope: Envelope) {
+        const claimed = await this.prisma.envelope.updateMany({
+            where: { id: envelope.id, remindedAt: null, status: { in: ['SENT', 'VIEWED'] } },
+            data: { remindedAt: new Date() },
+        })
+        if (claimed.count === 0) return
+        const token = randomToken(32)
+        const rotated = await this.prisma.envelope.update({
+            where: { id: envelope.id },
+            data: { tokenHash: sha256Hex(token) },
+        })
+        const url = signingUrlFor(token)
+        const message = await this.messaging.send({
+            tenantId: tenant.id,
+            envelopeId: envelope.id,
+            to: envelope.signerPhone,
+            kind: 'SIGNING_LINK',
+            body: reminderText(envelope.signerName, tenant.name, envelope.title, url),
+            url,
+            secrets: [token],
+        })
+        await this.audit.append(envelope.id, 'REMINDER_SENT', 'system', {
+            provider: message.provider,
+            status: message.status,
+        })
+        this.events.emit(tenant.id, { type: 'envelope.updated', envelope: toEnvelopeDto(rotated) })
     }
 
     async list(tenant: Tenant, status?: string) {

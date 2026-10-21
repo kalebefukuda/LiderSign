@@ -6,6 +6,10 @@ export function signingLinkText(signerName: string, officeName: string, title: s
     return `Olá, ${firstName(signerName)}! ${officeName} enviou "${title}" para você assinar pelo celular: ${url}`
 }
 
+export function reminderText(signerName: string, officeName: string, title: string, url: string): string {
+    return `Oi, ${firstName(signerName)}! Passando para lembrar: "${title}", de ${officeName}, ainda espera a sua assinatura. Use este link (o anterior deixou de valer): ${url}`
+}
+
 export function otpText(code: string): string {
     return `Seu código LíderSign é ${code}. Vale por 10 minutos. Não compartilhe com ninguém.`
 }

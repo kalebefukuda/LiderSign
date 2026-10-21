@@ -1,16 +1,35 @@
 import type { OfficeMeDto } from '@lidersign/shared'
 import * as React from 'react'
 
-const OfficeContext = React.createContext<OfficeMeDto | null>(null)
+type OfficeContextValue = { office: OfficeMeDto; reload: () => Promise<unknown> }
 
-export function OfficeProvider({ value, children }: { value: OfficeMeDto; children: React.ReactNode }) {
-    return <OfficeContext.Provider value={value}>{children}</OfficeContext.Provider>
+const OfficeContext = React.createContext<OfficeContextValue | null>(null)
+
+export function OfficeProvider({
+    value,
+    reload,
+    children,
+}: {
+    value: OfficeMeDto
+    reload: () => Promise<unknown>
+    children: React.ReactNode
+}) {
+    const context = React.useMemo(() => ({ office: value, reload }), [value, reload])
+    return <OfficeContext.Provider value={context}>{children}</OfficeContext.Provider>
 }
 
-export function useOffice(): OfficeMeDto {
+function useOfficeContext() {
     const value = React.useContext(OfficeContext)
     if (!value) throw new Error('useOffice fora do painel')
     return value
+}
+
+export function useOffice(): OfficeMeDto {
+    return useOfficeContext().office
+}
+
+export function useOfficeReload() {
+    return useOfficeContext().reload
 }
 
 export function partnerLink(office: OfficeMeDto, path = '') {

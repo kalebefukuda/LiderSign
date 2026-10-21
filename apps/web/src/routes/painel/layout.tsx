@@ -41,7 +41,13 @@ export default function PanelLayout() {
         )
     }
 
-    const page = me.data ? <OfficeProvider value={me.data}>{content}</OfficeProvider> : content
+    const page = me.data ? (
+        <OfficeProvider value={me.data} reload={me.reload}>
+            {content}
+        </OfficeProvider>
+    ) : (
+        content
+    )
 
     if (embedded) return <div className="min-h-dvh bg-white px-5 py-6 sm:px-8">{page}</div>
 

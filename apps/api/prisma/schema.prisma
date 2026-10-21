@@ -15,6 +15,11 @@ model Tenant {
   active        Boolean  @default(true)
   webhookUrl    String?
   webhookSecret String
+  brandColor         String?
+  logoPath           String?
+  linkValidityDays   Int      @default(7)
+  reminderEnabled    Boolean  @default(true)
+  reminderAfterHours Int      @default(24)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -94,6 +99,7 @@ model Envelope {
   signedAt         DateTime?
   completedAt      DateTime?
   canceledAt       DateTime?
+  remindedAt       DateTime?
   expiresAt        DateTime
 
   tenant     Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)

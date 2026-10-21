@@ -21,6 +21,7 @@ import {
 } from '@lidersign/shared'
 import type { Response } from 'express'
 import { Ctx, type RequestContext } from '../common/request-context'
+import { logoMime } from '../office/branding'
 import { ZodPipe } from '../common/zod.pipe'
 import { SigningService } from './signing.service'
 
@@ -32,6 +33,15 @@ export class SigningController {
     @Get()
     session(@Param('token') token: string, @Ctx() ctx: RequestContext) {
         return this.signing.session(token, ctx)
+    }
+
+    @Get('logo')
+    async logo(@Param('token') token: string, @Res({ passthrough: true }) res: Response) {
+        const data = await this.signing.logo(token)
+        res.setHeader('Content-Type', logoMime(data) ?? 'application/octet-stream')
+        res.setHeader('Cache-Control', 'private, max-age=300')
+        res.setHeader('X-Content-Type-Options', 'nosniff')
+        return new StreamableFile(data)
     }
 
     @Get('document')

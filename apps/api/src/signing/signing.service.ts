@@ -119,6 +119,7 @@ export class SigningService {
         return {
             title: envelope.title,
             officeName: envelope.tenant.name,
+            branding: { color: envelope.tenant.brandColor, hasLogo: Boolean(envelope.tenant.logoPath) },
             status: envelope.status as EnvelopeStatus,
             assuranceLevel: envelope.assuranceLevel as AssuranceLevel,
             requiresSelfie: envelope.assuranceLevel === 'REFORCADO',
@@ -164,6 +165,12 @@ export class SigningService {
             }
         }
         return this.toSession(envelope)
+    }
+
+    async logo(token: string): Promise<Buffer> {
+        const envelope = await this.resolve(token)
+        if (!envelope.tenant.logoPath) throw new NotFoundException('Sem logo')
+        return this.storage.get(envelope.tenant.logoPath)
     }
 
     async document(token: string): Promise<Buffer> {
