@@ -6,7 +6,7 @@ import { useDocumentTitle } from '@lidersign/ui'
 import { TemplateImport } from '@/features/templates'
 
 export default function NewTemplateRoute() {
-    useDocumentTitle('Novo modelo · Painel')
+    useDocumentTitle('Novo modelo')
     return (
         <div className="space-y-8 animate-enter">
             <div>

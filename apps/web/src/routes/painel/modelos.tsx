@@ -6,7 +6,7 @@ import { Button, useDocumentTitle } from '@lidersign/ui'
 import { TemplateList } from '@/features/templates'
 
 export default function TemplatesRoute() {
-    useDocumentTitle('Modelos · Painel')
+    useDocumentTitle('Modelos')
     return (
         <div className="space-y-8 animate-enter">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">

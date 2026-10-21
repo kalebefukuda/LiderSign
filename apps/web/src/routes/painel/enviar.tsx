@@ -3,7 +3,7 @@ import { useDocumentTitle } from '@lidersign/ui'
 import { SendForm } from '@/features/envelopes'
 
 export default function SendRoute() {
-    useDocumentTitle('Envio avulso · LíderSign')
+    useDocumentTitle('Envio avulso')
     return (
         <div className="max-w-3xl space-y-10 animate-enter">
             <div>

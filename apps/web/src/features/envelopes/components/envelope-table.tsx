@@ -1,15 +1,97 @@
-import { FileSignature, RefreshCw } from 'lucide-react'
-import { Link } from 'react-router'
+import type { EnvelopeDto } from '@lidersign/shared'
+import { FileSignature, RefreshCw, Search } from 'lucide-react'
+import * as React from 'react'
+import { Link, useSearchParams } from 'react-router'
 
-import { Button, Skeleton, EmptyState, ErrorNotice, formatDateTime } from '@lidersign/ui'
+import { Button, EmptyState, ErrorNotice, NativeSelect, Skeleton, cn, formatDateTime } from '@lidersign/ui'
 
 import { partnerLink, useOffice } from '@/features/office'
 
 import { useEnvelopes } from '../hooks'
 import { StatusPill } from './status-pill'
 
-export function EnvelopeTable({ limit }: { limit?: number } = {}) {
+const STATUS_FILTERS = [
+    { value: 'todos', label: 'Todos', match: () => true },
+    {
+        value: 'aguardando',
+        label: 'Aguardando',
+        match: (e: EnvelopeDto) => e.status === 'SENT' || e.status === 'VIEWED',
+    },
+    {
+        value: 'assinados',
+        label: 'Assinados',
+        match: (e: EnvelopeDto) => e.status === 'SIGNED' || e.status === 'COMPLETED',
+    },
+    {
+        value: 'encerrados',
+        label: 'Cancelados ou expirados',
+        match: (e: EnvelopeDto) => e.status === 'CANCELED' || e.status === 'EXPIRED',
+    },
+] as const
+
+const PERIODS = [
+    { value: 'todos', label: 'Qualquer data', days: null },
+    { value: '7', label: 'Últimos 7 dias', days: 7 },
+    { value: '30', label: 'Últimos 30 dias', days: 30 },
+    { value: '90', label: 'Últimos 90 dias', days: 90 },
+] as const
+
+function useFilters(envelopes: EnvelopeDto[]) {
+    const [params, setParams] = useSearchParams()
+    const status = STATUS_FILTERS.find((item) => item.value === params.get('status')) ?? STATUS_FILTERS[0]
+    const period = PERIODS.find((item) => item.value === params.get('periodo')) ?? PERIODS[0]
+    const template = params.get('modelo') ?? ''
+    const query = params.get('q') ?? ''
+
+    const set = (key: string, value: string) =>
+        setParams(
+            (current) => {
+                const next = new URLSearchParams(current)
+                if (!value || value === 'todos') next.delete(key)
+                else next.set(key, value)
+                return next
+            },
+            { replace: true },
+        )
+
+    const templates = React.useMemo(() => {
+        const seen = new Map<string, string>()
+        for (const envelope of envelopes)
+            if (!seen.has(envelope.templateId)) seen.set(envelope.templateId, envelope.title)
+        return [...seen.entries()].map(([id, title]) => ({ id, title }))
+    }, [envelopes])
+
+    const needle = query.trim().toLowerCase()
+    const since = period.days ? Date.now() - period.days * 24 * 60 * 60 * 1000 : null
+    const base = envelopes.filter(
+        (envelope) =>
+            (!template || envelope.templateId === template) &&
+            (!since || new Date(envelope.sentAt ?? envelope.createdAt).getTime() >= since) &&
+            (!needle ||
+                `${envelope.signer.name} ${envelope.title} ${envelope.verificationCode}`
+                    .toLowerCase()
+                    .includes(needle)),
+    )
+
+    return {
+        status,
+        period,
+        template,
+        query,
+        templates,
+        set,
+        counts: Object.fromEntries(
+            STATUS_FILTERS.map((item) => [item.value, base.filter(item.match).length]),
+        ),
+        rows: base.filter(status.match),
+        active: status.value !== 'todos' || period.value !== 'todos' || Boolean(template) || Boolean(needle),
+        clear: () => setParams({}, { replace: true }),
+    }
+}
+
+export function EnvelopeTable({ limit, filterable }: { limit?: number; filterable?: boolean } = {}) {
     const { data, error, loading, reload, live } = useEnvelopes()
+    const filters = useFilters(data ?? [])
     const office = useOffice()
     const partnerInbox = partnerLink(office, '/atendimento')
 
@@ -65,7 +147,8 @@ export function EnvelopeTable({ limit }: { limit?: number } = {}) {
         )
     }
 
-    const rows = limit ? data.slice(0, limit) : data
+    const visible = filterable ? filters.rows : data
+    const rows = limit ? visible.slice(0, limit) : visible
 
     return (
         <div className="space-y-3">
@@ -79,7 +162,23 @@ export function EnvelopeTable({ limit }: { limit?: number } = {}) {
                 {live ? 'Atualizando ao vivo' : 'Atualizando a cada poucos segundos'}
             </p>
 
-            <div className="hidden overflow-hidden rounded-2xl border border-line md:block">
+            {filterable ? <FilterBar filters={filters} /> : null}
+
+            {!rows.length ? (
+                <div className="rounded-2xl border border-line px-5 py-12 text-center">
+                    <p className="text-sm text-muted">Nenhum documento com esses filtros.</p>
+                    <Button variant="ghost" size="sm" className="mt-3" onClick={filters.clear}>
+                        Limpar filtros
+                    </Button>
+                </div>
+            ) : null}
+
+            <div
+                className={cn(
+                    'hidden overflow-hidden rounded-2xl border border-line',
+                    rows.length && 'md:block',
+                )}
+            >
                 <table className="w-full text-left text-sm">
                     <thead className="border-b border-line bg-surface/70">
                         <tr className="text-[11px] font-semibold uppercase tracking-[0.12em] text-subtle">
@@ -123,7 +222,12 @@ export function EnvelopeTable({ limit }: { limit?: number } = {}) {
                 </table>
             </div>
 
-            <ul className="divide-y divide-line overflow-hidden rounded-2xl border border-line md:hidden">
+            <ul
+                className={cn(
+                    'divide-y divide-line overflow-hidden rounded-2xl border border-line md:hidden',
+                    !rows.length && 'hidden',
+                )}
+            >
                 {rows.map((envelope) => (
                     <li key={envelope.id}>
                         <Link
@@ -142,6 +246,74 @@ export function EnvelopeTable({ limit }: { limit?: number } = {}) {
                     </li>
                 ))}
             </ul>
+        </div>
+    )
+}
+
+function FilterBar({ filters }: { filters: ReturnType<typeof useFilters> }) {
+    return (
+        <div className="space-y-3">
+            <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filtrar por status">
+                {STATUS_FILTERS.map((item) => {
+                    const selected = item.value === filters.status.value
+                    return (
+                        <button
+                            key={item.value}
+                            type="button"
+                            aria-pressed={selected}
+                            onClick={() => filters.set('status', item.value)}
+                            className={cn(
+                                'inline-flex h-8 items-center gap-1.5 rounded-lg border px-3 text-sm transition-colors',
+                                selected
+                                    ? 'border-ink bg-ink text-white'
+                                    : 'border-line bg-white text-ink/80 hover:bg-surface',
+                            )}
+                        >
+                            {item.label}
+                            <span
+                                className={cn('text-xs tabular', selected ? 'text-white/70' : 'text-subtle')}
+                            >
+                                {filters.counts[item.value]}
+                            </span>
+                        </button>
+                    )
+                })}
+            </div>
+            <div className="grid gap-2 sm:grid-cols-[1fr_200px_180px]">
+                <label className="flex h-10 items-center gap-2 rounded-lg border border-line bg-white px-3">
+                    <Search className="size-4 text-subtle" aria-hidden />
+                    <span className="sr-only">Buscar</span>
+                    <input
+                        value={filters.query}
+                        onChange={(event) => filters.set('q', event.target.value)}
+                        placeholder="Buscar por cliente, documento ou código"
+                        className="h-full flex-1 bg-transparent text-sm outline-none placeholder:text-subtle"
+                    />
+                </label>
+                <NativeSelect
+                    aria-label="Modelo"
+                    value={filters.template}
+                    onChange={(event) => filters.set('modelo', event.target.value)}
+                >
+                    <option value="">Todos os modelos</option>
+                    {filters.templates.map((item) => (
+                        <option key={item.id} value={item.id}>
+                            {item.title}
+                        </option>
+                    ))}
+                </NativeSelect>
+                <NativeSelect
+                    aria-label="Período"
+                    value={filters.period.value}
+                    onChange={(event) => filters.set('periodo', event.target.value)}
+                >
+                    {PERIODS.map((item) => (
+                        <option key={item.value} value={item.value}>
+                            {item.label}
+                        </option>
+                    ))}
+                </NativeSelect>
+            </div>
         </div>
     )
 }

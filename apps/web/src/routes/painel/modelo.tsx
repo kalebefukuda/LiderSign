@@ -6,7 +6,7 @@ import { useDocumentTitle } from '@lidersign/ui'
 import { TemplateEditLoader } from '@/features/templates'
 
 export default function EditTemplateRoute() {
-    useDocumentTitle('Editar modelo · Painel')
+    useDocumentTitle('Editar modelo')
     const { id = '' } = useParams()
     return (
         <div className="space-y-8 animate-enter">

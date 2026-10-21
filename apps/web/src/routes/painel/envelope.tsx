@@ -5,7 +5,7 @@ import { useDocumentTitle } from '@lidersign/ui'
 import { EnvelopeDetail } from '@/features/envelopes'
 
 export default function EnvelopeRoute() {
-    useDocumentTitle('Envelope · Painel')
+    useDocumentTitle('Documento')
     const { id = '' } = useParams()
     return <EnvelopeDetail id={id} />
 }

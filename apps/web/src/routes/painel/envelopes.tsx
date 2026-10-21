@@ -6,7 +6,7 @@ import { Button, useDocumentTitle } from '@lidersign/ui'
 import { EnvelopeTable } from '@/features/envelopes'
 
 export default function EnvelopesRoute() {
-    useDocumentTitle('Documentos · LíderSign')
+    useDocumentTitle('Documentos')
     return (
         <div className="space-y-8 animate-enter">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -22,7 +22,7 @@ export default function EnvelopesRoute() {
                     </Link>
                 </Button>
             </div>
-            <EnvelopeTable />
+            <EnvelopeTable filterable />
         </div>
     )
 }
