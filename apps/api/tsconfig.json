@@ -1,0 +1,16 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "module": "node16",
+        "moduleResolution": "node16",
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "outDir": "dist",
+        "rootDir": "src",
+        "declaration": false,
+        "incremental": false,
+        "strictPropertyInitialization": false,
+        "types": ["node", "multer"]
+    },
+    "include": ["src"]
+}

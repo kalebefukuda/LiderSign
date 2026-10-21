@@ -1,0 +1,3 @@
+# Scripts de shell sempre com LF (o container quebra com CRLF no Windows)
+*.sh text eol=lf
+Dockerfile text eol=lf
