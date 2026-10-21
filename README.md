@@ -72,6 +72,30 @@ pnpm dev            # Nest na porta 4000 e Vite na 3000
 
 Abra http://localhost:3000. Sem o túnel, os links usam `WEB_PUBLIC_URL` e abrem só neste computador. Em desenvolvimento, o Vite faz proxy de `/v1`, `/demo-host` e `/health` para o Nest.
 
+### Variáveis de ambiente
+
+No Docker tudo já vem com valores de demonstração; o `.env` (copiado do `.env.example`) só serve para trocar algum.
+
+| Variável | Para quê |
+| --- | --- |
+| `APP_PORT` | Porta do app no seu computador (Docker) |
+| `DATABASE_URL` | Postgres |
+| `PORT` | Porta do Nest (4000 em desenvolvimento, 3000 no Docker) |
+| `PARTNER_API_KEY` | Chave de parceiro da LíderHub. Gere com `openssl rand -hex 32` |
+| `WEB_PUBLIC_URL` | Endereço dos links quando o túnel não está no ar |
+| `TUNNEL_METRICS_URL` | Métricas do cloudflared; no Docker, os links usam a URL HTTPS do túnel. Vazio desliga |
+| `WEB_DIST_DIR` | Build do React servido pelo Nest (vazio = `apps/web/dist`) |
+| `STORAGE_DIR`, `CERT_DIR` | Onde ficam os PDFs e o certificado de selagem |
+| `SEAL_CERT_PASSPHRASE` | Senha do certificado de selagem (em produção, e-CNPJ no cofre) |
+| `TSA_URL` | Carimbo do tempo RFC 3161. Vazio desliga |
+| `TRUST_PROXY` | Saltos de proxy confiáveis para o IP do cliente (vazio = só loopback) |
+| `WEBHOOK_ALLOWED_HOSTS` | Hosts que podem receber webhooks (proteção contra SSRF) |
+| `WHATSAPP_PROVIDER` | `simulator` (padrão) ou `cloud_api` |
+| `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_API_VERSION` | WhatsApp oficial da Meta |
+| `ANTHROPIC_API_KEY`, `AI_MODEL` | IA que transforma contrato em modelo (opcional; sem chave usa regras locais) |
+| `DEMO_MODE`, `DEMO_TENANT_ID` | Modo demonstração e o escritório de exemplo |
+| `LIDERSIGN_API_URL`, `LIDERSIGN_TENANT_ID` | Usadas pelo servidor MCP |
+
 ### Testes
 
 ```bash
