@@ -141,6 +141,10 @@ Depois é só pedir: _"Gere o contrato de honorários da Maria Aparecida dos San
 
 ## Como funciona
 
+![Como o fluxo funciona: ativar, enviar, assinar, selar e avisar, abrir o painel e verificar](docs/fluxo.svg)
+
+Para editar o diagrama, abra [`docs/fluxo.excalidraw`](docs/fluxo.excalidraw) no [Excalidraw](https://excalidraw.com).
+
 ```
 apps/web             LíderSign · React + Vite: painel do escritório, assinatura e verificação
 apps/api             LíderSign · NestJS: API, selagem do PDF, webhooks e tempo real; serve o site
