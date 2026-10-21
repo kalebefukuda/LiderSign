@@ -49,7 +49,15 @@ export function ErrorNotice({ message, action }: { message: string; action?: Rea
     )
 }
 
-export function CopyButton({ value, label = 'Copiar', className }: { value: string; label?: string; className?: string }) {
+export function CopyButton({
+    value,
+    label = 'Copiar',
+    className,
+}: {
+    value: string
+    label?: string
+    className?: string
+}) {
     const [copied, setCopied] = React.useState(false)
     return (
         <button

@@ -33,7 +33,12 @@ export class TimestampService {
                     asn1.create(U, asn1.Type.OID, false, asn1.oidToDer(OID_SHA256).getBytes()),
                     asn1.create(U, asn1.Type.NULL, false, ''),
                 ]),
-                asn1.create(U, asn1.Type.OCTETSTRING, false, Buffer.from(sha256Hex, 'hex').toString('binary')),
+                asn1.create(
+                    U,
+                    asn1.Type.OCTETSTRING,
+                    false,
+                    Buffer.from(sha256Hex, 'hex').toString('binary'),
+                ),
             ]),
             asn1.create(U, asn1.Type.INTEGER, false, nonce.toString('binary')),
             asn1.create(U, asn1.Type.BOOLEAN, false, String.fromCharCode(0xff)),
@@ -84,7 +89,11 @@ export class TimestampService {
             return { status: 'OK', token: der, genTime, tsa }
         } catch (error) {
             const cause = (error as Error & { cause?: Error }).cause?.message
-            return { status: 'FAILED', error: [(error as Error).message, cause].filter(Boolean).join(': '), tsa }
+            return {
+                status: 'FAILED',
+                error: [(error as Error).message, cause].filter(Boolean).join(': '),
+                tsa,
+            }
         }
     }
 }

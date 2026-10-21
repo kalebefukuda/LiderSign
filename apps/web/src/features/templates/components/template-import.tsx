@@ -13,7 +13,8 @@ import { templatesApi } from '../api'
 import { BLANK_TEMPLATE_BODY } from '../utils'
 import { TemplateEditor, type TemplateDraft } from './template-editor'
 
-const ACCEPT = '.pdf,.docx,.txt,.md,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain'
+const ACCEPT =
+    '.pdf,.docx,.txt,.md,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain'
 const MAX_BYTES = 5 * 1024 * 1024
 
 type State =
@@ -113,10 +114,12 @@ export function TemplateImport() {
                     <FileUp className="size-5" aria-hidden />
                 </div>
                 <div className="space-y-1">
-                    <p className="text-[15px] font-semibold">Arraste o contrato de exemplo ou clique para escolher</p>
+                    <p className="text-[15px] font-semibold">
+                        Arraste o contrato de exemplo ou clique para escolher
+                    </p>
                     <p className="text-sm text-muted">
-                        PDF, DOCX ou TXT, até 5 MB. Mesmo sem nenhum campo marcado, o LíderSign encontra os dados do
-                        cliente e transforma em modelo.
+                        PDF, DOCX ou TXT, até 5 MB. Mesmo sem nenhum campo marcado, o LíderSign encontra os
+                        dados do cliente e transforma em modelo.
                     </p>
                 </div>
                 <input

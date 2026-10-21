@@ -1,4 +1,9 @@
-import { ConflictException, Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common'
+import {
+    ConflictException,
+    Injectable,
+    NotFoundException,
+    UnprocessableEntityException,
+} from '@nestjs/common'
 import { Prisma, type Envelope, type Tenant } from '@prisma/client'
 import {
     maskCpf,
@@ -69,7 +74,9 @@ export class EnvelopesService {
         const template = await this.templates.findOwned(tenant, input.templateId)
         if (template.archived) throw new NotFoundException('Modelo arquivado')
 
-        const values = Object.fromEntries(Object.entries(input.variables).map(([key, value]) => [key, value.trim()]))
+        const values = Object.fromEntries(
+            Object.entries(input.variables).map(([key, value]) => [key, value.trim()]),
+        )
         const missing = missingVariables(template.body, values)
         if (missing.length) {
             throw new UnprocessableEntityException({
@@ -83,7 +90,11 @@ export class EnvelopesService {
             title: template.name,
             officeName: tenant.name,
             body: renderedBody,
-            signer: { name: input.signer.name, cpfMasked: maskCpf(input.signer.cpf), role: roleForKind(template.kind) },
+            signer: {
+                name: input.signer.name,
+                cpfMasked: maskCpf(input.signer.cpf),
+                role: roleForKind(template.kind),
+            },
         })
         const originalSha256 = sha256Hex(original)
         const id = randomUUID()
@@ -206,7 +217,9 @@ export class EnvelopesService {
     async cancel(tenant: Tenant, id: string, ctx: RequestContext) {
         const envelope = await this.findOwned(tenant, id)
         if (!['SENT', 'VIEWED'].includes(envelope.status)) {
-            throw new ConflictException('Documentos assinados, expirados ou já cancelados não podem ser cancelados')
+            throw new ConflictException(
+                'Documentos assinados, expirados ou já cancelados não podem ser cancelados',
+            )
         }
         // Guarda de estado atômica: se o signatário assinou no mesmo instante, a assinatura vence
         const changed = await this.prisma.envelope.updateMany({
@@ -223,20 +236,33 @@ export class EnvelopesService {
         return toEnvelopeDto(canceled)
     }
 
-    async file(tenant: Tenant, id: string, kind: string): Promise<{ data: Buffer; type: string; name: string }> {
+    async file(
+        tenant: Tenant,
+        id: string,
+        kind: string,
+    ): Promise<{ data: Buffer; type: string; name: string }> {
         const envelope = await this.findOwned(tenant, id)
         const base = `lidersign-${envelope.verificationCode}`
         if (kind === 'original') {
-            return { data: await this.storage.get(envelope.originalPath), type: 'application/pdf', name: `${base}-original.pdf` }
+            return {
+                data: await this.storage.get(envelope.originalPath),
+                type: 'application/pdf',
+                name: `${base}-original.pdf`,
+            }
         }
         if (kind === 'signed') {
             if (envelope.status !== ('COMPLETED' satisfies EnvelopeStatus) || !envelope.signedPath) {
                 throw new ConflictException('O PDF selado fica disponível quando a assinatura é concluída')
             }
-            return { data: await this.storage.get(envelope.signedPath), type: 'application/pdf', name: `${base}-assinado.pdf` }
+            return {
+                data: await this.storage.get(envelope.signedPath),
+                type: 'application/pdf',
+                name: `${base}-assinado.pdf`,
+            }
         }
         if (kind === 'timestamp') {
-            if (!envelope.timestampToken) throw new ConflictException('Este documento não tem carimbo do tempo emitido')
+            if (!envelope.timestampToken)
+                throw new ConflictException('Este documento não tem carimbo do tempo emitido')
             return {
                 data: Buffer.from(envelope.timestampToken),
                 type: 'application/timestamp-reply',

@@ -54,7 +54,8 @@ export function IdentityStep({ token, firstName, officeName, title, onConfirmed 
         <form onSubmit={submit} className="mt-3 space-y-6">
             <h1 className="text-[28px] font-bold leading-tight tracking-[-0.035em]">Olá, {firstName}</h1>
             <p className="text-[17px] leading-relaxed text-ink/80">
-                <span className="font-semibold text-ink">{officeName}</span> enviou um documento para você assinar.
+                <span className="font-semibold text-ink">{officeName}</span> enviou um documento para você
+                assinar.
             </p>
             <div className="flex items-center gap-3 rounded-2xl border border-line px-4 py-4">
                 <FileText className="size-5 shrink-0 text-brand" aria-hidden />
@@ -92,8 +93,8 @@ export function IdentityStep({ token, firstName, officeName, title, onConfirmed 
 
             {notMe ? (
                 <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-[15px] leading-relaxed text-amber-900">
-                    Não assine. Responda no WhatsApp avisando o escritório que este documento chegou para a pessoa errada.
-                    Você pode fechar esta página.
+                    Não assine. Responda no WhatsApp avisando o escritório que este documento chegou para a
+                    pessoa errada. Você pode fechar esta página.
                 </div>
             ) : null}
 
@@ -101,7 +102,13 @@ export function IdentityStep({ token, firstName, officeName, title, onConfirmed 
                 <Button type="submit" size="lg" className="w-full" loading={sending} disabled={!complete}>
                     Abrir documento
                 </Button>
-                <Button type="button" variant="ghost" size="lg" className="w-full" onClick={() => setNotMe(true)}>
+                <Button
+                    type="button"
+                    variant="ghost"
+                    size="lg"
+                    className="w-full"
+                    onClick={() => setNotMe(true)}
+                >
                     Não sou {firstName}
                 </Button>
             </div>

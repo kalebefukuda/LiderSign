@@ -36,9 +36,22 @@ export function DialogContent({
 }
 
 export function DialogTitle({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Title>) {
-    return <DialogPrimitive.Title className={cn('text-lg font-semibold tracking-[-0.01em]', className)} {...props} />
+    return (
+        <DialogPrimitive.Title
+            className={cn('text-lg font-semibold tracking-[-0.01em]', className)}
+            {...props}
+        />
+    )
 }
 
-export function DialogDescription({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Description>) {
-    return <DialogPrimitive.Description className={cn('text-sm leading-relaxed text-muted', className)} {...props} />
+export function DialogDescription({
+    className,
+    ...props
+}: React.ComponentProps<typeof DialogPrimitive.Description>) {
+    return (
+        <DialogPrimitive.Description
+            className={cn('text-sm leading-relaxed text-muted', className)}
+            {...props}
+        />
+    )
 }

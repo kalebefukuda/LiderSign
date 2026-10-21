@@ -24,9 +24,11 @@ export function formatDateTimeLong(value: string | Date | null | undefined) {
 
 export function formatTime(value: string | Date | null | undefined) {
     if (!value) return ''
-    return new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: TIME_ZONE }).format(
-        new Date(value),
-    )
+    return new Intl.DateTimeFormat('pt-BR', {
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: TIME_ZONE,
+    }).format(new Date(value))
 }
 
 export function formatTimeSeconds(value: string | Date | null | undefined) {
@@ -40,9 +42,12 @@ export function formatTimeSeconds(value: string | Date | null | undefined) {
 }
 
 export function todayLong() {
-    return new Intl.DateTimeFormat('pt-BR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: TIME_ZONE }).format(
-        new Date(),
-    )
+    return new Intl.DateTimeFormat('pt-BR', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+        timeZone: TIME_ZONE,
+    }).format(new Date())
 }
 
 export function relativeTime(value: string | Date | null | undefined) {

@@ -15,7 +15,13 @@ const TIMESTAMP_LABEL = {
 } as const
 
 /** Resposta direta primeiro (vale ou não vale, quem e quando); o técnico fica recolhido. */
-export function VerificationResult({ data, children }: { data: PublicVerificationDto; children?: React.ReactNode }) {
+export function VerificationResult({
+    data,
+    children,
+}: {
+    data: PublicVerificationDto
+    children?: React.ReactNode
+}) {
     const completed = data.valid && data.status === 'COMPLETED'
     const pending = data.status === 'SENT' || data.status === 'VIEWED' || data.status === 'SIGNED'
     const tampered = completed && !data.trailIntact
@@ -80,7 +86,8 @@ export function VerificationResult({ data, children }: { data: PublicVerificatio
                             <span className="font-medium text-ink">{data.title}</span>, de {data.officeName}
                             {completed && data.completedAt ? (
                                 <>
-                                    , assinado em <span className="tabular">{formatDateTimeLong(data.completedAt)}</span>.
+                                    , assinado em{' '}
+                                    <span className="tabular">{formatDateTimeLong(data.completedAt)}</span>.
                                 </>
                             ) : pending ? (
                                 <>, aguardando a assinatura de {data.signer.nameMasked}.</>
@@ -112,7 +119,10 @@ export function VerificationResult({ data, children }: { data: PublicVerificatio
                 <div className="space-y-8 border-t border-line px-6 py-6">
                     <dl className="grid gap-x-10 gap-y-6 sm:grid-cols-2">
                         <Item label="Código de verificação" value={data.code} mono />
-                        <Item label="Confirmação de identidade" value={ASSURANCE_LEVEL_LABEL[data.assuranceLevel]} />
+                        <Item
+                            label="Confirmação de identidade"
+                            value={ASSURANCE_LEVEL_LABEL[data.assuranceLevel]}
+                        />
                         <div>
                             <dt>
                                 <Kicker>Carimbo do tempo</Kicker>
@@ -128,7 +138,9 @@ export function VerificationResult({ data, children }: { data: PublicVerificatio
                         </div>
                         <Item label="CPF" value={data.signer.cpfMasked} mono />
                         <Hash label="SHA-256 do documento original" value={data.originalSha256} />
-                        {data.signedSha256 ? <Hash label="SHA-256 do documento assinado" value={data.signedSha256} /> : null}
+                        {data.signedSha256 ? (
+                            <Hash label="SHA-256 do documento assinado" value={data.signedSha256} />
+                        ) : null}
                     </dl>
 
                     {data.trail.length ? (
@@ -137,7 +149,11 @@ export function VerificationResult({ data, children }: { data: PublicVerificatio
                                 <h2 id="trilha" className="text-base font-semibold tracking-[-0.02em]">
                                     Trilha de auditoria
                                 </h2>
-                                <p className={data.trailIntact ? 'text-sm text-emerald-700' : 'text-sm text-red-600'}>
+                                <p
+                                    className={
+                                        data.trailIntact ? 'text-sm text-emerald-700' : 'text-sm text-red-600'
+                                    }
+                                >
                                     {data.trailIntact
                                         ? 'Íntegra: cada evento confere com o anterior'
                                         : 'Atenção: a trilha não confere'}
@@ -150,7 +166,9 @@ export function VerificationResult({ data, children }: { data: PublicVerificatio
                                         className="flex flex-col gap-0.5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
                                     >
                                         <span className="text-[15px]">{item.label}</span>
-                                        <span className="text-sm text-muted tabular">{formatDateTimeLong(item.at)}</span>
+                                        <span className="text-sm text-muted tabular">
+                                            {formatDateTimeLong(item.at)}
+                                        </span>
                                     </li>
                                 ))}
                             </ol>

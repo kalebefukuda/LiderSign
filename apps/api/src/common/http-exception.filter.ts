@@ -55,7 +55,12 @@ export class HttpExceptionFilter implements ExceptionFilter {
             if (status === 429 && message === 'ThrottlerException: Too Many Requests') {
                 message = 'Muitas tentativas. Aguarde um minuto e tente de novo.'
             }
-            body = { statusCode: status, error: REASON[status] ?? 'Error', message, ...(issues ? { issues } : {}) }
+            body = {
+                statusCode: status,
+                error: REASON[status] ?? 'Error',
+                message,
+                ...(issues ? { issues } : {}),
+            }
         } else {
             this.logger.error(exception instanceof Error ? exception.stack : String(exception))
             body = {

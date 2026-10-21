@@ -4,7 +4,13 @@
  * Só sobe com DEMO_MODE=true. Nunca usar em produção.
  */
 import { BadRequestException, ConflictException, Injectable, Logger } from '@nestjs/common'
-import type { ConnectTenantResponse, MessageStatus, TemplateDto, TenantDto, WebhookPayload } from '@lidersign/shared'
+import type {
+    ConnectTenantResponse,
+    MessageStatus,
+    TemplateDto,
+    TenantDto,
+    WebhookPayload,
+} from '@lidersign/shared'
 import { isValidBrPhone, normalizeBrPhone } from '@lidersign/shared'
 import { createHmac, timingSafeEqual } from 'node:crypto'
 import { env } from '../config/env'
@@ -89,7 +95,9 @@ export class DemoHostService {
             path: '/v1/partner/tenants',
             status: res.status,
             ms: Date.now() - startedAt,
-            detail: json.created ? 'Conta do escritório criada, com os modelos de exemplo' : 'Conta do escritório reativada',
+            detail: json.created
+                ? 'Conta do escritório criada, com os modelos de exemplo'
+                : 'Conta do escritório reativada',
         })
         const { webhookSecret: _secret, ...rest } = json
         return rest
@@ -131,7 +139,9 @@ export class DemoHostService {
     }
 
     /** Configurações › WhatsApp: manda uma mensagem de teste para conferir a conexão com a Meta. */
-    async whatsappTest(phone: string): Promise<{ status: MessageStatus; error: string | null; provider: string }> {
+    async whatsappTest(
+        phone: string,
+    ): Promise<{ status: MessageStatus; error: string | null; provider: string }> {
         if (!isValidBrPhone(phone)) throw new BadRequestException('Informe o celular com DDD.')
         const tenant = await this.prisma.tenant.findUnique({ where: { externalId: env().DEMO_TENANT_ID } })
         if (!tenant?.active) throw new ConflictException('Ative o escritório de demonstração antes do teste.')
@@ -155,7 +165,11 @@ export class DemoHostService {
         return this.secret
     }
 
-    private static check(secret: string, header: string, rawBody: string): { ok: boolean; reason: string | null } {
+    private static check(
+        secret: string,
+        header: string,
+        rawBody: string,
+    ): { ok: boolean; reason: string | null } {
         const parts = Object.fromEntries(
             header.split(',').map((part) => {
                 const [key, ...value] = part.trim().split('=')
@@ -163,7 +177,8 @@ export class DemoHostService {
             }),
         ) as { t?: string; v1?: string }
         const timestamp = Number(parts.t)
-        if (!parts.t || !parts.v1 || !Number.isFinite(timestamp)) return { ok: false, reason: 'cabeçalho inválido' }
+        if (!parts.t || !parts.v1 || !Number.isFinite(timestamp))
+            return { ok: false, reason: 'cabeçalho inválido' }
         if (Math.abs(Date.now() / 1000 - timestamp) > TOLERANCE_SECONDS) {
             return { ok: false, reason: 'fora da janela de 5 minutos' }
         }
@@ -182,7 +197,9 @@ export class DemoHostService {
         let reason: string | null = 'sem assinatura'
         if (signature) {
             let secret = this.secret ?? (await this.fetchSecret())
-            let result = secret ? DemoHostService.check(secret, signature, body) : { ok: false, reason: 'sem segredo' }
+            let result = secret
+                ? DemoHostService.check(secret, signature, body)
+                : { ok: false, reason: 'sem segredo' }
             if (!result.ok && result.reason === 'HMAC não confere') {
                 secret = await this.fetchSecret()
                 if (secret) result = DemoHostService.check(secret, signature, body)

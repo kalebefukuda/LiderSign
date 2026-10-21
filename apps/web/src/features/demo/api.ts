@@ -58,14 +58,21 @@ export const demoApi = {
     callsUrl: `${DEMO_HOST_BASE}/calls`,
     status: () => fetchJson<DemoStatus>(`${DEMO_HOST_BASE}/status`, { cache: 'no-store' }),
     activate: () =>
-        announce(fetchJson<Omit<ConnectTenantResponse, 'webhookSecret'>>(`${DEMO_HOST_BASE}/activate`, { method: 'POST' })),
+        announce(
+            fetchJson<Omit<ConnectTenantResponse, 'webhookSecret'>>(`${DEMO_HOST_BASE}/activate`, {
+                method: 'POST',
+            }),
+        ),
     deactivate: () => announce(fetchJson<void>(`${DEMO_HOST_BASE}/deactivate`, { method: 'POST' })),
     reset: () => announce(fetchJson<void>(`${PARTNER_BASE}/demo/reset`, { method: 'POST' })),
     whatsappTest: (phone: string) =>
-        fetchJson<{ status: MessageStatus; error: string | null; provider: string }>(`${DEMO_HOST_BASE}/whatsapp-test`, {
-            method: 'POST',
-            body: JSON.stringify({ phone }),
-        }),
+        fetchJson<{ status: MessageStatus; error: string | null; provider: string }>(
+            `${DEMO_HOST_BASE}/whatsapp-test`,
+            {
+                method: 'POST',
+                body: JSON.stringify({ phone }),
+            },
+        ),
 }
 
 export { isLocalUrl } from '@/lib/url'

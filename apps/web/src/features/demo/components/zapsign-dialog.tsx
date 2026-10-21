@@ -5,13 +5,24 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import { Input, Label, NativeSelect } from '@/components/ui/primitives'
 
-const PROMISES = ['Listar modelos', 'Ver campos do modelo', 'Criar documento para assinar', 'Ver status do documento']
+const PROMISES = [
+    'Listar modelos',
+    'Ver campos do modelo',
+    'Criar documento para assinar',
+    'Ver status do documento',
+]
 
 /**
  * Réplica da tela atual de conexão da ZapSign na LíderHub (V3). Serve para mostrar a dor:
  * token de API, ambiente e plano pago, tudo fora da plataforma.
  */
-export function ZapSignDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+export function ZapSignDialog({
+    open,
+    onOpenChange,
+}: {
+    open: boolean
+    onOpenChange: (open: boolean) => void
+}) {
     const [token, setToken] = React.useState('')
 
     return (
@@ -20,8 +31,8 @@ export function ZapSignDialog({ open, onOpenChange }: { open: boolean; onOpenCha
                 <div className="px-6 pb-5 pt-6">
                     <DialogTitle className="text-xl">Conectar ZapSign</DialogTitle>
                     <DialogDescription className="mt-1.5 pr-6">
-                        Documentos para assinar a partir dos seus modelos. O token é testado no ZapSign antes de ser
-                        guardado.
+                        Documentos para assinar a partir dos seus modelos. O token é testado no ZapSign antes
+                        de ser guardado.
                     </DialogDescription>
 
                     <div className="mt-6 space-y-5">
@@ -38,8 +49,8 @@ export function ZapSignDialog({ open, onOpenChange }: { open: boolean; onOpenCha
                                 spellCheck={false}
                             />
                             <p className="text-[13px] leading-relaxed text-muted">
-                                No ZapSign, abra Configurações › Integrações › API ZapSign, ative a integração e copie o
-                                token.{' '}
+                                No ZapSign, abra Configurações › Integrações › API ZapSign, ative a integração
+                                e copie o token.{' '}
                                 <span className="inline-flex items-center gap-1 font-medium text-brand">
                                     Como obter o token <ExternalLink className="size-3" aria-hidden />
                                 </span>
@@ -57,8 +68,8 @@ export function ZapSignDialog({ open, onOpenChange }: { open: boolean; onOpenCha
                         </div>
 
                         <p className="flex items-center gap-2 text-[13px] text-muted">
-                            <Info className="size-4 shrink-0" aria-hidden /> Requer o plano Equipe ou Enterprise no
-                            ZapSign.
+                            <Info className="size-4 shrink-0" aria-hidden /> Requer o plano Equipe ou
+                            Enterprise no ZapSign.
                         </p>
 
                         <div>
@@ -88,8 +99,8 @@ export function ZapSignDialog({ open, onOpenChange }: { open: boolean; onOpenCha
 
                 <div className="border-t border-brand/15 bg-brand-soft px-6 py-3.5 text-[13px] leading-relaxed text-ink/80">
                     <span className="font-semibold text-brand">Nota da demonstração · </span>
-                    réplica da tela atual. Antes de enviar o primeiro contrato, o advogado precisa saber o que é uma API,
-                    onde fica o token e qual plano contratar, tudo fora da LíderHub.
+                    réplica da tela atual. Antes de enviar o primeiro contrato, o advogado precisa saber o que
+                    é uma API, onde fica o token e qual plano contratar, tudo fora da LíderHub.
                 </div>
             </DialogContent>
         </Dialog>

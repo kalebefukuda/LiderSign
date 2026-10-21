@@ -24,7 +24,8 @@ export function ReadAloud({ text, compact = false }: { text: string; compact?: b
         synth.cancel()
         const voices = synth.getVoices()
         const voice =
-            voices.find((item) => item.lang === 'pt-BR') ?? voices.find((item) => item.lang.toLowerCase().startsWith('pt'))
+            voices.find((item) => item.lang === 'pt-BR') ??
+            voices.find((item) => item.lang.toLowerCase().startsWith('pt'))
         // Parágrafos em fila: evita o corte de falas longas em alguns navegadores.
         const chunks = text
             .split(/\n{2,}/)
@@ -59,7 +60,11 @@ export function ReadAloud({ text, compact = false }: { text: string; compact?: b
                         }
                     }}
                 >
-                    {status === 'speaking' ? <Pause className="size-4" aria-hidden /> : <Volume2 className="size-4" aria-hidden />}
+                    {status === 'speaking' ? (
+                        <Pause className="size-4" aria-hidden />
+                    ) : (
+                        <Volume2 className="size-4" aria-hidden />
+                    )}
                     {label}
                 </button>
                 {status !== 'idle' ? (

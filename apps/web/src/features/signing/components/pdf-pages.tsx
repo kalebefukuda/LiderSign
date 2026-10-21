@@ -19,7 +19,6 @@ export function PdfPages({ url, onError }: { url: string; onError?: () => void }
         let destroy: (() => void) | undefined
         const host = container.current
         if (!host) return
-
         ;(async () => {
             // Build "legacy": traz polyfills e roda nos celulares mais antigos dos clientes
             const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs')
@@ -35,7 +34,9 @@ export function PdfPages({ url, onError }: { url: string; onError?: () => void }
             for (let number = 1; number <= doc.numPages; number += 1) {
                 const page = await doc.getPage(number)
                 if (cancelled) return
-                const viewport = page.getViewport({ scale: (width / page.getViewport({ scale: 1 }).width) * ratio })
+                const viewport = page.getViewport({
+                    scale: (width / page.getViewport({ scale: 1 }).width) * ratio,
+                })
                 const canvas = document.createElement('canvas')
                 canvas.width = Math.floor(viewport.width)
                 canvas.height = Math.floor(viewport.height)

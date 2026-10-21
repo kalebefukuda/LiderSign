@@ -47,7 +47,9 @@ export function blocksToContent(blocks: TemplateBlock[]): Content[] {
         flushList()
         if (block.type === 'hr') {
             content.push({
-                canvas: [{ type: 'line', x1: 0, y1: 0, x2: CONTENT_WIDTH, y2: 0, lineWidth: 0.5, lineColor: RULE }],
+                canvas: [
+                    { type: 'line', x1: 0, y1: 0, x2: CONTENT_WIDTH, y2: 0, lineWidth: 0.5, lineColor: RULE },
+                ],
                 margin: [0, 6, 0, 10],
             })
         } else {
@@ -114,17 +116,44 @@ function signatureBlock(signer: DocumentSigner): Content {
                 stack: [
                     {
                         canvas: [
-                            { type: 'rect', x: 0, y: 0, w: SIGNATURE_AREA.width, h: SIGNATURE_AREA.height, color: '#FFFFFF' },
+                            {
+                                type: 'rect',
+                                x: 0,
+                                y: 0,
+                                w: SIGNATURE_AREA.width,
+                                h: SIGNATURE_AREA.height,
+                                color: '#FFFFFF',
+                            },
                         ],
                     },
                 ],
             },
             {
-                canvas: [{ type: 'line', x1: 0, y1: 0, x2: SIGNATURE_AREA.width, y2: 0, lineWidth: 0.6, lineColor: MUTED }],
+                canvas: [
+                    {
+                        type: 'line',
+                        x1: 0,
+                        y1: 0,
+                        x2: SIGNATURE_AREA.width,
+                        y2: 0,
+                        lineWidth: 0.6,
+                        lineColor: MUTED,
+                    },
+                ],
             },
             { text: signer.name, fontSize: 10, bold: true, color: '#111827', margin: [0, 5, 0, 0] },
-            { text: `${signer.role} · CPF ${signer.cpfMasked}`, fontSize: 8.5, color: MUTED, margin: [0, 2, 0, 0] },
-            { text: 'Assinatura eletrônica pelo LíderSign', fontSize: 7.5, color: MUTED, margin: [0, 2, 0, 0] },
+            {
+                text: `${signer.role} · CPF ${signer.cpfMasked}`,
+                fontSize: 8.5,
+                color: MUTED,
+                margin: [0, 2, 0, 0],
+            },
+            {
+                text: 'Assinatura eletrônica pelo LíderSign',
+                fontSize: 7.5,
+                color: MUTED,
+                margin: [0, 2, 0, 0],
+            },
         ],
     }
     return block as unknown as Content
@@ -134,7 +163,10 @@ function signatureBlock(signer: DocumentSigner): Content {
  * Definição do PDF original. O bloco de assinatura nunca se divide entre páginas, e a posição da área
  * reservada é informada em onAnchor: a selagem desenha a assinatura exatamente ali.
  */
-function documentDefinition(input: DocumentInput, onAnchor?: (anchor: SignatureAnchor) => void): TDocumentDefinitions {
+function documentDefinition(
+    input: DocumentInput,
+    onAnchor?: (anchor: SignatureAnchor) => void,
+): TDocumentDefinitions {
     return {
         pageSize: 'A4',
         pageMargins: [56, 72, 56, 72],

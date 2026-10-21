@@ -11,6 +11,8 @@ export const envelopesApi = {
     fileUrl: (id: string, file: EnvelopeFile) => `${PARTNER_BASE}/envelopes/${enc(id)}/files/${file}`,
     create: (input: CreateEnvelopeInput) =>
         fetchJson<EnvelopeDto>(`${PARTNER_BASE}/envelopes`, { method: 'POST', body: JSON.stringify(input) }),
-    resend: (id: string) => fetchJson<EnvelopeDto>(`${PARTNER_BASE}/envelopes/${enc(id)}/resend`, { method: 'POST' }),
-    cancel: (id: string) => fetchJson<EnvelopeDto>(`${PARTNER_BASE}/envelopes/${enc(id)}/cancel`, { method: 'POST' }),
+    resend: (id: string) =>
+        fetchJson<EnvelopeDto>(`${PARTNER_BASE}/envelopes/${enc(id)}/resend`, { method: 'POST' }),
+    cancel: (id: string) =>
+        fetchJson<EnvelopeDto>(`${PARTNER_BASE}/envelopes/${enc(id)}/cancel`, { method: 'POST' }),
 }

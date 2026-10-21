@@ -1,8 +1,4 @@
-import {
-    ASSURANCE_LEVEL_LABEL,
-    TEMPLATE_KIND_LABEL,
-    type TemplateDto,
-} from '@lidersign/shared'
+import { ASSURANCE_LEVEL_LABEL, TEMPLATE_KIND_LABEL, type TemplateDto } from '@lidersign/shared'
 import { ChevronRight, FileText, RefreshCw } from 'lucide-react'
 import { Link } from 'react-router'
 

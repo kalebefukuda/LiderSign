@@ -14,7 +14,12 @@ import { PrismaService } from '../prisma/prisma.service'
 export function syncVariables(body: string, variables: TemplateVariable[]): TemplateVariable[] {
     const keys = extractVariableKeys(body)
     return keys.map(
-        (key) => variables.find((variable) => variable.key === key) ?? { key, label: humanizeKey(key), type: 'text' },
+        (key) =>
+            variables.find((variable) => variable.key === key) ?? {
+                key,
+                label: humanizeKey(key),
+                type: 'text',
+            },
     )
 }
 

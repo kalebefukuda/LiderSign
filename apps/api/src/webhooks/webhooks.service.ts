@@ -119,7 +119,8 @@ export class WebhooksService {
                     envelopeId: envelope.id,
                     delivery: toWebhookDeliveryDto(delivery),
                 })
-                if (!ok) this.logger.warn(`Webhook ${event} não entregue após ${attempt + 1} tentativas: ${error}`)
+                if (!ok)
+                    this.logger.warn(`Webhook ${event} não entregue após ${attempt + 1} tentativas: ${error}`)
                 return
             }
         }

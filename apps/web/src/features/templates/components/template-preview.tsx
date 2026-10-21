@@ -40,7 +40,10 @@ export function TemplatePreview({
     variables?: TemplateVariable[]
     className?: string
 }) {
-    const labels = React.useMemo(() => new Map(variables.map((variable) => [variable.key, variable.label])), [variables])
+    const labels = React.useMemo(
+        () => new Map(variables.map((variable) => [variable.key, variable.label])),
+        [variables],
+    )
     const blocks = React.useMemo(() => parseTemplate(body), [body])
 
     if (!blocks.length) {
@@ -54,7 +57,10 @@ export function TemplatePreview({
                 const content = block.spans.map((span, spanIndex) => renderSpan(span, labels, spanIndex))
                 if (block.type === 'h1')
                     return (
-                        <h3 key={index} className="pb-1 text-center text-base font-bold uppercase tracking-[0.02em]">
+                        <h3
+                            key={index}
+                            className="pb-1 text-center text-base font-bold uppercase tracking-[0.02em]"
+                        >
                             {content}
                         </h3>
                     )

@@ -22,7 +22,11 @@ export class TenantsService {
         const tenant = existing
             ? await this.prisma.tenant.update({
                   where: { id: existing.id },
-                  data: { name: input.name, active: true, webhookUrl: input.webhookUrl ?? existing.webhookUrl },
+                  data: {
+                      name: input.name,
+                      active: true,
+                      webhookUrl: input.webhookUrl ?? existing.webhookUrl,
+                  },
               })
             : await this.prisma.tenant.create({
                   data: {
@@ -39,7 +43,11 @@ export class TenantsService {
                 for (const template of STARTER_TEMPLATES) await this.templates.create(tenant, template)
             }
         }
-        return { tenant: toTenantDto(tenant), created: !existing, ...(webhookSecret ? { webhookSecret } : {}) }
+        return {
+            tenant: toTenantDto(tenant),
+            created: !existing,
+            ...(webhookSecret ? { webhookSecret } : {}),
+        }
     }
 
     async get(externalId: string) {

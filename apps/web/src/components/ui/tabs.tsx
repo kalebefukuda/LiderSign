@@ -27,5 +27,10 @@ export function TabsTrigger({ className, ...props }: React.ComponentProps<typeof
 }
 
 export function TabsContent({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.Content>) {
-    return <TabsPrimitive.Content className={cn('outline-none data-[state=active]:animate-enter', className)} {...props} />
+    return (
+        <TabsPrimitive.Content
+            className={cn('outline-none data-[state=active]:animate-enter', className)}
+            {...props}
+        />
+    )
 }

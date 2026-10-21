@@ -22,12 +22,18 @@ export function CallLog() {
     }
 
     return (
-        <ol className="divide-y divide-line overflow-hidden rounded-2xl border border-line" aria-live="polite">
+        <ol
+            className="divide-y divide-line overflow-hidden rounded-2xl border border-line"
+            aria-live="polite"
+        >
             {entries.map((entry, index) => {
                 const outgoing = entry.direction === 'liderhub-to-lidersign'
                 const ok = entry.status < 400
                 return (
-                    <li key={`${entry.at}-${index}`} className="grid gap-1 px-4 py-3 sm:grid-cols-[72px_190px_1fr_auto] sm:items-center sm:gap-4">
+                    <li
+                        key={`${entry.at}-${index}`}
+                        className="grid gap-1 px-4 py-3 sm:grid-cols-[72px_190px_1fr_auto] sm:items-center sm:gap-4"
+                    >
                         <span className="text-xs text-subtle tabular">{formatTime(entry.at)}</span>
                         <span className="inline-flex items-center gap-1.5 text-[13px] text-muted">
                             {outgoing ? (
@@ -36,7 +42,8 @@ export function CallLog() {
                                 </>
                             ) : (
                                 <>
-                                    LíderHub <ArrowLeft className="size-3.5" aria-label="recebeu de" /> LíderSign
+                                    LíderHub <ArrowLeft className="size-3.5" aria-label="recebeu de" />{' '}
+                                    LíderSign
                                 </>
                             )}
                         </span>
@@ -44,7 +51,9 @@ export function CallLog() {
                             <span className="block truncate font-mono text-[13px] text-ink">
                                 {entry.method} {entry.path}
                             </span>
-                            {entry.detail ? <span className="block truncate text-[13px] text-muted">{entry.detail}</span> : null}
+                            {entry.detail ? (
+                                <span className="block truncate text-[13px] text-muted">{entry.detail}</span>
+                            ) : null}
                         </span>
                         <span
                             className={cn(

@@ -12,9 +12,7 @@
 export const VARIABLE_PATTERN = /\{\{\s*([a-z][a-z0-9_]*)\s*\}\}/g
 
 export type TemplateSpan = { text: string; bold: boolean }
-export type TemplateBlock =
-    | { type: 'h1' | 'h2' | 'p' | 'li'; spans: TemplateSpan[] }
-    | { type: 'hr' }
+export type TemplateBlock = { type: 'h1' | 'h2' | 'p' | 'li'; spans: TemplateSpan[] } | { type: 'hr' }
 
 export function extractVariableKeys(body: string): string[] {
     const keys: string[] = []

@@ -42,10 +42,7 @@ export type UpdateTemplateInput = z.infer<typeof updateTemplateSchema>
 
 export const signerSchema = z.object({
     name: z.string().trim().min(3).max(120),
-    cpf: z
-        .string()
-        .transform(onlyDigits)
-        .refine(isValidCpf, 'CPF inválido'),
+    cpf: z.string().transform(onlyDigits).refine(isValidCpf, 'CPF inválido'),
     phone: z
         .string()
         .refine(isValidBrPhone, 'Celular inválido: informe DDD + número')

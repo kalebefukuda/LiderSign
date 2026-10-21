@@ -66,7 +66,10 @@ export const listarModelos = createTool({
         'Lista os modelos de documento (contratos, procurações, declarações) que o escritório já tem no LíderSign. ' +
         'Use antes de criar um documento para descobrir o id do modelo certo.',
     inputSchema: z.object({}),
-    execute: async (_input, context): Promise<ToolResult<{ modelos: ReturnType<typeof summarizeTemplate>[] }>> => {
+    execute: async (
+        _input,
+        context,
+    ): Promise<ToolResult<{ modelos: ReturnType<typeof summarizeTemplate>[] }>> => {
         try {
             const templates = await client().listTemplates(context?.abortSignal)
             return { ok: true, modelos: templates.map(summarizeTemplate) }
@@ -113,7 +116,9 @@ export const criarDocumentoParaAssinar = createTool({
         modeloId: z.string().min(1).describe('Id do modelo, vindo de listar_modelos'),
         variaveis: z
             .record(z.string(), z.string())
-            .describe('Valores das variáveis do modelo, por chave. Ex.: { "nome_cliente": "Maria Aparecida dos Santos" }'),
+            .describe(
+                'Valores das variáveis do modelo, por chave. Ex.: { "nome_cliente": "Maria Aparecida dos Santos" }',
+            ),
         signatario: z.object({
             nome: z.string().min(3).describe('Nome completo de quem vai assinar'),
             cpf: z.string().describe('CPF de quem vai assinar, com ou sem pontuação'),
@@ -129,7 +134,8 @@ export const criarDocumentoParaAssinar = createTool({
         try {
             const problemas: string[] = []
             if (!isValidCpf(signatario.cpf)) problemas.push('CPF do signatário inválido.')
-            if (!isValidBrPhone(signatario.celular)) problemas.push('Celular do signatário inválido: informe DDD + número.')
+            if (!isValidBrPhone(signatario.celular))
+                problemas.push('Celular do signatário inválido: informe DDD + número.')
             if (problemas.length) {
                 return { ok: false as const, erro: 'Não criei o documento.', detalhes: problemas }
             }
@@ -185,7 +191,10 @@ export const verStatusDoDocumento = createTool({
         'Consulta o status de um documento enviado para assinatura (Enviado, Visto, Selando, Assinado, Cancelado ou Expirado), ' +
         'os últimos passos da trilha de auditoria e o link de verificação pública.',
     inputSchema: z.object({
-        documentoId: z.string().min(1).describe('Id do documento, devolvido por criar_documento_para_assinar'),
+        documentoId: z
+            .string()
+            .min(1)
+            .describe('Id do documento, devolvido por criar_documento_para_assinar'),
     }),
     execute: async ({ documentoId }, context) => {
         try {

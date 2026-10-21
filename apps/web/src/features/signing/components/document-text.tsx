@@ -23,7 +23,10 @@ export function DocumentText({ body }: { body: string }) {
                 if (block.type === 'hr') return <hr key={index} className="border-line" />
                 if (block.type === 'h1')
                     return (
-                        <h2 key={index} className="text-[17px] font-bold uppercase leading-snug tracking-[0.01em] text-ink">
+                        <h2
+                            key={index}
+                            className="text-[17px] font-bold uppercase leading-snug tracking-[0.01em] text-ink"
+                        >
                             {renderSpans(block.spans)}
                         </h2>
                     )

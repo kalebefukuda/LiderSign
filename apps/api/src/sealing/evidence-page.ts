@@ -106,7 +106,10 @@ export function buildEvidenceDefinition(input: EvidenceInput): TDocumentDefiniti
                   text: input.signature.typedName,
                   italics: true,
                   // Encolhe nomes longos para caber em uma linha no espaço da assinatura
-                  fontSize: Math.max(12, Math.min(20, Math.floor(370 / Math.max(input.signature.typedName.length, 1)))),
+                  fontSize: Math.max(
+                      12,
+                      Math.min(20, Math.floor(370 / Math.max(input.signature.typedName.length, 1))),
+                  ),
                   color: '#0B1F4D',
                   margin: [0, 14, 0, 14],
               }
@@ -132,11 +135,16 @@ export function buildEvidenceDefinition(input: EvidenceInput): TDocumentDefiniti
             stack: [
                 signatureVisual,
                 {
-                    canvas: [{ type: 'line', x1: 0, y1: 0, x2: 190, y2: 0, lineWidth: 0.5, lineColor: MUTED }],
+                    canvas: [
+                        { type: 'line', x1: 0, y1: 0, x2: 190, y2: 0, lineWidth: 0.5, lineColor: MUTED },
+                    ],
                     margin: [0, 2, 0, 3],
                 },
                 {
-                    text: input.signature.type === 'drawn' ? 'Assinatura desenhada' : 'Nome digitado como assinatura',
+                    text:
+                        input.signature.type === 'drawn'
+                            ? 'Assinatura desenhada'
+                            : 'Nome digitado como assinatura',
                     fontSize: 7.5,
                     color: MUTED,
                 },
@@ -185,7 +193,13 @@ export function buildEvidenceDefinition(input: EvidenceInput): TDocumentDefiniti
                     {
                         width: '*',
                         stack: [
-                            { text: 'LÍDERSIGN', fontSize: 8, bold: true, color: ACCENT, characterSpacing: 2 },
+                            {
+                                text: 'LÍDERSIGN',
+                                fontSize: 8,
+                                bold: true,
+                                color: ACCENT,
+                                characterSpacing: 2,
+                            },
                             { text: 'Página de evidências', style: 'h1', margin: [0, 6, 0, 6] },
                             { text: input.title, fontSize: 11, bold: true, color: '#111827' },
                             { text: input.officeName, fontSize: 9, color: MUTED, margin: [0, 2, 0, 10] },

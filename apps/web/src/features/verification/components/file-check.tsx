@@ -8,7 +8,9 @@ import { errorMessage } from '@/lib/http'
 
 import { verificationApi } from '../api'
 
-type Result = { kind: 'match'; data: FileCheckResponse; fileName: string } | { kind: 'mismatch'; data: FileCheckResponse; fileName: string }
+type Result =
+    | { kind: 'match'; data: FileCheckResponse; fileName: string }
+    | { kind: 'mismatch'; data: FileCheckResponse; fileName: string }
 
 /** Confere um PDF pelo SHA-256: qualquer byte alterado muda o hash. */
 export function FileCheck({ expectedCode }: { expectedCode?: string }) {
@@ -70,8 +72,12 @@ export function FileCheck({ expectedCode }: { expectedCode?: string }) {
                     <FileSearch className="size-5" aria-hidden />
                 </span>
                 <div>
-                    <p className="font-medium">{checking ? 'Conferindo o arquivo…' : 'Arraste o PDF aqui ou clique para escolher'}</p>
-                    <p className="mt-0.5 text-sm text-muted">O arquivo é comparado pelo hash e não fica guardado.</p>
+                    <p className="font-medium">
+                        {checking ? 'Conferindo o arquivo…' : 'Arraste o PDF aqui ou clique para escolher'}
+                    </p>
+                    <p className="mt-0.5 text-sm text-muted">
+                        O arquivo é comparado pelo hash e não fica guardado.
+                    </p>
                 </div>
                 <input
                     ref={inputRef}
@@ -93,7 +99,9 @@ export function FileCheck({ expectedCode }: { expectedCode?: string }) {
                     role="status"
                     className={cn(
                         'flex gap-3 rounded-2xl border p-5 animate-enter',
-                        result.kind === 'match' ? 'border-emerald-200 bg-emerald-50/60' : 'border-red-200 bg-red-50/60',
+                        result.kind === 'match'
+                            ? 'border-emerald-200 bg-emerald-50/60'
+                            : 'border-red-200 bg-red-50/60',
                     )}
                 >
                     {result.kind === 'match' ? (
@@ -102,7 +110,12 @@ export function FileCheck({ expectedCode }: { expectedCode?: string }) {
                         <XCircle className="mt-0.5 size-5 shrink-0 text-red-600" aria-hidden />
                     )}
                     <div className="min-w-0 space-y-1">
-                        <p className={cn('font-semibold', result.kind === 'match' ? 'text-emerald-800' : 'text-red-800')}>
+                        <p
+                            className={cn(
+                                'font-semibold',
+                                result.kind === 'match' ? 'text-emerald-800' : 'text-red-800',
+                            )}
+                        >
                             {result.kind === 'match'
                                 ? 'Arquivo idêntico ao assinado'
                                 : 'Este arquivo não confere: ele foi alterado ou não foi assinado pelo LíderSign'}

@@ -2,7 +2,8 @@ import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { z } from 'zod'
 
-const emptyToUndefined = (value: unknown) => (typeof value === 'string' && value.trim() === '' ? undefined : value)
+const emptyToUndefined = (value: unknown) =>
+    typeof value === 'string' && value.trim() === '' ? undefined : value
 
 const booleanFromString = z
     .union([z.boolean(), z.string()])
@@ -50,7 +51,10 @@ const envSchema = z
         DEMO_TENANT_ID: z.string().default('escritorio-demo'),
     })
     .superRefine((env, ctx) => {
-        if (env.WHATSAPP_PROVIDER === 'cloud_api' && (!env.WHATSAPP_PHONE_NUMBER_ID || !env.WHATSAPP_ACCESS_TOKEN)) {
+        if (
+            env.WHATSAPP_PROVIDER === 'cloud_api' &&
+            (!env.WHATSAPP_PHONE_NUMBER_ID || !env.WHATSAPP_ACCESS_TOKEN)
+        ) {
             ctx.addIssue({
                 code: 'custom',
                 path: ['WHATSAPP_PROVIDER'],

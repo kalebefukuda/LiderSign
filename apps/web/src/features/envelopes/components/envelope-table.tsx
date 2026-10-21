@@ -16,7 +16,10 @@ export function EnvelopeTable({ limit }: { limit?: number } = {}) {
         return (
             <div className="overflow-hidden rounded-2xl border border-line">
                 {Array.from({ length: 5 }).map((_, index) => (
-                    <div key={index} className="flex items-center gap-6 border-b border-line px-5 py-4 last:border-0">
+                    <div
+                        key={index}
+                        className="flex items-center gap-6 border-b border-line px-5 py-4 last:border-0"
+                    >
                         <Skeleton className="h-4 w-1/3" />
                         <Skeleton className="h-4 w-1/5" />
                         <Skeleton className="ml-auto h-5 w-20 rounded-full" />
@@ -60,7 +63,9 @@ export function EnvelopeTable({ limit }: { limit?: number } = {}) {
         <div className="space-y-3">
             <p className="flex items-center gap-2 text-xs text-muted">
                 <span
-                    className={live ? 'size-1.5 rounded-full bg-emerald-500' : 'size-1.5 rounded-full bg-line-strong'}
+                    className={
+                        live ? 'size-1.5 rounded-full bg-emerald-500' : 'size-1.5 rounded-full bg-line-strong'
+                    }
                     aria-hidden
                 />
                 {live ? 'Atualizando ao vivo' : 'Atualizando a cada poucos segundos'}

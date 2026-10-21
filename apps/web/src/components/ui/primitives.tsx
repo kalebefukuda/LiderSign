@@ -48,7 +48,13 @@ export function NativeSelect({ className, children, ...props }: React.ComponentP
                 viewBox="0 0 16 16"
                 className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted"
             >
-                <path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                <path
+                    d="M4 6l4 4 4-4"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                />
             </svg>
         </div>
     )

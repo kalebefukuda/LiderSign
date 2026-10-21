@@ -81,8 +81,5 @@ test('extractTemplateWithAI usa o agente Mastra e devolve o modelo validado', as
 })
 
 test('extractTemplateWithAI recusa documento sem texto', async () => {
-    await assert.rejects(
-        () => extractTemplateWithAI({ text: '   ', apiKey: 'x' }),
-        /pouco texto/,
-    )
+    await assert.rejects(() => extractTemplateWithAI({ text: '   ', apiKey: 'x' }), /pouco texto/)
 })

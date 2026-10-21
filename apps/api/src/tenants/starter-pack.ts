@@ -49,7 +49,12 @@ Fica eleito o foro da comarca de {{cidade}} para resolver eventuais dúvidas sob
 
 {{cidade}}, {{data}}.`,
         variables: [
-            { key: 'nome_cliente', label: 'Nome do cliente', type: 'text', example: 'Maria Aparecida dos Santos' },
+            {
+                key: 'nome_cliente',
+                label: 'Nome do cliente',
+                type: 'text',
+                example: 'Maria Aparecida dos Santos',
+            },
             { key: 'cpf_cliente', label: 'CPF do cliente', type: 'cpf', example: '529.982.247-25' },
             {
                 key: 'endereco_cliente',
@@ -63,7 +68,12 @@ Fica eleito o foro da comarca de {{cidade}} para resolver eventuais dúvidas sob
                 type: 'text',
                 example: 'Souza Advocacia Previdenciária',
             },
-            { key: 'nome_advogado', label: 'Advogado responsável', type: 'text', example: 'Dra. Ana Paula Souza' },
+            {
+                key: 'nome_advogado',
+                label: 'Advogado responsável',
+                type: 'text',
+                example: 'Dra. Ana Paula Souza',
+            },
             { key: 'oab_advogado', label: 'OAB do advogado', type: 'text', example: 'OAB/SC 00000' },
             { key: 'percentual_honorarios', label: 'Percentual de honorários', type: 'text', example: '30%' },
             { key: 'cidade', label: 'Cidade', type: 'text', example: 'Joinville/SC' },
@@ -96,7 +106,12 @@ O(A) OUTORGANTE declara que leu esta procuração, que confirmou sua identidade 
 
 {{cidade}}, {{data}}.`,
         variables: [
-            { key: 'nome_cliente', label: 'Nome do outorgante', type: 'text', example: 'Maria Aparecida dos Santos' },
+            {
+                key: 'nome_cliente',
+                label: 'Nome do outorgante',
+                type: 'text',
+                example: 'Maria Aparecida dos Santos',
+            },
             { key: 'nacionalidade', label: 'Nacionalidade', type: 'text', example: 'brasileira' },
             { key: 'estado_civil', label: 'Estado civil', type: 'text', example: 'viúva' },
             { key: 'profissao', label: 'Profissão', type: 'text', example: 'do lar' },
@@ -107,7 +122,12 @@ O(A) OUTORGANTE declara que leu esta procuração, que confirmou sua identidade 
                 type: 'address',
                 example: 'Rua das Palmeiras, 120, Centro, Joinville/SC',
             },
-            { key: 'nome_advogado', label: 'Advogado(a) outorgado(a)', type: 'text', example: 'Dra. Ana Paula Souza' },
+            {
+                key: 'nome_advogado',
+                label: 'Advogado(a) outorgado(a)',
+                type: 'text',
+                example: 'Dra. Ana Paula Souza',
+            },
             { key: 'oab_advogado', label: 'OAB do advogado', type: 'text', example: 'OAB/SC 00000' },
             {
                 key: 'endereco_escritorio',

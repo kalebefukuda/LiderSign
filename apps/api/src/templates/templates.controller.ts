@@ -40,7 +40,10 @@ export class TemplatesController {
     }
 
     @Post()
-    create(@CurrentTenant() tenant: Tenant, @Body(new ZodPipe(createTemplateSchema)) body: CreateTemplateInput) {
+    create(
+        @CurrentTenant() tenant: Tenant,
+        @Body(new ZodPipe(createTemplateSchema)) body: CreateTemplateInput,
+    ) {
         return this.templates.create(tenant, body)
     }
 

@@ -40,7 +40,9 @@ async function readTunnelUrl(metricsUrl: string): Promise<string | null> {
 function safeHostname(text: string): string | null {
     try {
         const parsed = JSON.parse(text) as { hostname?: unknown }
-        return typeof parsed.hostname === 'string' && parsed.hostname ? parsed.hostname.replace(/^https:\/\//, '') : null
+        return typeof parsed.hostname === 'string' && parsed.hostname
+            ? parsed.hostname.replace(/^https:\/\//, '')
+            : null
     } catch {
         return null
     }

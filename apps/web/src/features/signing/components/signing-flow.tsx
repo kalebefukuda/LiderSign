@@ -102,7 +102,11 @@ export function SigningFlow({ token }: { token: string }) {
                         <Link2Off className="size-6" aria-hidden />
                     </span>
                     <h1 className="text-2xl font-bold tracking-[-0.03em]">
-                        {expired ? 'Este link não está mais ativo' : state.status === 0 || state.status >= 500 ? 'Sem conexão agora' : 'Link inválido'}
+                        {expired
+                            ? 'Este link não está mais ativo'
+                            : state.status === 0 || state.status >= 500
+                              ? 'Sem conexão agora'
+                              : 'Link inválido'}
                     </h1>
                     <p className="max-w-xs text-[15px] leading-relaxed text-muted">
                         {expired
@@ -174,7 +178,9 @@ export function SigningFlow({ token }: { token: string }) {
             </div>
 
             <div key={step} className="mt-7 animate-enter">
-                <p className="text-[13px] font-semibold uppercase tracking-[0.16em] text-subtle">{STEP_LABEL[step]}</p>
+                <p className="text-[13px] font-semibold uppercase tracking-[0.16em] text-subtle">
+                    {STEP_LABEL[step]}
+                </p>
 
                 {step === 'identity' ? (
                     <IdentityStep
@@ -191,7 +197,9 @@ export function SigningFlow({ token }: { token: string }) {
 
                 {step === 'read' ? (
                     <div className="mt-3 space-y-5">
-                        <h1 className="text-[26px] font-bold leading-tight tracking-[-0.035em]">{session.title}</h1>
+                        <h1 className="text-[26px] font-bold leading-tight tracking-[-0.035em]">
+                            {session.title}
+                        </h1>
                         <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
                             <ReadAloud text={session.plainText} compact />
                             <button
@@ -234,7 +242,9 @@ export function SigningFlow({ token }: { token: string }) {
 
                 {step === 'otp' ? (
                     <div className="mt-3 space-y-5">
-                        <h1 className="text-[26px] font-bold leading-tight tracking-[-0.035em]">Confirme que é você</h1>
+                        <h1 className="text-[26px] font-bold leading-tight tracking-[-0.035em]">
+                            Confirme que é você
+                        </h1>
                         <OtpStep
                             token={token}
                             phoneMasked={session.signer.phoneMasked}
@@ -245,15 +255,23 @@ export function SigningFlow({ token }: { token: string }) {
 
                 {step === 'selfie' ? (
                     <div className="mt-3 space-y-5">
-                        <h1 className="text-[26px] font-bold leading-tight tracking-[-0.035em]">Uma selfie rápida</h1>
+                        <h1 className="text-[26px] font-bold leading-tight tracking-[-0.035em]">
+                            Uma selfie rápida
+                        </h1>
                         <SelfieStep token={token} onCaptured={() => go('sign')} />
                     </div>
                 ) : null}
 
                 {step === 'sign' ? (
                     <div className="mt-3 space-y-5">
-                        <h1 className="text-[26px] font-bold leading-tight tracking-[-0.035em]">Sua assinatura</h1>
-                        <SignStep token={token} signerName={session.signer.name} onSigned={() => go('done')} />
+                        <h1 className="text-[26px] font-bold leading-tight tracking-[-0.035em]">
+                            Sua assinatura
+                        </h1>
+                        <SignStep
+                            token={token}
+                            signerName={session.signer.name}
+                            onSigned={() => go('done')}
+                        />
                     </div>
                 ) : null}
             </div>
@@ -295,7 +313,9 @@ function DoneScreen({ token, initial }: { token: string; initial: SigningSession
             >
                 <CheckCircle2 className="size-8" aria-hidden />
             </span>
-            <h1 className="mt-6 text-[28px] font-bold leading-tight tracking-[-0.035em]">Pronto! Documento assinado</h1>
+            <h1 className="mt-6 text-[28px] font-bold leading-tight tracking-[-0.035em]">
+                Pronto! Documento assinado
+            </h1>
             <p className="mt-3 max-w-xs text-[17px] leading-relaxed text-ink/80">
                 {completed
                     ? `${session.officeName} já recebeu. Guarde a sua cópia.`
@@ -316,7 +336,9 @@ function DoneScreen({ token, initial }: { token: string; initial: SigningSession
                         aria-live="polite"
                     >
                         <span className="size-2 animate-pulse rounded-full bg-brand" aria-hidden />
-                        {waitedTooLong ? 'Ainda finalizando. Você pode voltar a este link depois.' : 'Finalizando o PDF…'}
+                        {waitedTooLong
+                            ? 'Ainda finalizando. Você pode voltar a este link depois.'
+                            : 'Finalizando o PDF…'}
                     </div>
                 )}
                 <div className="rounded-2xl border border-line p-4">

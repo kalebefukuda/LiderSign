@@ -46,7 +46,8 @@ const MAX_SIGNATURE = 300 * 1024
 const IDENTITY_MAX_ATTEMPTS = 5
 
 /** Aceite por clique: o texto fica junto do botão "Assinar" e vai para a trilha e para a página de evidências. */
-export const CONSENT_TEXT = 'Ao tocar em "Assinar", declaro que li o documento e concordo em assiná-lo eletronicamente.'
+export const CONSENT_TEXT =
+    'Ao tocar em "Assinar", declaro que li o documento e concordo em assiná-lo eletronicamente.'
 
 type EnvelopeWithTenant = Envelope & { tenant: Tenant }
 type UploadedFile = { buffer: Buffer; size: number }
@@ -54,7 +55,10 @@ type UploadedFile = { buffer: Buffer; size: number }
 function selfieExtension(data: Buffer): 'jpg' | 'png' | 'webp' | null {
     if (data[0] === 0xff && data[1] === 0xd8 && data[2] === 0xff) return 'jpg'
     if (data.subarray(0, 4).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47]))) return 'png'
-    if (data.subarray(0, 4).toString('ascii') === 'RIFF' && data.subarray(8, 12).toString('ascii') === 'WEBP') {
+    if (
+        data.subarray(0, 4).toString('ascii') === 'RIFF' &&
+        data.subarray(8, 12).toString('ascii') === 'WEBP'
+    ) {
         return 'webp'
     }
     return null
@@ -75,7 +79,8 @@ export class SigningService {
     ) {}
 
     private async resolve(token: string): Promise<EnvelopeWithTenant> {
-        if (!/^[A-Za-z0-9_-]{20,100}$/.test(token)) throw new NotFoundException('Link inválido. Peça um novo link ao escritório.')
+        if (!/^[A-Za-z0-9_-]{20,100}$/.test(token))
+            throw new NotFoundException('Link inválido. Peça um novo link ao escritório.')
         let envelope = await this.prisma.envelope.findUnique({
             where: { tokenHash: sha256Hex(token) },
             include: { tenant: true },
@@ -92,8 +97,10 @@ export class SigningService {
     }
 
     private assertOpen(envelope: Envelope) {
-        if (envelope.status === 'EXPIRED') throw new GoneException('Este link expirou. Peça um novo link ao escritório.')
-        if (envelope.status === 'CANCELED') throw new GoneException('Este documento foi cancelado pelo escritório.')
+        if (envelope.status === 'EXPIRED')
+            throw new GoneException('Este link expirou. Peça um novo link ao escritório.')
+        if (envelope.status === 'CANCELED')
+            throw new GoneException('Este documento foi cancelado pelo escritório.')
         if (envelope.status === 'SIGNED' || envelope.status === 'COMPLETED') {
             throw new ConflictException('Este documento já foi assinado.')
         }
@@ -124,7 +131,9 @@ export class SigningService {
             identityConfirmed,
             signer: {
                 // Antes do CPF, só o primeiro nome (minimização, LGPD art. 6º, III)
-                name: identityConfirmed ? envelope.signerName : (envelope.signerName.trim().split(/\s+/)[0] ?? ''),
+                name: identityConfirmed
+                    ? envelope.signerName
+                    : (envelope.signerName.trim().split(/\s+/)[0] ?? ''),
                 cpfMasked: maskCpf(envelope.signerCpf),
                 phoneMasked: maskPhone(envelope.signerPhone),
             },
@@ -141,8 +150,10 @@ export class SigningService {
 
     async session(token: string, ctx: RequestContext): Promise<SigningSessionDto> {
         let envelope = await this.resolve(token)
-        if (envelope.status === 'EXPIRED') throw new GoneException('Este link expirou. Peça um novo link ao escritório.')
-        if (envelope.status === 'CANCELED') throw new GoneException('Este documento foi cancelado pelo escritório.')
+        if (envelope.status === 'EXPIRED')
+            throw new GoneException('Este link expirou. Peça um novo link ao escritório.')
+        if (envelope.status === 'CANCELED')
+            throw new GoneException('Este documento foi cancelado pelo escritório.')
         if (envelope.status === 'SENT') {
             const updated = await this.prisma.envelope.updateMany({
                 where: { id: envelope.id, status: 'SENT' },
@@ -176,7 +187,11 @@ export class SigningService {
         this.assertOpen(envelope)
         if (envelope.identityVerifiedAt) return { confirmed: true as const }
         const claimed = await this.prisma.envelope.updateMany({
-            where: { id: envelope.id, identityVerifiedAt: null, identityAttempts: { lt: IDENTITY_MAX_ATTEMPTS } },
+            where: {
+                id: envelope.id,
+                identityVerifiedAt: null,
+                identityAttempts: { lt: IDENTITY_MAX_ATTEMPTS },
+            },
             data: { identityAttempts: { increment: 1 } },
         })
         if (claimed.count === 0) {
@@ -203,7 +218,13 @@ export class SigningService {
             where: { id: envelope.id },
             data: { identityVerifiedAt: new Date() },
         })
-        await this.audit.append(envelope.id, 'IDENTITY_CONFIRMED', 'signer', { cpf: maskCpf(envelope.signerCpf) }, ctx)
+        await this.audit.append(
+            envelope.id,
+            'IDENTITY_CONFIRMED',
+            'signer',
+            { cpf: maskCpf(envelope.signerCpf) },
+            ctx,
+        )
         return { confirmed: true as const }
     }
 
@@ -247,9 +268,17 @@ export class SigningService {
             body: otpText(code),
             secrets: [code],
         })
-        await this.audit.append(envelope.id, 'OTP_SENT', 'system', { provider: message.provider, status: message.status }, ctx)
+        await this.audit.append(
+            envelope.id,
+            'OTP_SENT',
+            'system',
+            { provider: message.provider, status: message.status },
+            ctx,
+        )
         if (message.status === 'FAILED') {
-            throw new BadGatewayException('Não conseguimos enviar o código pelo WhatsApp. Tente de novo em instantes.')
+            throw new BadGatewayException(
+                'Não conseguimos enviar o código pelo WhatsApp. Tente de novo em instantes.',
+            )
         }
         return {
             sentTo: maskPhone(envelope.signerPhone),
@@ -296,14 +325,21 @@ export class SigningService {
             where: { id: envelope.id },
             data: { otpVerifiedAt: new Date(), otpHash: null, otpExpiresAt: null, otpAttempts: 0 },
         })
-        await this.audit.append(envelope.id, 'OTP_VERIFIED', 'signer', { telefone: maskPhone(envelope.signerPhone) }, ctx)
+        await this.audit.append(
+            envelope.id,
+            'OTP_VERIFIED',
+            'signer',
+            { telefone: maskPhone(envelope.signerPhone) },
+            ctx,
+        )
         return { verified: true as const }
     }
 
     async selfie(token: string, file: UploadedFile | undefined, ctx: RequestContext) {
         const envelope = await this.resolve(token)
         this.assertOpen(envelope)
-        if (envelope.assuranceLevel !== 'REFORCADO') throw new ConflictException('Este documento não pede selfie.')
+        if (envelope.assuranceLevel !== 'REFORCADO')
+            throw new ConflictException('Este documento não pede selfie.')
         this.assertIdentity(envelope)
         if (!file?.buffer?.length) throw new UnprocessableEntityException('Envie a foto no campo "selfie".')
         if (file.size > MAX_SELFIE) throw new PayloadTooLargeException('A foto pode ter no máximo 5 MB.')
@@ -340,7 +376,10 @@ export class SigningService {
         let typedName: string | null = null
         if (input.signature.type === 'drawn') {
             const png = Buffer.from(input.signature.imageDataUrl.split(',')[1] ?? '', 'base64')
-            if (!png.subarray(0, 4).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47])) || png.length > MAX_SIGNATURE) {
+            if (
+                !png.subarray(0, 4).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47])) ||
+                png.length > MAX_SIGNATURE
+            ) {
                 throw new UnprocessableEntityException('Assinatura inválida. Desenhe de novo.')
             }
             signatureImagePath = StorageService.envelopeKey(envelope.tenantId, envelope.id, 'signature.png')

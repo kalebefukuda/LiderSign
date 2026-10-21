@@ -15,6 +15,9 @@ export const templatesApi = {
     importFile: (file: File) => {
         const form = new FormData()
         form.append('file', file)
-        return fetchJson<TemplateImportResponse>(`${PARTNER_BASE}/templates/import`, { method: 'POST', body: form })
+        return fetchJson<TemplateImportResponse>(`${PARTNER_BASE}/templates/import`, {
+            method: 'POST',
+            body: form,
+        })
     },
 }

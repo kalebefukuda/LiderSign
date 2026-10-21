@@ -35,7 +35,16 @@ export type ButtonProps = React.ComponentProps<'button'> &
         loading?: boolean
     }
 
-export function Button({ className, variant, size, asChild, loading, disabled, children, ...props }: ButtonProps) {
+export function Button({
+    className,
+    variant,
+    size,
+    asChild,
+    loading,
+    disabled,
+    children,
+    ...props
+}: ButtonProps) {
     const Component = asChild ? Slot : 'button'
     return (
         <Component

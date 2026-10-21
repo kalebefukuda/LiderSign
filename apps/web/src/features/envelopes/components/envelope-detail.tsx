@@ -4,7 +4,16 @@ import {
     type MessageKind,
     type StreamEvent,
 } from '@lidersign/shared'
-import { ArrowLeft, CheckCircle2, ChevronDown, Download, ExternalLink, Loader2, RefreshCw, XCircle } from 'lucide-react'
+import {
+    ArrowLeft,
+    CheckCircle2,
+    ChevronDown,
+    Download,
+    ExternalLink,
+    Loader2,
+    RefreshCw,
+    XCircle,
+} from 'lucide-react'
 import { Link } from 'react-router'
 import * as React from 'react'
 import { toast } from 'sonner'
@@ -44,7 +53,9 @@ function hideOtp(body: string) {
 export function EnvelopeDetail({ id }: { id: string }) {
     const url = envelopesApi.detailUrl(id)
     const [final, setFinal] = React.useState(false)
-    const { data, error, loading, reload } = useResource<EnvelopeDetailDto>(url, { refreshMs: final ? 0 : 4000 })
+    const { data, error, loading, reload } = useResource<EnvelopeDetailDto>(url, {
+        refreshMs: final ? 0 : 4000,
+    })
     const [busy, setBusy] = React.useState<'resend' | 'cancel' | null>(null)
     const [confirmCancel, setConfirmCancel] = React.useState(false)
     const [linkVersion, setLinkVersion] = React.useState(0)
@@ -128,7 +139,9 @@ export function EnvelopeDetail({ id }: { id: string }) {
                 <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-3">
-                            <h1 className="text-2xl font-bold tracking-[-0.03em] sm:text-[28px]">{data.title}</h1>
+                            <h1 className="text-2xl font-bold tracking-[-0.03em] sm:text-[28px]">
+                                {data.title}
+                            </h1>
                             <StatusPill status={data.status} />
                         </div>
                         <p className="mt-1.5 text-[15px] text-muted">
@@ -160,7 +173,8 @@ export function EnvelopeDetail({ id }: { id: string }) {
 
             {data.status === 'SIGNED' ? (
                 <Notice icon={<Loader2 className="size-5 animate-spin text-brand" aria-hidden />}>
-                    {signerFirst} assinou. Estamos finalizando o PDF com o selo e o carimbo do tempo, leva poucos segundos.
+                    {signerFirst} assinou. Estamos finalizando o PDF com o selo e o carimbo do tempo, leva
+                    poucos segundos.
                 </Notice>
             ) : null}
 
@@ -171,8 +185,11 @@ export function EnvelopeDetail({ id }: { id: string }) {
                         <div>
                             <h2 className="text-xl font-bold tracking-[-0.02em]">{signerFirst} assinou</h2>
                             <p className="mt-1 text-[15px] text-ink/80">
-                                Em {formatDateTimeLong(data.signedAt ?? data.completedAt!)}. O PDF assinado já está pronto
-                                {data.messages.some((m) => m.kind === 'SIGNED_COPY' && m.provider !== 'simulator')
+                                Em {formatDateTimeLong(data.signedAt ?? data.completedAt!)}. O PDF assinado já
+                                está pronto
+                                {data.messages.some(
+                                    (m) => m.kind === 'SIGNED_COPY' && m.provider !== 'simulator',
+                                )
                                     ? ` e uma cópia foi para o WhatsApp de ${signerFirst}.`
                                     : '.'}
                             </p>
@@ -220,9 +237,16 @@ export function EnvelopeDetail({ id }: { id: string }) {
                         <Kicker>Documento</Kicker>
                         <div className="mt-4 flex flex-col gap-2">
                             {data.status === 'COMPLETED' ? (
-                                <DownloadLink href={envelopesApi.fileUrl(id, 'signed')} label="PDF assinado" primary />
+                                <DownloadLink
+                                    href={envelopesApi.fileUrl(id, 'signed')}
+                                    label="PDF assinado"
+                                    primary
+                                />
                             ) : null}
-                            <DownloadLink href={envelopesApi.fileUrl(id, 'original')} label="PDF enviado (sem assinatura)" />
+                            <DownloadLink
+                                href={envelopesApi.fileUrl(id, 'original')}
+                                label="PDF enviado (sem assinatura)"
+                            />
                         </div>
                     </Card>
 
@@ -244,7 +268,9 @@ export function EnvelopeDetail({ id }: { id: string }) {
                     <Card className="p-6">
                         <Kicker>Código de verificação</Kicker>
                         <div className="mt-2 flex items-center gap-1">
-                            <span className="font-mono text-[17px] tracking-wide">{data.verificationCode}</span>
+                            <span className="font-mono text-[17px] tracking-wide">
+                                {data.verificationCode}
+                            </span>
                             <CopyButton value={data.verificationCode} />
                         </div>
                         <p className="mt-2 text-sm leading-relaxed text-muted">
@@ -264,7 +290,8 @@ export function EnvelopeDetail({ id }: { id: string }) {
                 <DialogContent className="p-6">
                     <DialogTitle>Cancelar este envio?</DialogTitle>
                     <DialogDescription className="mt-2">
-                        O link de assinatura deixa de funcionar na hora. Para assinar depois, será preciso enviar de novo.
+                        O link de assinatura deixa de funcionar na hora. Para assinar depois, será preciso
+                        enviar de novo.
                     </DialogDescription>
                     <div className="mt-6 flex justify-end gap-2">
                         <Button variant="secondary" onClick={() => setConfirmCancel(false)}>
@@ -303,7 +330,12 @@ function Progress({ envelope }: { envelope: EnvelopeDetailDto }) {
                                 done ? 'bg-brand' : active ? 'bg-brand/30' : 'bg-line',
                             )}
                         />
-                        <p className={cn('mt-2.5 text-sm font-medium', done ? 'text-ink' : active ? 'text-ink/70' : 'text-subtle')}>
+                        <p
+                            className={cn(
+                                'mt-2.5 text-sm font-medium',
+                                done ? 'text-ink' : active ? 'text-ink/70' : 'text-subtle',
+                            )}
+                        >
                             {step.label}
                         </p>
                         <p className="mt-0.5 text-xs text-subtle tabular">
@@ -336,13 +368,18 @@ function TechnicalDetails({ data, id }: { data: EnvelopeDetailDto; id: string })
             <div className="grid gap-8 border-t border-line px-6 py-6 lg:grid-cols-2">
                 <div className="space-y-5">
                     <HashRow label="SHA-256 do PDF enviado" value={data.originalSha256} />
-                    {data.signedSha256 ? <HashRow label="SHA-256 do PDF assinado" value={data.signedSha256} /> : null}
+                    {data.signedSha256 ? (
+                        <HashRow label="SHA-256 do PDF assinado" value={data.signedSha256} />
+                    ) : null}
                     <div>
                         <p className="text-xs text-subtle">Carimbo do tempo (RFC 3161)</p>
                         <p className="mt-1 text-sm">
                             <TimestampLabel status={data.timestamp.status} />
                             {data.timestamp.genTime ? (
-                                <span className="text-muted tabular"> · {formatDateTimeLong(data.timestamp.genTime)}</span>
+                                <span className="text-muted tabular">
+                                    {' '}
+                                    · {formatDateTimeLong(data.timestamp.genTime)}
+                                </span>
                             ) : null}
                         </p>
                         {data.timestamp.status === 'OK' ? (
@@ -367,8 +404,12 @@ function TechnicalDetails({ data, id }: { data: EnvelopeDetailDto; id: string })
                             <ul className="mt-2 space-y-2">
                                 {data.messages.map((message) => (
                                     <li key={message.id} className="text-sm">
-                                        <span className="font-medium">{MESSAGE_KIND_LABEL[message.kind]}</span>{' '}
-                                        <span className="text-subtle tabular">{formatDateTime(message.createdAt)}</span>
+                                        <span className="font-medium">
+                                            {MESSAGE_KIND_LABEL[message.kind]}
+                                        </span>{' '}
+                                        <span className="text-subtle tabular">
+                                            {formatDateTime(message.createdAt)}
+                                        </span>
                                         <p className="line-clamp-1 text-muted">{hideOtp(message.body)}</p>
                                         <p className="text-xs text-subtle">
                                             {message.provider === 'simulator'
@@ -389,11 +430,16 @@ function TechnicalDetails({ data, id }: { data: EnvelopeDetailDto; id: string })
                         {data.webhookDeliveries.length ? (
                             <ul className="mt-2 space-y-1.5">
                                 {data.webhookDeliveries.map((delivery) => (
-                                    <li key={delivery.id} className="flex items-center justify-between gap-3 text-sm">
+                                    <li
+                                        key={delivery.id}
+                                        className="flex items-center justify-between gap-3 text-sm"
+                                    >
                                         <span className="font-mono text-[13px]">{delivery.event}</span>
                                         <Badge tone={delivery.ok ? 'success' : 'danger'}>
                                             {delivery.statusCode ?? 'sem resposta'}
-                                            {delivery.attempts > 1 ? ` · ${delivery.attempts} tentativas` : ''}
+                                            {delivery.attempts > 1
+                                                ? ` · ${delivery.attempts} tentativas`
+                                                : ''}
                                         </Badge>
                                     </li>
                                 ))}
@@ -404,7 +450,9 @@ function TechnicalDetails({ data, id }: { data: EnvelopeDetailDto; id: string })
                     </div>
                 </div>
                 <div>
-                    <p className="mb-3 text-xs text-subtle">Trilha de auditoria: cada evento leva o hash do anterior</p>
+                    <p className="mb-3 text-xs text-subtle">
+                        Trilha de auditoria: cada evento leva o hash do anterior
+                    </p>
                     <AuditTrail events={data.events} technical />
                 </div>
             </div>

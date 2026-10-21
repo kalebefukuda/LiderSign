@@ -1,5 +1,11 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common'
-import { ASSURANCE_LEVEL_LABEL, AUDIT_EVENT_LABEL, maskCpf, maskPhone, formatDateTimeBr } from '@lidersign/shared'
+import {
+    ASSURANCE_LEVEL_LABEL,
+    AUDIT_EVENT_LABEL,
+    maskCpf,
+    maskPhone,
+    formatDateTimeBr,
+} from '@lidersign/shared'
 import type { AssuranceLevel, AuditEventType } from '@lidersign/shared'
 import { pdflibAddPlaceholder } from '@signpdf/placeholder-pdf-lib'
 import signpdf from '@signpdf/signpdf'
@@ -50,13 +56,21 @@ function winAnsi(text: string): string {
 type SignatureVisual = { type: 'drawn'; imageDataUrl: string } | { type: 'typed'; typedName: string }
 
 /** Desenha a assinatura na área reservada do bloco, com a data e o código logo acima. */
-async function drawSignature(doc: PDFDocument, anchor: SignatureAnchor, signature: SignatureVisual, note: string) {
+async function drawSignature(
+    doc: PDFDocument,
+    anchor: SignatureAnchor,
+    signature: SignatureVisual,
+    note: string,
+) {
     const page = doc.getPage(anchor.pageNumber - 1)
     const x = anchor.left
     const bottom = page.getHeight() - anchor.top - SIGNATURE_AREA.height
     if (signature.type === 'drawn') {
         const png = await doc.embedPng(Buffer.from(signature.imageDataUrl.split(',')[1] ?? '', 'base64'))
-        const scale = Math.min((SIGNATURE_AREA.width - 8) / png.width, (SIGNATURE_AREA.height - 14) / png.height)
+        const scale = Math.min(
+            (SIGNATURE_AREA.width - 8) / png.width,
+            (SIGNATURE_AREA.height - 14) / png.height,
+        )
         page.drawImage(png, { x: x + 4, y: bottom + 2, width: png.width * scale, height: png.height * scale })
     } else {
         const font = await doc.embedFont(StandardFonts.TimesRomanItalic)
@@ -78,7 +92,10 @@ async function drawSignature(doc: PDFDocument, anchor: SignatureAnchor, signatur
 function imageMime(data: Buffer): 'image/png' | 'image/jpeg' | 'image/webp' | null {
     if (data.subarray(0, 4).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47]))) return 'image/png'
     if (data[0] === 0xff && data[1] === 0xd8) return 'image/jpeg'
-    if (data.subarray(0, 4).toString('ascii') === 'RIFF' && data.subarray(8, 12).toString('ascii') === 'WEBP') {
+    if (
+        data.subarray(0, 4).toString('ascii') === 'RIFF' &&
+        data.subarray(8, 12).toString('ascii') === 'WEBP'
+    ) {
         return 'image/webp'
     }
     return null
@@ -106,8 +123,13 @@ export class SealService implements OnApplicationBootstrap {
 
     /** Retoma selagens interrompidas (ex.: reinício do servidor). */
     async onApplicationBootstrap() {
-        void this.certificate.getP12().catch((error) => this.logger.error(`Certificado: ${(error as Error).message}`))
-        const stuck = await this.prisma.envelope.findMany({ where: { status: 'SIGNED' }, select: { id: true } })
+        void this.certificate
+            .getP12()
+            .catch((error) => this.logger.error(`Certificado: ${(error as Error).message}`))
+        const stuck = await this.prisma.envelope.findMany({
+            where: { status: 'SIGNED' },
+            select: { id: true },
+        })
         for (const { id } of stuck) this.start(id, null)
     }
 
@@ -138,7 +160,10 @@ export class SealService implements OnApplicationBootstrap {
         if (envelope.timestampStatus !== 'PENDING') return
         const result = await this.timestamp.stamp(envelope.originalSha256)
         if (result.status === 'OK') {
-            await this.storage.put(StorageService.envelopeKey(envelope.tenantId, envelope.id, 'timestamp.tsr'), result.token)
+            await this.storage.put(
+                StorageService.envelopeKey(envelope.tenantId, envelope.id, 'timestamp.tsr'),
+                result.token,
+            )
             await this.prisma.envelope.update({
                 where: { id: envelope.id },
                 data: {
@@ -154,7 +179,8 @@ export class SealService implements OnApplicationBootstrap {
                 sha256: envelope.originalSha256,
             })
         } else {
-            const reason = result.status === 'SKIPPED' ? 'Carimbo do tempo desligado nesta instalação' : result.error
+            const reason =
+                result.status === 'SKIPPED' ? 'Carimbo do tempo desligado nesta instalação' : result.error
             await this.prisma.envelope.update({
                 where: { id: envelope.id },
                 data: {
@@ -216,7 +242,11 @@ export class SealService implements OnApplicationBootstrap {
                   ? 'Desligado nesta instalação'
                   : `Indisponível no momento da selagem${envelope.timestampTsa ? ` (${envelope.timestampTsa})` : ''}`
         const geo = evidence.geolocation
-        const qrDataUrl = await QRCode.toDataURL(verifyUrl, { margin: 1, width: 288, errorCorrectionLevel: 'M' })
+        const qrDataUrl = await QRCode.toDataURL(verifyUrl, {
+            margin: 1,
+            width: 288,
+            errorCorrectionLevel: 'M',
+        })
 
         const evidencePdf = await renderPdf(
             buildEvidenceDefinition({
@@ -234,7 +264,9 @@ export class SealService implements OnApplicationBootstrap {
                 signature,
                 selfieDataUrl,
                 selfieNote,
-                assuranceLabel: ASSURANCE_LEVEL_LABEL[envelope.assuranceLevel as AssuranceLevel] ?? envelope.assuranceLevel,
+                assuranceLabel:
+                    ASSURANCE_LEVEL_LABEL[envelope.assuranceLevel as AssuranceLevel] ??
+                    envelope.assuranceLevel,
                 signedAt: envelope.signedAt ?? new Date(),
                 ip: evidence.ip ?? null,
                 device: summarizeUserAgent(evidence.userAgent ?? null),
@@ -321,7 +353,9 @@ export class SealService implements OnApplicationBootstrap {
             appName: 'LíderSign',
         })
         const prepared = Buffer.from(await doc.save({ useObjectStreams: false }))
-        const signer = new P12Signer(await this.certificate.getP12(), { passphrase: this.certificate.passphrase })
+        const signer = new P12Signer(await this.certificate.getP12(), {
+            passphrase: this.certificate.passphrase,
+        })
         const signed = await signpdf.sign(prepared, signer)
 
         // 5. Grava e registra

@@ -34,7 +34,11 @@ export function createDemoHostProxy(port: number) {
         // Só o que a tela do escritório usa. Rotas de parceiro (/partner/*) nunca passam por aqui.
         const path = req.path
         if (!ALLOWED_PREFIXES.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))) {
-            res.status(404).json({ statusCode: 404, error: 'Not Found', message: 'Rota não disponível na demo.' })
+            res.status(404).json({
+                statusCode: 404,
+                error: 'Not Found',
+                message: 'Rota não disponível na demo.',
+            })
             return
         }
         const target = `http://127.0.0.1:${port}/v1${req.url}`

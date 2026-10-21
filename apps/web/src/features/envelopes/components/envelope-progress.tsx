@@ -33,8 +33,12 @@ export function EnvelopeProgress({ envelope, className }: { envelope: EnvelopeDt
                         />
                         <span className={cn('truncate text-xs', done ? 'text-ink' : 'text-subtle')}>
                             {step.label}
-                            {step.at ? <span className="ml-1 text-subtle tabular">{formatTime(step.at)}</span> : null}
-                            {index === 2 && sealing ? <span className="ml-1 text-subtle">selando…</span> : null}
+                            {step.at ? (
+                                <span className="ml-1 text-subtle tabular">{formatTime(step.at)}</span>
+                            ) : null}
+                            {index === 2 && sealing ? (
+                                <span className="ml-1 text-subtle">selando…</span>
+                            ) : null}
                         </span>
                         <span className="sr-only">{done ? 'concluído' : 'pendente'}</span>
                     </li>

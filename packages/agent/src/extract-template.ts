@@ -103,7 +103,10 @@ export async function extractTemplateWithAI(input: ExtractTemplateInput): Promis
 
     const model: MastraModelConfig =
         input.modelOverride ??
-        ({ id: `anthropic/${input.model || DEFAULT_TEMPLATE_MODEL}`, apiKey: input.apiKey } as MastraModelConfig)
+        ({
+            id: `anthropic/${input.model || DEFAULT_TEMPLATE_MODEL}`,
+            apiKey: input.apiKey,
+        } as MastraModelConfig)
 
     const agent = new Agent({
         id: 'lidersign-template-extractor',
@@ -143,7 +146,10 @@ function sanitizeFileName(fileName?: string): string {
 }
 
 function nameFromFile(fileName?: string): string {
-    const base = sanitizeFileName(fileName).replace(/\.[a-z0-9]{2,5}$/i, '').replace(/[_-]+/g, ' ').trim()
+    const base = sanitizeFileName(fileName)
+        .replace(/\.[a-z0-9]{2,5}$/i, '')
+        .replace(/[_-]+/g, ' ')
+        .trim()
     return base.length >= 3 ? base : 'Modelo importado'
 }
 
@@ -152,7 +158,10 @@ function nameFromFile(fileName?: string): string {
  * chaves válidas e sem duplicata, toda variável do corpo declarada, nada sobrando, schema do LíderSign.
  */
 export function normalizeExtraction(raw: RawExtraction, fileName?: string): ExtractedTemplate {
-    const warnings = raw.warnings.map((item) => item.trim()).filter(Boolean).slice(0, 10)
+    const warnings = raw.warnings
+        .map((item) => item.trim())
+        .filter(Boolean)
+        .slice(0, 10)
 
     // 1. Corrige chaves fora do padrão dentro do corpo: {{Nome do Cliente}} -> {{nome_do_cliente}}
     let body = raw.body.replace(/\r\n/g, '\n').trim()

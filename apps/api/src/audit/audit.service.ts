@@ -89,7 +89,8 @@ export class AuditService {
         let prev: string | null = null
         for (const event of events) {
             if (event.prevHash !== prev) return false
-            if (AuditService.computeHash(prev, event.type, event.data, event.createdAt) !== event.hash) return false
+            if (AuditService.computeHash(prev, event.type, event.data, event.createdAt) !== event.hash)
+                return false
             prev = event.hash
         }
         return true

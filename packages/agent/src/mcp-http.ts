@@ -40,7 +40,9 @@ const httpServer = http.createServer(async (req, res) => {
         return
     }
     if (url.pathname !== '/mcp') {
-        res.writeHead(404, { 'Content-Type': 'application/json' }).end(JSON.stringify({ error: 'Não encontrado' }))
+        res.writeHead(404, { 'Content-Type': 'application/json' }).end(
+            JSON.stringify({ error: 'Não encontrado' }),
+        )
         return
     }
     if (!authorized(req.headers.authorization)) {

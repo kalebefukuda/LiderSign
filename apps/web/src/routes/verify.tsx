@@ -15,14 +15,15 @@ export default function VerifyRoute() {
                         Este documento é autêntico?
                     </h1>
                     <p className="mt-4 max-w-[56ch] text-lg leading-relaxed text-muted">
-                        Digite o código que aparece no rodapé do PDF, ou envie o arquivo para conferir se ele é idêntico
-                        ao que foi assinado.
+                        Digite o código que aparece no rodapé do PDF, ou envie o arquivo para conferir se ele
+                        é idêntico ao que foi assinado.
                     </p>
                 </div>
                 <div className="mt-12 space-y-12">
                     <CodeForm />
                     <div className="flex items-center gap-4 text-sm text-subtle">
-                        <span className="h-px flex-1 bg-line" /> ou confira o arquivo <span className="h-px flex-1 bg-line" />
+                        <span className="h-px flex-1 bg-line" /> ou confira o arquivo{' '}
+                        <span className="h-px flex-1 bg-line" />
                     </div>
                     <FileCheck />
                 </div>

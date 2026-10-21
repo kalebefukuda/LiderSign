@@ -14,7 +14,9 @@ export default function VerifyCodeRoute() {
     useDocumentTitle('Verificação de documento')
     const { code: rawCode = '' } = useParams()
     const code = decodeURIComponent(rawCode).trim().toUpperCase()
-    const { data, error, loading, reload } = useResource<PublicVerificationDto>(verificationApi.lookupUrl(code))
+    const { data, error, loading, reload } = useResource<PublicVerificationDto>(
+        verificationApi.lookupUrl(code),
+    )
     const notFound = error && [400, 404, 422].includes(error.status)
 
     return (
@@ -35,8 +37,8 @@ export default function VerifyCodeRoute() {
                                     Tem o PDF em mãos?
                                 </h2>
                                 <p className="mb-5 mt-1.5 text-sm leading-relaxed text-muted">
-                                    Envie o arquivo para conferir se ele é exatamente o que foi assinado, sem nenhuma
-                                    alteração.
+                                    Envie o arquivo para conferir se ele é exatamente o que foi assinado, sem
+                                    nenhuma alteração.
                                 </p>
                                 <FileCheck expectedCode={data.code} />
                             </section>
@@ -48,9 +50,9 @@ export default function VerifyCodeRoute() {
                                 title="Nenhum documento com este código"
                                 description={
                                     <>
-                                        Confira se o código <span className="font-mono text-ink">{code}</span> foi digitado
-                                        igual ao rodapé do PDF. Documentos que não foram assinados pelo LíderSign não
-                                        aparecem aqui.
+                                        Confira se o código <span className="font-mono text-ink">{code}</span>{' '}
+                                        foi digitado igual ao rodapé do PDF. Documentos que não foram
+                                        assinados pelo LíderSign não aparecem aqui.
                                     </>
                                 }
                             />
@@ -69,7 +71,6 @@ export default function VerifyCodeRoute() {
                         />
                     )}
                 </div>
-
             </main>
         </div>
     )

@@ -22,7 +22,8 @@ function chainIntact(events: EnvelopeEvent[]): boolean {
     let prev: string | null = null
     for (const event of events) {
         if (event.prevHash !== prev) return false
-        if (AuditService.computeHash(prev, event.type, event.data, event.createdAt) !== event.hash) return false
+        if (AuditService.computeHash(prev, event.type, event.data, event.createdAt) !== event.hash)
+            return false
         prev = event.hash
     }
     return true
@@ -84,7 +85,10 @@ export class VerificationService {
     async byFile(file: { buffer: Buffer } | undefined): Promise<FileCheckResponse> {
         if (!file?.buffer?.length) throw new UnprocessableEntityException('Envie o PDF no campo "file".')
         const sha256 = sha256Hex(file.buffer)
-        const signed = await this.prisma.envelope.findFirst({ where: { signedSha256: sha256 }, include: this.include })
+        const signed = await this.prisma.envelope.findFirst({
+            where: { signedSha256: sha256 },
+            include: this.include,
+        })
         if (signed) return { match: true, sha256, verification: this.toDto(signed) }
         // É o original sem as assinaturas? Não confere, mas dá para apontar o envelope.
         const original = await this.prisma.envelope.findFirst({

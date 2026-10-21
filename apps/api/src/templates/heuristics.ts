@@ -96,8 +96,20 @@ const VALUE_RULES: Rule[] = [
         label: 'CNPJ',
         example: '00.000.000/0001-00',
     },
-    { pattern: /\b\d{3}\.\d{3}\.\d{3}-\d{2}\b/g, prefix: 'cpf', type: 'cpf', label: 'CPF', example: '000.000.000-00' },
-    { pattern: /\b\d{2}\/\d{2}\/\d{4}\b/g, prefix: 'data', type: 'date', label: 'Data', example: '20/10/2026' },
+    {
+        pattern: /\b\d{3}\.\d{3}\.\d{3}-\d{2}\b/g,
+        prefix: 'cpf',
+        type: 'cpf',
+        label: 'CPF',
+        example: '000.000.000-00',
+    },
+    {
+        pattern: /\b\d{2}\/\d{2}\/\d{4}\b/g,
+        prefix: 'data',
+        type: 'date',
+        label: 'Data',
+        example: '20/10/2026',
+    },
     {
         pattern: /R\$\s?\d{1,3}(?:\.\d{3})*(?:,\d{2})?/g,
         prefix: 'valor',
@@ -117,7 +129,10 @@ const VALUE_RULES: Rule[] = [
 export function heuristicTemplate(text: string): HeuristicResult {
     const { title, lines } = toMarkdown(text)
     const [titleLine, ...rest] = lines
-    let body = rest.join('\n').replace(/\n{3,}/g, '\n\n').trim()
+    let body = rest
+        .join('\n')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim()
 
     const variables: TemplateVariable[] = []
     const add = (key: string, label: string, type: VariableType, example?: string) => {
@@ -145,13 +160,18 @@ export function heuristicTemplate(text: string): HeuristicResult {
     })
     body = body.replace(/\[([^[\]\n]{2,60})\]/g, (_, label: string) => fromLabel(label))
     body = body.replace(/(?:<<|«)\s*([^<>«»\n]{2,60}?)\s*(?:>>|»)/g, (_, label: string) => fromLabel(label))
-    body = body.replace(/(?<!\{)\{\s*([A-Za-zÀ-ú_][^{}\n]{0,50}?)\s*\}(?!\})/g, (_, label: string) => fromLabel(label))
+    body = body.replace(/(?<!\{)\{\s*([A-Za-zÀ-ú_][^{}\n]{0,50}?)\s*\}(?!\})/g, (_, label: string) =>
+        fromLabel(label),
+    )
     // Linhas de assinatura não viram campo: quem assina é o LíderSign (página de evidências + selo)
     let signatureLines = 0
-    body = body.replace(/^[^\n]{0,40}(assinatura|assinado|outorgante|contratante|contratado)[^\n]{0,20}:?\s*_{5,}\s*$/gim, () => {
-        signatureLines++
-        return ''
-    })
+    body = body.replace(
+        /^[^\n]{0,40}(assinatura|assinado|outorgante|contratante|contratado)[^\n]{0,20}:?\s*_{5,}\s*$/gim,
+        () => {
+            signatureLines++
+            return ''
+        },
+    )
     body = body.replace(/^\s*_{5,}\s*$/gm, () => {
         signatureLines++
         return ''
@@ -183,10 +203,14 @@ export function heuristicTemplate(text: string): HeuristicResult {
 
     const warnings = ['Revise os campos sugeridos antes de salvar.']
     if (signatureLines > 0) {
-        warnings.push('Removemos as linhas de assinatura: o LíderSign adiciona a assinatura e a página de evidências.')
+        warnings.push(
+            'Removemos as linhas de assinatura: o LíderSign adiciona a assinatura e a página de evidências.',
+        )
     }
     if (variables.length === 0) {
-        warnings.push('Nenhum campo variável encontrado: marque os trechos que mudam a cada cliente com {{nome_do_campo}}.')
+        warnings.push(
+            'Nenhum campo variável encontrado: marque os trechos que mudam a cada cliente com {{nome_do_campo}}.',
+        )
     }
     return {
         suggestedName: (title || 'Modelo importado').slice(0, 120),

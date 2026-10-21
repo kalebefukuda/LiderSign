@@ -17,8 +17,14 @@ import { demoApi, type DemoStatus } from '../api'
 function Code({ children }: { children: string }) {
     return (
         <div className="flex items-start justify-between gap-3 rounded-xl bg-ink px-4 py-3">
-            <pre className="overflow-x-auto font-mono text-[12px] leading-relaxed text-white/90">{children}</pre>
-            <CopyButton value={children} label="Copiar" className="shrink-0 text-white/80 hover:bg-white/10 hover:text-white" />
+            <pre className="overflow-x-auto font-mono text-[12px] leading-relaxed text-white/90">
+                {children}
+            </pre>
+            <CopyButton
+                value={children}
+                label="Copiar"
+                className="shrink-0 text-white/80 hover:bg-white/10 hover:text-white"
+            />
         </div>
     )
 }
@@ -88,14 +94,15 @@ export function SettingsPage() {
 
     return (
         <div className="space-y-12">
-
             <section aria-labelledby="whatsapp" className="space-y-4">
                 <Kicker id="whatsapp">WhatsApp</Kicker>
                 <div className="space-y-5 rounded-2xl border border-line p-5 sm:p-6">
                     <div className="flex flex-wrap items-center gap-3">
                         <MessageCircle className="size-5 text-brand" aria-hidden />
                         <p className="font-semibold">
-                            {official ? 'WhatsApp oficial (Meta Cloud API)' : 'Modo demonstração, sem WhatsApp'}
+                            {official
+                                ? 'WhatsApp oficial (Meta Cloud API)'
+                                : 'Modo demonstração, sem WhatsApp'}
                         </p>
                         {official ? (
                             configured ? (
@@ -113,11 +120,15 @@ export function SettingsPage() {
                     {official ? (
                         <>
                             <p className="max-w-2xl text-[15px] leading-relaxed text-ink/80">
-                                O link, o código e a cópia assinada saem pelo número da Meta. Envie um teste para conferir
-                                a conexão antes de mandar um contrato.
+                                O link, o código e a cópia assinada saem pelo número da Meta. Envie um teste
+                                para conferir a conexão antes de mandar um contrato.
                             </p>
                             <form onSubmit={sendTest} className="flex max-w-lg flex-wrap items-end gap-3">
-                                <Field label="Seu celular (cadastrado na Meta)" htmlFor="test-phone" className="min-w-[220px] flex-1">
+                                <Field
+                                    label="Seu celular (cadastrado na Meta)"
+                                    htmlFor="test-phone"
+                                    className="min-w-[220px] flex-1"
+                                >
                                     <Input
                                         id="test-phone"
                                         value={phone}
@@ -132,25 +143,34 @@ export function SettingsPage() {
                                 </Button>
                             </form>
                             {result ? (
-                                <p className={result.ok ? 'text-sm text-emerald-700' : 'text-sm text-red-600'}>{result.text}</p>
+                                <p
+                                    className={
+                                        result.ok ? 'text-sm text-emerald-700' : 'text-sm text-red-600'
+                                    }
+                                >
+                                    {result.text}
+                                </p>
                             ) : null}
                         </>
                     ) : (
                         <>
                             <p className="max-w-2xl text-[15px] leading-relaxed text-ink/80">
-                                Nenhuma mensagem sai daqui. Depois de enviar, o escritório manda o link pelo próprio
-                                WhatsApp, no botão "Enviar pelo WhatsApp". Na LíderHub, quem envia é o WhatsApp oficial
-                                dela. O código por WhatsApp só é pedido nos modelos com selfie; sem a Meta configurada, ele
-                                aparece na tela de assinatura.
+                                Nenhuma mensagem sai daqui. Depois de enviar, o escritório manda o link pelo
+                                próprio WhatsApp, no botão "Enviar pelo WhatsApp". Na LíderHub, quem envia é o
+                                WhatsApp oficial dela. O código por WhatsApp só é pedido nos modelos com
+                                selfie; sem a Meta configurada, ele aparece na tela de assinatura.
                             </p>
                             <div className="space-y-2">
-                                <p className="text-sm font-medium">Para usar um número de teste da Meta, no .env:</p>
+                                <p className="text-sm font-medium">
+                                    Para usar um número de teste da Meta, no .env:
+                                </p>
                                 <Code>{`WHATSAPP_PROVIDER=cloud_api
 WHATSAPP_PHONE_NUMBER_ID=<Phone number ID>
 WHATSAPP_ACCESS_TOKEN=<token da Meta>`}</Code>
                                 <p className="text-[13px] text-muted">
-                                    Depois rode <span className="whitespace-nowrap font-mono">docker compose up -d</span>. Passo a passo em{' '}
-                                    <span className="font-mono">infra/tunnel.md</span>.
+                                    Depois rode{' '}
+                                    <span className="whitespace-nowrap font-mono">docker compose up -d</span>.
+                                    Passo a passo em <span className="font-mono">infra/tunnel.md</span>.
                                 </p>
                             </div>
                         </>
@@ -178,26 +198,33 @@ WHATSAPP_ACCESS_TOKEN=<token da Meta>`}</Code>
                     {local ? (
                         <div className="space-y-5">
                             <p className="max-w-2xl text-[15px] leading-relaxed text-ink/80">
-                                <span className="font-mono">localhost</span> é o próprio computador, então o celular não
-                                consegue abrir o link. Escolha uma das opções, coloque o endereço em{' '}
-                                <span className="font-mono">WEB_PUBLIC_URL</span> no .env e rode{' '}
+                                <span className="font-mono">localhost</span> é o próprio computador, então o
+                                celular não consegue abrir o link. Escolha uma das opções, coloque o endereço
+                                em <span className="font-mono">WEB_PUBLIC_URL</span> no .env e rode{' '}
                                 <span className="whitespace-nowrap font-mono">docker compose up -d</span>.
                             </p>
                             <div className="grid gap-5 lg:grid-cols-2">
                                 <div className="space-y-2">
-                                    <p className="text-sm font-medium">Celular no mesmo Wi-Fi (mais simples)</p>
-                                    <p className="text-[13px] text-muted">Descubra o IP do computador (no Mac):</p>
+                                    <p className="text-sm font-medium">
+                                        Celular no mesmo Wi-Fi (mais simples)
+                                    </p>
+                                    <p className="text-[13px] text-muted">
+                                        Descubra o IP do computador (no Mac):
+                                    </p>
                                     <Code>ipconfig getifaddr en0</Code>
                                     <p className="text-[13px] text-muted">E use no .env:</p>
                                     <Code>{`WEB_PUBLIC_URL=http://<esse IP>:${port}`}</Code>
                                 </div>
                                 <div className="space-y-2">
-                                    <p className="text-sm font-medium">Qualquer rede, com HTTPS (túnel, sem conta)</p>
+                                    <p className="text-sm font-medium">
+                                        Qualquer rede, com HTTPS (túnel, sem conta)
+                                    </p>
                                     <Code>{`brew install cloudflared
 cloudflared tunnel --url http://localhost:${port}`}</Code>
                                     <p className="text-[13px] text-muted">
-                                        Use a URL <span className="font-mono">https://….trycloudflare.com</span> no .env e
-                                        feche o túnel depois da demonstração.
+                                        Use a URL{' '}
+                                        <span className="font-mono">https://….trycloudflare.com</span> no .env
+                                        e feche o túnel depois da demonstração.
                                     </p>
                                 </div>
                             </div>
@@ -228,7 +255,8 @@ cloudflared tunnel --url http://localhost:${port}`}</Code>
                 <DialogContent>
                     <DialogTitle>Reiniciar a demonstração?</DialogTitle>
                     <DialogDescription>
-                        Os documentos enviados e o escritório de demonstração serão apagados. Depois é só ativar de novo.
+                        Os documentos enviados e o escritório de demonstração serão apagados. Depois é só
+                        ativar de novo.
                     </DialogDescription>
                     <div className="mt-6 flex justify-end gap-2">
                         <Button variant="secondary" onClick={() => setConfirmReset(false)}>

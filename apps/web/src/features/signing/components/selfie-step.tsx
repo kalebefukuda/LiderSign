@@ -55,8 +55,8 @@ export function SelfieStep({ token, onCaptured }: { token: string; onCaptured: (
     return (
         <div className="space-y-5">
             <p className="text-[15px] leading-relaxed text-muted">
-                Para documentos como procurações, pedimos uma selfie. Ela entra só no registro de evidências deste
-                documento e ajuda a provar que foi você quem assinou.
+                Para documentos como procurações, pedimos uma selfie. Ela entra só no registro de evidências
+                deste documento e ajuda a provar que foi você quem assinou.
             </p>
             {preview ? (
                 <img
@@ -74,7 +74,9 @@ export function SelfieStep({ token, onCaptured }: { token: string; onCaptured: (
                         <Camera className="size-5" aria-hidden />
                     </span>
                     <span className="text-[15px] font-medium">Tirar selfie</span>
-                    <span className="text-sm text-muted">Rosto inteiro, sem óculos escuros, em lugar iluminado</span>
+                    <span className="text-sm text-muted">
+                        Rosto inteiro, sem óculos escuros, em lugar iluminado
+                    </span>
                 </button>
             )}
             <input
@@ -91,8 +93,8 @@ export function SelfieStep({ token, onCaptured }: { token: string; onCaptured: (
             />
             <p className="flex gap-2 text-[13px] leading-relaxed text-muted">
                 <ShieldCheck className="mt-0.5 size-4 shrink-0 text-brand" aria-hidden />
-                Ao enviar, você autoriza o uso da foto apenas como prova desta assinatura (LGPD, art. 11). Ela não é
-                compartilhada com mais ninguém.
+                Ao enviar, você autoriza o uso da foto apenas como prova desta assinatura (LGPD, art. 11). Ela
+                não é compartilhada com mais ninguém.
             </p>
             {error ? <p className="text-[15px] text-red-600">{error}</p> : null}
             {preview ? (
@@ -100,7 +102,12 @@ export function SelfieStep({ token, onCaptured }: { token: string; onCaptured: (
                     <Button size="lg" className="w-full" loading={uploading} onClick={confirm}>
                         Usar esta foto
                     </Button>
-                    <Button variant="ghost" size="lg" className="w-full" onClick={() => inputRef.current?.click()}>
+                    <Button
+                        variant="ghost"
+                        size="lg"
+                        className="w-full"
+                        onClick={() => inputRef.current?.click()}
+                    >
                         <RotateCcw aria-hidden /> Tirar outra
                     </Button>
                 </div>

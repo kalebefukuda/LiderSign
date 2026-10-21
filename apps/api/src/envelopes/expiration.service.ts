@@ -27,7 +27,9 @@ export class ExpirationService implements OnModuleInit, OnModuleDestroy {
 
     onModuleInit() {
         this.timer = setInterval(() => {
-            this.expireOverdue().catch((error: Error) => this.logger.warn(`Falha na varredura: ${error.message}`))
+            this.expireOverdue().catch((error: Error) =>
+                this.logger.warn(`Falha na varredura: ${error.message}`),
+            )
         }, SWEEP_MS)
         this.timer.unref()
     }
@@ -50,7 +52,10 @@ export class ExpirationService implements OnModuleInit, OnModuleDestroy {
             if (changed.count === 0) continue
             const expired = { ...envelope, status: 'EXPIRED' }
             await this.audit.append(envelope.id, 'ENVELOPE_EXPIRED', 'system', {})
-            this.events.emit(envelope.tenantId, { type: 'envelope.updated', envelope: toEnvelopeDto(expired) })
+            this.events.emit(envelope.tenantId, {
+                type: 'envelope.updated',
+                envelope: toEnvelopeDto(expired),
+            })
             this.webhooks.dispatch(envelope.tenant, expired, 'envelope.expired')
         }
     }

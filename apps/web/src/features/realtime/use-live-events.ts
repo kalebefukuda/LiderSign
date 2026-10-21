@@ -33,7 +33,8 @@ function connect() {
     source.onmessage = (message) => {
         try {
             const parsed = JSON.parse(message.data) as StreamEvent
-            if (parsed && typeof parsed === 'object' && 'type' in parsed) listeners.forEach((listener) => listener(parsed))
+            if (parsed && typeof parsed === 'object' && 'type' in parsed)
+                listeners.forEach((listener) => listener(parsed))
         } catch {
             /* heartbeat ou payload desconhecido */
         }

@@ -92,7 +92,11 @@ export function SignStep({
                     ) : null}
                     <div className="flex flex-wrap gap-x-5 gap-y-2 text-[15px]">
                         {!editing ? (
-                            <button type="button" onClick={() => setEditing(true)} className="font-medium text-brand">
+                            <button
+                                type="button"
+                                onClick={() => setEditing(true)}
+                                className="font-medium text-brand"
+                            >
                                 Corrigir o nome
                             </button>
                         ) : null}
@@ -126,7 +130,8 @@ export function SignStep({
 
             <div className="sticky bottom-0 -mx-5 border-t border-line bg-white px-5 pb-[max(16px,env(safe-area-inset-bottom))] pt-4">
                 <p className="mb-3 text-center text-[13px] leading-relaxed text-muted">
-                    Ao tocar em Assinar, você declara que leu o documento e concorda em assiná-lo eletronicamente.
+                    Ao tocar em Assinar, você declara que leu o documento e concorda em assiná-lo
+                    eletronicamente.
                 </p>
                 <Button size="lg" className="w-full" disabled={!ready} loading={submitting} onClick={submit}>
                     Assinar

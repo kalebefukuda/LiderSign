@@ -38,7 +38,11 @@ export function SendForm() {
     const host = useResource<{ whatsappProvider: 'simulator' | 'cloud_api' }>(`${DEMO_HOST_BASE}/status`)
     const [templateId, setTemplateId] = React.useState('')
     const [values, setValues] = React.useState<Record<string, string>>({})
-    const [signer, setSigner] = React.useState({ name: SAMPLE_SIGNER.name, cpf: SAMPLE_SIGNER.cpf, phone: '' })
+    const [signer, setSigner] = React.useState({
+        name: SAMPLE_SIGNER.name,
+        cpf: SAMPLE_SIGNER.cpf,
+        phone: '',
+    })
     const [sending, setSending] = React.useState(false)
     const [formError, setFormError] = React.useState<string | null>(null)
 
@@ -57,7 +61,10 @@ export function SendForm() {
         const sample = sampleValues()
         setValues(
             Object.fromEntries(
-                template.variables.map((variable) => [variable.key, sample[variable.key] ?? variable.example ?? '']),
+                template.variables.map((variable) => [
+                    variable.key,
+                    sample[variable.key] ?? variable.example ?? '',
+                ]),
             ),
         )
     }, [template])
@@ -140,7 +147,9 @@ export function SendForm() {
                 send: true,
             })
             rememberLink(envelope.id, envelope.signingUrl, signer.phone)
-            toast.success(viaWhatsApp ? 'Enviado pelo WhatsApp' : 'Documento pronto. Agora é só mandar o link.')
+            toast.success(
+                viaWhatsApp ? 'Enviado pelo WhatsApp' : 'Documento pronto. Agora é só mandar o link.',
+            )
             navigate(`/painel/envelopes/${envelope.id}`)
         } catch (err) {
             setFormError(errorMessage(err))
@@ -161,7 +170,11 @@ export function SendForm() {
                     ) : null}
                 </div>
                 <Field label="Modelo" htmlFor="send-template">
-                    <NativeSelect id="send-template" value={templateId} onChange={(event) => setTemplateId(event.target.value)}>
+                    <NativeSelect
+                        id="send-template"
+                        value={templateId}
+                        onChange={(event) => setTemplateId(event.target.value)}
+                    >
                         {templates.map((item) => (
                             <option key={item.id} value={item.id}>
                                 {item.name}
@@ -170,7 +183,9 @@ export function SendForm() {
                     </NativeSelect>
                 </Field>
                 {template?.assuranceLevel === 'REFORCADO' ? (
-                    <p className="text-[13px] text-muted">Este modelo pede uma selfie de quem assina, além do código.</p>
+                    <p className="text-[13px] text-muted">
+                        Este modelo pede uma selfie de quem assina, além do código.
+                    </p>
                 ) : null}
             </section>
 
@@ -192,7 +207,9 @@ export function SendForm() {
                             aria-invalid={cpfInvalid}
                             inputMode="numeric"
                             onChange={(event) => setSigner({ ...signer, cpf: event.target.value })}
-                            onBlur={() => setSigner((current) => ({ ...current, cpf: formatCpf(current.cpf) }))}
+                            onBlur={() =>
+                                setSigner((current) => ({ ...current, cpf: formatCpf(current.cpf) }))
+                            }
                             className="tabular"
                         />
                     </Field>
@@ -229,13 +246,17 @@ export function SendForm() {
                                 label={variable.label}
                                 htmlFor={`var-${variable.key}`}
                                 className={
-                                    variable.type === 'address' || variable.key === 'finalidade' ? '@md:col-span-2' : undefined
+                                    variable.type === 'address' || variable.key === 'finalidade'
+                                        ? '@md:col-span-2'
+                                        : undefined
                                 }
                             >
                                 <Input
                                     id={`var-${variable.key}`}
                                     value={values[variable.key] ?? ''}
-                                    onChange={(event) => setValues({ ...values, [variable.key]: event.target.value })}
+                                    onChange={(event) =>
+                                        setValues({ ...values, [variable.key]: event.target.value })
+                                    }
                                 />
                             </Field>
                         ))}

@@ -67,9 +67,14 @@ export class HealthModule {}
 
 /** Build do React (Vite). Em produção o Nest serve API e site na mesma origem. */
 function webStatic(): DynamicModule[] {
-    const dist = env().WEB_DIST_DIR ? resolve(env().WEB_DIST_DIR as string) : resolve(__dirname, '../../web/dist')
+    const dist = env().WEB_DIST_DIR
+        ? resolve(env().WEB_DIST_DIR as string)
+        : resolve(__dirname, '../../web/dist')
     if (!existsSync(join(dist, 'index.html'))) {
-        Logger.log(`Site não encontrado em ${dist}: servindo só a API (em dev, use o Vite na porta 3000)`, 'Web')
+        Logger.log(
+            `Site não encontrado em ${dist}: servindo só a API (em dev, use o Vite na porta 3000)`,
+            'Web',
+        )
         return []
     }
     return [

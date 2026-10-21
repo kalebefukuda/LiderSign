@@ -78,7 +78,11 @@ test.beforeEach(async ({ request }) => {
     await resetDemo(request)
 })
 
-test('na LíderHub, ativar o LíderSign é um switch e o contrato sai pela conversa', async ({ browser, page, request }) => {
+test('na LíderHub, ativar o LíderSign é um switch e o contrato sai pela conversa', async ({
+    browser,
+    page,
+    request,
+}) => {
     await page.goto('/')
     await expect(page).toHaveURL(/\/liderhub/)
     const toggle = page.getByRole('switch', { name: 'Ativar LíderSign' })
@@ -88,15 +92,24 @@ test('na LíderHub, ativar o LíderSign é um switch e o contrato sai pela conve
     await expect(toggle).toHaveAttribute('aria-checked', 'true')
     await expect(page.getByText('Conta do escritório criada, com os modelos de exemplo')).toBeVisible()
 
-    await page.getByRole('navigation', { name: 'LíderHub' }).getByRole('button', { name: 'Atendimento' }).click()
+    await page
+        .getByRole('navigation', { name: 'LíderHub' })
+        .getByRole('button', { name: 'Atendimento' })
+        .click()
     await page.getByLabel('WhatsApp da Maria').fill('(47) 98888-7777')
     await page.getByRole('button', { name: 'Enviar para assinatura' }).click()
     const share = await page.getByRole('link', { name: 'Abrir no meu WhatsApp' }).getAttribute('href')
     expect(share).toContain('https://wa.me/5547988887777?text=')
-    const signingUrl = decodeURIComponent(new URL(share!).searchParams.get('text') ?? '').match(/https?:\/\/\S+\/s\/[\w-]+/)?.[0]
+    const signingUrl = decodeURIComponent(new URL(share!).searchParams.get('text') ?? '').match(
+        /https?:\/\/\S+\/s\/[\w-]+/,
+    )?.[0]
     expect(signingUrl).toBeTruthy()
 
-    const phone = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true })
+    const phone = await browser.newPage({
+        viewport: { width: 390, height: 844 },
+        isMobile: true,
+        hasTouch: true,
+    })
     await phone.goto(new URL(signingUrl!).pathname)
     await confirmCpf(phone)
     await expect(phone.getByRole('img', { name: /Página 1 de/ })).toBeVisible()
@@ -110,17 +123,26 @@ test('na LíderHub, ativar o LíderSign é um switch e o contrato sai pela conve
     await expect(page.getByText('Contrato assinado.pdf')).toBeVisible({ timeout: 45_000 })
 
     // Os contratos ficam dentro da LíderHub: lista com filtro e modelos embutidos
-    await page.getByRole('navigation', { name: 'LíderHub' }).getByRole('button', { name: /Contratos/ }).click()
+    await page
+        .getByRole('navigation', { name: 'LíderHub' })
+        .getByRole('button', { name: /Contratos/ })
+        .click()
     await expect(page.getByRole('cell', { name: /Maria Aparecida dos Santos/ })).toBeVisible()
     await page.getByRole('button', { name: /Assinados/ }).click()
     await expect(page.getByRole('link', { name: 'Baixar PDF assinado' })).toBeVisible()
     await page.getByRole('tab', { name: 'Modelos' }).click()
-    await expect(page.frameLocator('iframe[title="Modelos do LíderSign"]').getByRole('heading', { name: 'Modelos' })).toBeVisible()
+    await expect(
+        page.frameLocator('iframe[title="Modelos do LíderSign"]').getByRole('heading', { name: 'Modelos' }),
+    ).toBeVisible()
 
     // O painel do LíderSign é o bastidor: conexão, resumo e documentos
     await page.goto('/painel')
     await expect(page.getByText('Conectado à LíderHub')).toBeVisible()
-    await expect(page.getByRole('navigation', { name: 'Painel' }).getByRole('link')).toHaveText(['Início', 'Documentos', 'Modelos'])
+    await expect(page.getByRole('navigation', { name: 'Painel' }).getByRole('link')).toHaveText([
+        'Início',
+        'Documentos',
+        'Modelos',
+    ])
 
     // Envio avulso continua possível, com o link para mandar pelo WhatsApp
     await page.goto('/painel/enviar')
@@ -159,14 +181,20 @@ test('lead assina pelo celular e o escritório recebe o PDF selado', async ({ br
     const wrong = await request.post(`/v1/sign/${token}/identity`, { data: { cpf: '111.444.777-35' } })
     expect(wrong.status()).toBe(422)
 
-    const phone = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true })
+    const phone = await browser.newPage({
+        viewport: { width: 390, height: 844 },
+        isMobile: true,
+        hasTouch: true,
+    })
     await phone.goto(new URL(envelope.signingUrl!).pathname)
     await confirmCpf(phone)
     await expect(phone.getByLabel('Texto do documento')).toContainText(SIGNER.name)
     await phone.getByRole('button', { name: 'Continuar para assinar' }).click()
 
     // O escritório nunca vê o token do link
-    const officeView = JSON.stringify(await (await request.get(`/demo-host/v1/envelopes/${envelope.id}`)).json())
+    const officeView = JSON.stringify(
+        await (await request.get(`/demo-host/v1/envelopes/${envelope.id}`)).json(),
+    )
     expect(officeView).not.toContain(token)
 
     await phone.getByRole('button', { name: 'Prefiro desenhar' }).click()
@@ -175,7 +203,9 @@ test('lead assina pelo celular e o escritório recebe o PDF selado', async ({ br
 
     await expect(phone.getByRole('heading', { name: 'Pronto! Documento assinado' })).toBeVisible()
     await waitCompleted(request, envelope.id)
-    await expect(phone.getByRole('link', { name: /Baixar documento assinado/ })).toBeVisible({ timeout: 30_000 })
+    await expect(phone.getByRole('link', { name: /Baixar documento assinado/ })).toBeVisible({
+        timeout: 30_000,
+    })
 
     // O PDF selado confere na verificação pública; uma cópia alterada não confere.
     const signed = await (await request.get(`/demo-host/v1/envelopes/${envelope.id}/files/signed`)).body()
@@ -220,7 +250,9 @@ test('procuração exige selfie no nível Reforçado', async ({ request }) => {
     expect((await request.post(`/v1/sign/${token}/otp`)).status()).toBe(409)
     expect((await request.post(`/v1/sign/${token}/identity`, { data: { cpf: CPF } })).ok()).toBeTruthy()
     await request.post(`/v1/sign/${token}/otp`)
-    const verify = await request.post(`/v1/sign/${token}/otp/verify`, { data: { code: await latestOtp(request) } })
+    const verify = await request.post(`/v1/sign/${token}/otp/verify`, {
+        data: { code: await latestOtp(request) },
+    })
     expect(verify.ok()).toBeTruthy()
 
     // O proxy da demo não deixa passar rotas de parceiro (ex.: segredo do webhook)

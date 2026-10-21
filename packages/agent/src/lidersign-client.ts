@@ -52,10 +52,7 @@ export function configFromEnv(env: NodeJS.ProcessEnv = process.env): LiderSignCl
  * As rotas do cliente já incluem /v1, então a base fica sempre sem ele.
  */
 export function normalizeApiUrl(value: string): string {
-    return value
-        .trim()
-        .replace(/\/+$/, '')
-        .replace(/\/v1$/i, '')
+    return value.trim().replace(/\/+$/, '').replace(/\/v1$/i, '')
 }
 
 export class LiderSignClient {

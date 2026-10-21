@@ -16,8 +16,9 @@ export default function DevelopersRoute() {
                         Como a LíderHub usa o LíderSign
                     </h1>
                     <p className="mt-3 text-[16px] leading-relaxed text-muted">
-                        O escritório não vê esta página. A LíderHub fala com o LíderSign por API, com uma chave de parceiro
-                        guardada no servidor dela: o escritório não cria conta nem cola token.
+                        O escritório não vê esta página. A LíderHub fala com o LíderSign por API, com uma
+                        chave de parceiro guardada no servidor dela: o escritório não cria conta nem cola
+                        token.
                     </p>
                 </div>
                 <div className="mt-14 space-y-16">

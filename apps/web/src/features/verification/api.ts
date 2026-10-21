@@ -5,7 +5,8 @@ import { fetchJson } from '@/lib/http'
 
 export const verificationApi = {
     lookupUrl: (code: string) => `${VERIFY_BASE}/${enc(code)}`,
-    lookup: (code: string) => fetchJson<PublicVerificationDto>(`${VERIFY_BASE}/${enc(code)}`, { cache: 'no-store' }),
+    lookup: (code: string) =>
+        fetchJson<PublicVerificationDto>(`${VERIFY_BASE}/${enc(code)}`, { cache: 'no-store' }),
     checkFile: (file: File) => {
         const form = new FormData()
         form.append('file', file)

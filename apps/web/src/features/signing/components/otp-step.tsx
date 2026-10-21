@@ -76,7 +76,8 @@ export function OtpStep({
                     <MessageCircle className="mt-0.5 size-5 shrink-0 text-brand" aria-hidden />
                     <p className="text-[15px] leading-relaxed text-ink/80">
                         Vamos mandar um código de 6 números para o WhatsApp{' '}
-                        <span className="font-medium text-ink tabular">{phoneMasked}</span>. É ele que confirma que é você.
+                        <span className="font-medium text-ink tabular">{phoneMasked}</span>. É ele que
+                        confirma que é você.
                     </p>
                 </div>
                 {error ? <p className="text-[15px] text-red-600">{error}</p> : null}
@@ -95,7 +96,8 @@ export function OtpStep({
                         <FlaskConical className="size-4" aria-hidden /> Modo demonstração
                     </p>
                     <p className="mt-2 text-[15px] leading-relaxed text-amber-950/80">
-                        Sem WhatsApp configurado, o código aparece aqui. Em produção, ele chega só pelo WhatsApp.
+                        Sem WhatsApp configurado, o código aparece aqui. Em produção, ele chega só pelo
+                        WhatsApp.
                     </p>
                     <div className="mt-3 flex items-center justify-between gap-3">
                         <span className="font-mono text-2xl font-semibold tracking-[0.3em] text-amber-950 tabular">
@@ -122,8 +124,9 @@ export function OtpStep({
                     </>
                 ) : (
                     <>
-                        Enviamos o código para <span className="font-medium text-ink tabular">{sent.sentTo}</span>. Abra o
-                        WhatsApp e digite aqui.
+                        Enviamos o código para{' '}
+                        <span className="font-medium text-ink tabular">{sent.sentTo}</span>. Abra o WhatsApp e
+                        digite aqui.
                     </>
                 )}
             </p>
@@ -152,7 +155,13 @@ export function OtpStep({
                 )}
             />
             {error ? <p className="text-[15px] text-red-600">{error}</p> : null}
-            <Button size="lg" className="w-full" loading={verifying} disabled={code.length !== 6} onClick={() => verify(code)}>
+            <Button
+                size="lg"
+                className="w-full"
+                loading={verifying}
+                disabled={code.length !== 6}
+                onClick={() => verify(code)}
+            >
                 Confirmar código
             </Button>
             <div className="text-center">

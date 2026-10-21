@@ -19,12 +19,7 @@ import { syncVariables } from './templates.service'
 
 type UploadedFile = { buffer: Buffer; originalname: string; mimetype: string; size: number }
 
-type AiExtract = (input: {
-    text: string
-    fileName?: string
-    apiKey: string
-    model: string
-}) => Promise<{
+type AiExtract = (input: { text: string; fileName?: string; apiKey: string; model: string }) => Promise<{
     suggestedName: string
     kind: TemplateKind
     body: string
@@ -68,7 +63,9 @@ export class TemplateImportService {
                 const result = await mammoth.extractRawText({ buffer: file.buffer })
                 return result.value
             } catch {
-                throw new UnsupportedMediaTypeException('Não foi possível ler o DOCX. Confira se o arquivo não está corrompido.')
+                throw new UnsupportedMediaTypeException(
+                    'Não foi possível ler o DOCX. Confira se o arquivo não está corrompido.',
+                )
             }
         }
         // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -78,7 +75,9 @@ export class TemplateImportService {
             const result = await parser.getText()
             return result.text
         } catch {
-            throw new UnsupportedMediaTypeException('Não foi possível ler o PDF. Confira se o arquivo não está protegido.')
+            throw new UnsupportedMediaTypeException(
+                'Não foi possível ler o PDF. Confira se o arquivo não está protegido.',
+            )
         } finally {
             await parser.destroy().catch(() => undefined)
         }
@@ -104,7 +103,9 @@ export class TemplateImportService {
                 body: parsed.body,
                 variables: syncVariables(parsed.body, parsed.variables),
                 engine: 'ai',
-                warnings: parsed.warnings?.length ? parsed.warnings : ['Revise os campos sugeridos pela IA antes de salvar.'],
+                warnings: parsed.warnings?.length
+                    ? parsed.warnings
+                    : ['Revise os campos sugeridos pela IA antes de salvar.'],
             }
         } catch (error) {
             this.logger.warn(`IA indisponível, usando regras locais: ${(error as Error).message}`)

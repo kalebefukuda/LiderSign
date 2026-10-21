@@ -32,6 +32,7 @@ export function recallLink(envelopeId: string): StoredLink | null {
 /** Link wa.me: abre o WhatsApp de quem está no painel com a mensagem pronta. Sem celular, a pessoa escolhe o contato. */
 export function whatsappShareUrl(text: string, phone?: string) {
     const digits = (phone ?? '').replace(/\D/g, '')
-    const target = digits.length >= 10 ? (digits.startsWith('55') && digits.length >= 12 ? digits : `55${digits}`) : ''
+    const target =
+        digits.length >= 10 ? (digits.startsWith('55') && digits.length >= 12 ? digits : `55${digits}`) : ''
     return `https://wa.me/${target}?text=${encodeURIComponent(text)}`
 }

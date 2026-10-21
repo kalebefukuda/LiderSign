@@ -55,7 +55,10 @@ export function TemplateEditor({
     const [saving, setSaving] = React.useState(false)
     const [error, setError] = React.useState<string | null>(null)
 
-    const variables = React.useMemo(() => syncVariables(draft.body, draft.variables), [draft.body, draft.variables])
+    const variables = React.useMemo(
+        () => syncVariables(draft.body, draft.variables),
+        [draft.body, draft.variables],
+    )
 
     function update<K extends keyof TemplateDraft>(key: K, value: TemplateDraft[K]) {
         setDraft((current) => ({ ...current, [key]: value }))
@@ -90,11 +93,18 @@ export function TemplateEditor({
             {origin ? (
                 <div className="flex flex-col gap-3 rounded-2xl border border-line bg-surface/70 p-4 sm:flex-row sm:items-start">
                     <Badge tone={origin.engine === 'ai' ? 'brand' : 'neutral'} className="self-start">
-                        {origin.engine === 'ai' ? <Sparkles className="size-3.5" /> : <Wand2 className="size-3.5" />}
+                        {origin.engine === 'ai' ? (
+                            <Sparkles className="size-3.5" />
+                        ) : (
+                            <Wand2 className="size-3.5" />
+                        )}
                         {origin.engine === 'ai' ? 'Sugerido pela IA' : 'Sugerido por regras locais'}
                     </Badge>
                     <div className="text-sm leading-relaxed text-muted">
-                        <p>Confira os campos marcados antes de salvar. Você pode renomear, mudar o tipo ou editar o texto.</p>
+                        <p>
+                            Confira os campos marcados antes de salvar. Você pode renomear, mudar o tipo ou
+                            editar o texto.
+                        </p>
                         {origin.warnings.length ? (
                             <ul className="mt-2 space-y-1">
                                 {origin.warnings.map((warning) => (
@@ -157,7 +167,9 @@ export function TemplateEditor({
                                         className="mt-1 size-4 accent-[#2463EB]"
                                     />
                                     <span>
-                                        <span className="block text-sm font-semibold">{ASSURANCE_LEVEL_LABEL[level]}</span>
+                                        <span className="block text-sm font-semibold">
+                                            {ASSURANCE_LEVEL_LABEL[level]}
+                                        </span>
                                         <span className="mt-0.5 block text-[13px] leading-relaxed text-muted">
                                             {ASSURANCE_HELP[level]}
                                         </span>
@@ -212,12 +224,18 @@ export function TemplateEditor({
                             <tbody>
                                 {variables.map((variable) => (
                                     <tr key={variable.key} className="border-b border-line last:border-0">
-                                        <td className="px-4 py-2.5 font-mono text-[13px] text-muted">{variable.key}</td>
+                                        <td className="px-4 py-2.5 font-mono text-[13px] text-muted">
+                                            {variable.key}
+                                        </td>
                                         <td className="px-4 py-2.5">
                                             <Input
                                                 aria-label={`Nome exibido de ${variable.key}`}
                                                 value={variable.label}
-                                                onChange={(event) => updateVariable(variable.key, { label: event.target.value })}
+                                                onChange={(event) =>
+                                                    updateVariable(variable.key, {
+                                                        label: event.target.value,
+                                                    })
+                                                }
                                                 className="h-9"
                                             />
                                         </td>
@@ -244,7 +262,9 @@ export function TemplateEditor({
                                                 aria-label={`Exemplo de ${variable.key}`}
                                                 value={variable.example ?? ''}
                                                 onChange={(event) =>
-                                                    updateVariable(variable.key, { example: event.target.value || undefined })
+                                                    updateVariable(variable.key, {
+                                                        example: event.target.value || undefined,
+                                                    })
                                                 }
                                                 placeholder="Opcional"
                                                 className="h-9"

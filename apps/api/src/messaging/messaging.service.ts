@@ -76,7 +76,10 @@ class CloudApiProvider implements WhatsAppProvider {
             }
             return { status: 'SENT', providerMessageId: json.messages?.[0]?.id }
         } catch (error) {
-            return { status: 'FAILED', error: `Falha de rede ao chamar a Meta: ${(error as Error).message}`.slice(0, 500) }
+            return {
+                status: 'FAILED',
+                error: `Falha de rede ao chamar a Meta: ${(error as Error).message}`.slice(0, 500),
+            }
         }
     }
 }
