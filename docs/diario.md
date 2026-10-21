@@ -1,0 +1,18 @@
+# Diário de bloqueios
+
+O que travou no caminho e como foi destravado, na ordem em que aconteceu.
+
+| # | Bloqueio | Como destravei |
+| --- | --- | --- |
+| 1 | O plugin de assistir vídeos precisava de autorização da empresa, e o player do Loom não carregava o vídeo | Li a transcrição completa do Loom pela aba "Transcript" no navegador e extraí os links das telas mostradas (Integrações, Conversas, Assistente) |
+| 2 | "Alguns tribunais não aceitam a ZapSign": não ficava claro por quê | A pesquisa mostrou que a lei aceita assinatura fora da ICP-Brasil e que o STJ aceita procuração assim. A recusa aparece no litígio de massa (Recomendação CNJ 159/2024; caso de procuração com selfie no TJSP). Conclusão: o problema é a força da prova, não a marca. Daí o dossiê para o juiz e os níveis de garantia |
+| 3 | Como tornar a integração "fácil" de verdade | O print do modal "Conectar ZapSign" listava o que o agente faria "em breve": listar modelos, ver campos, criar documento, ver status. Viraram as 4 ferramentas do MCP, e o token virou um switch com chave de parceiro |
+| 4 | Stack: comecei planejando Python por causa da assinatura de PDF | Perguntei à LíderHub: Nest, React, Supabase e Mastra. Migrei para TypeScript de ponta a ponta, primeiro com Next e depois com React + Vite, para ficar igual à stack deles |
+| 5 | A biblioteca de PDF assinado em Node não faz carimbo do tempo | Escrevi o cliente RFC 3161 com `node-forge` (pedido, resposta e `genTime`). O carimbo cobre o hash do original e sai como `.tsr`, verificável com `openssl ts -verify` |
+| 6 | O servidor de carimbo público (FreeTSA) estava bloqueado no ambiente de desenvolvimento | O código trata a falha (registra na trilha e sela mesmo assim). Para validar, subi uma TSA local com openssl: `openssl ts -verify` respondeu "Verification: OK" |
+| 7 | O download dos binários do Prisma estava bloqueado no ambiente | Usei o Prisma sem engine Rust (`engineType = "client"` + driver adapter `pg`) e gerei a migração com `prisma migrate diff` |
+| 8 | `@mastra/mcp` 2.x não encaixava no `@mastra/core` instalado | Fiquei na 1.18, a versão par. Conferi a API na documentação que vem dentro do pacote, não de memória |
+| 9 | Docker Hub bloqueado no ambiente, sem como baixar a imagem base | Repeti os passos do Dockerfile numa cópia limpa do projeto e subi o app a partir da pasta de produção. O `docker compose up --build` final roda na máquina com internet |
+| 10 | WhatsApp oficial parecia exigir aprovação demorada | A aprovação é para produção. O número de teste da Meta sai na hora, e um "oi" do celular abre a janela de 24 h para mensagens livres |
+| 11 | O link `localhost` não abre no celular | Um túnel HTTPS (`cloudflared`, sem conta) na porta 3000. O HTTPS também libera câmera e localização no navegador do celular |
+| 12 | Avaliar sem depender de contas externas | Tudo tem modo local: WhatsApp simulado, regras locais no lugar da IA, certificado gerado no primeiro boot e teste ponta a ponta que roda com um comando |

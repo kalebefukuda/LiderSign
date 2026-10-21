@@ -1,0 +1,170 @@
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Tenant {
+  id            String   @id @default(cuid())
+  externalId    String   @unique
+  name          String
+  active        Boolean  @default(true)
+  webhookUrl    String?
+  webhookSecret String
+  brandColor         String?
+  logoPath           String?
+  linkValidityDays   Int      @default(7)
+  reminderEnabled    Boolean  @default(true)
+  reminderAfterHours Int      @default(24)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  templates  Template[]
+  envelopes  Envelope[]
+  messages   Message[]
+  deliveries WebhookDelivery[]
+}
+
+model Template {
+  id             String   @id @default(cuid())
+  tenantId       String
+  name           String
+  kind           String   @default("CONTRATO")
+  assuranceLevel String   @default("PADRAO")
+  body           String
+  variables      Json     @default("[]")
+  version        Int      @default(1)
+  archived       Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  tenant    Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  envelopes Envelope[]
+
+  @@index([tenantId, archived])
+}
+
+model Envelope {
+  id               String  @id @default(cuid())
+  tenantId         String
+  templateId       String
+  templateVersion  Int
+  title            String
+  status           String  @default("SENT")
+  assuranceLevel   String  @default("PADRAO")
+  variables        Json
+  renderedBody     String
+  externalRef      String?
+
+  signerName       String
+  signerCpf        String
+  signerPhone      String
+  signerEmail      String?
+
+  tokenHash        String  @unique
+  verificationCode String  @unique
+
+  otpHash          String?
+  otpExpiresAt     DateTime?
+  otpSentAt        DateTime?
+  otpAttempts      Int     @default(0)
+  otpVerifiedAt    DateTime?
+
+  identityAttempts   Int     @default(0)
+  identityVerifiedAt DateTime?
+
+  originalPath     String
+  originalSha256   String
+  signedPath       String?
+  signedSha256     String?
+  selfiePath       String?
+  signatureType    String?
+  signatureImagePath String?
+  typedName        String?
+  evidence         Json?
+
+  timestampStatus  String  @default("PENDING")
+  timestampToken   Bytes?
+  timestampGenTime DateTime?
+  timestampTsa     String?
+
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  sentAt           DateTime?
+  viewedAt         DateTime?
+  signedAt         DateTime?
+  completedAt      DateTime?
+  canceledAt       DateTime?
+  remindedAt       DateTime?
+  expiresAt        DateTime
+
+  tenant     Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  template   Template          @relation(fields: [templateId], references: [id], onDelete: NoAction)
+  events     EnvelopeEvent[]
+  messages   Message[]
+  deliveries WebhookDelivery[]
+
+  @@index([tenantId, createdAt])
+  @@index([signedSha256])
+}
+
+model EnvelopeEvent {
+  id         String   @id @default(cuid())
+  envelopeId String
+  type       String
+  actor      String   @default("system")
+  data       Json     @default("{}")
+  ip         String?
+  userAgent  String?
+  prevHash   String?
+  hash       String
+  createdAt  DateTime @default(now())
+
+  envelope Envelope @relation(fields: [envelopeId], references: [id], onDelete: Cascade)
+
+  @@index([envelopeId, createdAt])
+}
+
+model Message {
+  id                String   @id @default(cuid())
+  tenantId          String
+  envelopeId        String?
+  to                String
+  kind              String
+  body              String
+  url               String?
+  provider          String
+  status            String
+  providerMessageId String?
+  error             String?
+  createdAt         DateTime @default(now())
+
+  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  envelope Envelope? @relation(fields: [envelopeId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, createdAt])
+}
+
+model WebhookDelivery {
+  id          String    @id @default(cuid())
+  tenantId    String
+  envelopeId  String?
+  event       String
+  url         String
+  payload     Json
+  statusCode  Int?
+  ok          Boolean   @default(false)
+  attempts    Int       @default(0)
+  error       String?
+  createdAt   DateTime  @default(now())
+  deliveredAt DateTime?
+
+  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  envelope Envelope? @relation(fields: [envelopeId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, createdAt])
+}

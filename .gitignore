@@ -1,14 +1,11 @@
 node_modules/
 dist/
-.next/
 .turbo/
 coverage/
 playwright-report/
 test-results/
 *.tsbuildinfo
-next-env.d.ts
 
-# Segredos e dados locais: nunca versionar
 .env
 .env.*
 !.env.example
@@ -20,5 +17,4 @@ data/
 .DS_Store
 *.log
 
-# Pacotes de sincronização com o Mac
 .sync/
