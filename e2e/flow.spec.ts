@@ -135,6 +135,7 @@ test('na LíderHub, o LíderSign ativa em um clique e o contrato sai pela conver
         'Documentos',
         'Modelos',
         'Configurações',
+        'Desenvolvedores',
     ])
 
     await panel.goto('/painel/enviar')
@@ -257,4 +258,61 @@ test('procuração exige selfie no nível Reforçado', async ({ request }) => {
         data: { signature: { type: 'typed', typedName: SIGNER.name }, consent: true },
     })
     expect(withoutSelfie.status()).toBe(409)
+})
+
+const PNG_1X1 = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
+    'base64',
+)
+
+test('o escritório põe a marca no link e acompanha os webhooks', async ({ request }) => {
+    await activate()
+    const open = await hub.get('/api/lidersign/open', { maxRedirects: 0 })
+    const entry = new URL(open.headers().location)
+    await request.get(`${entry.pathname}${entry.search}`, { maxRedirects: 0 })
+    const headers = { 'X-LiderSign-Client': 'web' }
+
+    const light = await request.patch('/v1/office/settings', { headers, data: { brandColor: '#fde047' } })
+    expect(light.status()).toBe(422)
+    const saved = await request.patch('/v1/office/settings', {
+        headers,
+        data: { brandColor: '#0F766E', linkValidityDays: 3, reminderAfterHours: 48 },
+    })
+    expect(saved.ok()).toBeTruthy()
+    expect(await saved.json()).toMatchObject({
+        brandColor: '#0f766e',
+        linkValidityDays: 3,
+        reminderAfterHours: 48,
+    })
+
+    const notImage = await request.put('/v1/office/logo', {
+        headers,
+        multipart: { file: { name: 'logo.png', mimeType: 'image/png', buffer: Buffer.from('<svg></svg>') } },
+    })
+    expect(notImage.status()).toBe(400)
+    const logo = await request.put('/v1/office/logo', {
+        headers,
+        multipart: { file: { name: 'logo.png', mimeType: 'image/png', buffer: PNG_1X1 } },
+    })
+    expect((await logo.json()).hasLogo).toBe(true)
+
+    const envelope = await createEnvelope('CONTRATO')
+    const days = (new Date(envelope.expiresAt).getTime() - Date.now()) / 86_400_000
+    expect(days).toBeGreaterThan(2.9)
+    expect(days).toBeLessThan(3.1)
+
+    const token = new URL(envelope.signingUrl!).pathname.split('/').pop()!
+    const session = await (await request.get(`/v1/sign/${token}`)).json()
+    expect(session.branding).toEqual({ color: '#0f766e', hasLogo: true })
+    const image = await request.get(`/v1/sign/${token}/logo`)
+    expect(image.headers()['content-type']).toBe('image/png')
+
+    await expect
+        .poll(async () => {
+            const deliveries: { event: string; ok: boolean }[] = await (
+                await request.get('/v1/office/webhooks')
+            ).json()
+            return deliveries.some((item) => item.event === 'envelope.sent' && item.ok)
+        })
+        .toBe(true)
 })

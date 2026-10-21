@@ -1,4 +1,4 @@
-import { FileSignature, FileText, Home, Settings } from 'lucide-react'
+import { Braces, FileSignature, FileText, Home, Settings } from 'lucide-react'
 import { Link, useLocation } from 'react-router'
 
 import { cn } from '@lidersign/ui'
@@ -8,6 +8,7 @@ const items = [
     { href: '/painel/envelopes', label: 'Documentos', icon: FileSignature, also: ['/painel/enviar'] },
     { href: '/painel/modelos', label: 'Modelos', icon: FileText },
     { href: '/painel/configuracoes', label: 'Configurações', icon: Settings },
+    { href: '/painel/desenvolvedores', label: 'Desenvolvedores', icon: Braces },
 ]
 
 export function PanelNav({ orientation = 'vertical' }: { orientation?: 'vertical' | 'horizontal' }) {

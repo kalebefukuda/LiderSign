@@ -30,6 +30,11 @@ export const router = createBrowserRouter([
                         lazy: () => import('./routes/painel/enviar').then((m) => ({ Component: m.default })),
                     },
                     {
+                        path: 'desenvolvedores',
+                        lazy: () =>
+                            import('./routes/painel/desenvolvedores').then((m) => ({ Component: m.default })),
+                    },
+                    {
                         path: 'configuracoes',
                         lazy: () =>
                             import('./routes/painel/configuracoes').then((m) => ({ Component: m.default })),
