@@ -7,12 +7,12 @@ import { join, resolve } from 'node:path'
 import { env } from './config/env'
 import { CoreModule } from './core.module'
 import { DemoController } from './demo/demo.controller'
-import { DemoHostController } from './demo-host/demo-host.controller'
-import { DemoHostService } from './demo-host/demo-host.service'
 import { EnvelopesController } from './envelopes/envelopes.controller'
 import { EnvelopesService } from './envelopes/envelopes.service'
 import { EventsController } from './events/events.controller'
 import { HealthController } from './health/health.controller'
+import { OfficeLoginController } from './office/office-login.controller'
+import { OfficeController, PartnerInfoController } from './office/office.controller'
 import { SigningController } from './signing/signing.controller'
 import { SigningService } from './signing/signing.service'
 import { TemplateImportService } from './templates/template-import.service'
@@ -54,8 +54,8 @@ export class VerificationModule {}
 @Module({ imports: [TenantsModule], controllers: [DemoController] })
 export class DemoModule {}
 
-@Module({ controllers: [DemoHostController], providers: [DemoHostService] })
-export class DemoHostModule {}
+@Module({ controllers: [OfficeController, OfficeLoginController, PartnerInfoController] })
+export class OfficeModule {}
 
 @Module({ controllers: [HealthController] })
 export class HealthModule {}
@@ -74,7 +74,7 @@ function webStatic(): DynamicModule[] {
     return [
         ServeStaticModule.forRoot({
             rootPath: dist,
-            exclude: ['/v1/{*path}', '/demo-host/{*path}', '/health'],
+            exclude: ['/v1/{*path}', '/entrar', '/health'],
             serveStaticOptions: { index: false, maxAge: '1h' },
         }),
     ]
@@ -93,8 +93,9 @@ export class AppModule {
                 EnvelopesModule,
                 SigningModule,
                 VerificationModule,
+                OfficeModule,
                 HealthModule,
-                ...(env().DEMO_MODE ? [DemoModule, DemoHostModule] : []),
+                ...(env().DEMO_MODE ? [DemoModule] : []),
                 ...webStatic(),
             ],
             providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

@@ -25,6 +25,21 @@ export type ConnectTenantResponse = {
     webhookSecret?: string
 }
 
+export type OfficeSessionResponse = {
+    path: string
+    expiresAt: string
+}
+
+export type OfficeMeDto = {
+    tenant: TenantDto
+    templatesCount: number
+    whatsappProvider: 'simulator' | 'cloud_api'
+    whatsappConfigured: boolean
+    webPublicUrl: string
+    tunnel: boolean
+    partner: { name: string; url: string | null }
+}
+
 export type TemplateDto = {
     id: string
     name: string

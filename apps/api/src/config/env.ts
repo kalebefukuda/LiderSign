@@ -15,6 +15,27 @@ const envSchema = z
         PORT: z.coerce.number().int().positive().default(4000),
         WEB_DIST_DIR: z.preprocess(emptyToUndefined, z.string().optional()),
         PARTNER_API_KEY: z.string().min(16, 'PARTNER_API_KEY precisa ter pelo menos 16 caracteres'),
+        SESSION_SECRET: z.preprocess(
+            emptyToUndefined,
+            z.string().min(32, 'SESSION_SECRET precisa ter pelo menos 32 caracteres').optional(),
+        ),
+        PARTNER_NAME: z.string().default('LíderHub'),
+        PARTNER_APP_URL: z.preprocess(
+            emptyToUndefined,
+            z
+                .url()
+                .optional()
+                .transform((value) => value?.replace(/\/+$/, '')),
+        ),
+        EMBED_ALLOWED_ORIGINS: z
+            .string()
+            .default('http://localhost:3001')
+            .transform((value) =>
+                value
+                    .split(',')
+                    .map((origin) => origin.trim().replace(/\/+$/, ''))
+                    .filter((origin) => /^https?:\/\/[^\s/'";]+$/.test(origin)),
+            ),
         WEB_PUBLIC_URL: z
             .url('WEB_PUBLIC_URL precisa ser uma URL')
             .transform((value) => value.replace(/\/+$/, '')),
@@ -31,7 +52,7 @@ const envSchema = z
         TSA_URL: z.preprocess(emptyToUndefined, z.url().optional()),
         WEBHOOK_ALLOWED_HOSTS: z
             .string()
-            .default('localhost,127.0.0.1,web')
+            .default('localhost,127.0.0.1,liderhub')
             .transform((value) =>
                 value
                     .split(',')

@@ -12,6 +12,17 @@ export const connectTenantSchema = z.object({
 })
 export type ConnectTenantInput = z.infer<typeof connectTenantSchema>
 
+export const OFFICE_PATH_PATTERN = /^\/painel(?:\/[A-Za-z0-9_-]+)*\/?$/
+
+export const createOfficeSessionSchema = z.object({
+    to: z
+        .string()
+        .max(200)
+        .regex(OFFICE_PATH_PATTERN, 'Use um caminho do painel, como /painel/modelos')
+        .default('/painel'),
+})
+export type CreateOfficeSessionInput = z.infer<typeof createOfficeSessionSchema>
+
 export const templateVariableSchema = z.object({
     key: z.string().regex(/^[a-z][a-z0-9_]{0,47}$/, 'Chave em snake_case, começando por letra'),
     label: z.string().trim().min(1).max(80),
