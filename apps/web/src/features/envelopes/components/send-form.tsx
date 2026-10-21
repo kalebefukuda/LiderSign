@@ -24,14 +24,12 @@ import { envelopesApi } from '../api'
 import { rememberLink } from '../link-store'
 import { SAMPLE_SIGNER, sampleValues } from '../sample-data'
 
-/** Campos do contrato que já vêm de "Quem assina": não pedimos duas vezes. */
 const FROM_SIGNER: Record<string, 'name' | 'cpf'> = { nome_cliente: 'name', cpf_cliente: 'cpf' }
 
 function pickDefault(templates: TemplateDto[]) {
     return templates.find((template) => /bpc|honor/i.test(template.name)) ?? templates[0]
 }
 
-/** Enviar um documento para assinatura: modelo, quem assina e os campos do contrato. */
 export function SendForm() {
     const navigate = useNavigate()
     const { data: templates, error, loading, reload } = useResource<TemplateDto[]>(templatesApi.listUrl)

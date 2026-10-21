@@ -12,7 +12,6 @@ type Result =
     | { kind: 'match'; data: FileCheckResponse; fileName: string }
     | { kind: 'mismatch'; data: FileCheckResponse; fileName: string }
 
-/** Confere um PDF pelo SHA-256: qualquer byte alterado muda o hash. */
 export function FileCheck({ expectedCode }: { expectedCode?: string }) {
     const [checking, setChecking] = React.useState(false)
     const [result, setResult] = React.useState<Result | null>(null)

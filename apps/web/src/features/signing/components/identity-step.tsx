@@ -7,7 +7,6 @@ import { errorMessage } from '@/lib/http'
 
 import { signingApi } from '../api'
 
-/** 000.000.000-00 enquanto digita. */
 function cpfMask(value: string) {
     const digits = value.replace(/\D/g, '').slice(0, 11)
     return digits
@@ -24,7 +23,6 @@ type Props = {
     onConfirmed: () => void
 }
 
-/** Primeiro passo: a pessoa digita o próprio CPF. Só depois disso o documento aparece. */
 export function IdentityStep({ token, firstName, officeName, title, onConfirmed }: Props) {
     const [cpf, setCpf] = React.useState('')
     const [error, setError] = React.useState<string | null>(null)

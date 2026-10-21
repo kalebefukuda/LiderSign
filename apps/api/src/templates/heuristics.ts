@@ -42,7 +42,6 @@ function detectKind(text: string): TemplateKind {
     return 'OUTRO'
 }
 
-/** Transforma o texto cru em Markdown enxuto: título, seções, listas e parágrafos. */
 function toMarkdown(text: string): { title: string; lines: string[] } {
     const raw = text
         .replace(/\r\n?/g, '\n')
@@ -87,7 +86,6 @@ function toMarkdown(text: string): { title: string; lines: string[] } {
 
 type Rule = { pattern: RegExp; prefix: string; type: VariableType; label: string; example: string }
 
-/** Dados encontrados viram campos. O valor real nunca vira exemplo (minimização, LGPD art. 6º, III). */
 const VALUE_RULES: Rule[] = [
     {
         pattern: /\b\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}\b/g,
@@ -153,7 +151,6 @@ export function heuristicTemplate(text: string): HeuristicResult {
         return add(key, nice.charAt(0).toLocaleUpperCase('pt-BR') + nice.slice(1), 'text')
     }
 
-    // Marcadores que já existem no contrato
     body = body.replace(/\{\{\s*([^{}\n]{1,60})\s*\}\}/g, (_, name: string) => {
         const key = slugifyKey(name) || next('campo')
         return add(key, humanizeKey(key), 'text')
@@ -163,7 +160,6 @@ export function heuristicTemplate(text: string): HeuristicResult {
     body = body.replace(/(?<!\{)\{\s*([A-Za-zÀ-ú_][^{}\n]{0,50}?)\s*\}(?!\})/g, (_, label: string) =>
         fromLabel(label),
     )
-    // Linhas de assinatura não viram campo: quem assina é o LíderSign (página de evidências + selo)
     let signatureLines = 0
     body = body.replace(
         /^[^\n]{0,40}(assinatura|assinado|outorgante|contratante|contratado)[^\n]{0,20}:?\s*_{5,}\s*$/gim,
@@ -186,7 +182,6 @@ export function heuristicTemplate(text: string): HeuristicResult {
         return add(key, humanizeKey(key), 'text')
     })
 
-    // Dados concretos (o mesmo valor vira o mesmo campo)
     for (const rule of VALUE_RULES) {
         const seen = new Map<string, string>()
         body = body.replace(rule.pattern, (value: string) => {

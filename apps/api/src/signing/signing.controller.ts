@@ -24,7 +24,6 @@ import { Ctx, type RequestContext } from '../common/request-context'
 import { ZodPipe } from '../common/zod.pipe'
 import { SigningService } from './signing.service'
 
-/** Rotas públicas do signatário. Limite por IP mais apertado que o geral. */
 @Controller('v1/sign/:token')
 @Throttle({ default: { limit: 60, ttl: 60_000 } })
 export class SigningController {

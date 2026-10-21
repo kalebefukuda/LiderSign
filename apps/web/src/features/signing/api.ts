@@ -17,7 +17,6 @@ export const signingApi = {
             sentTo: string
             expiresInSeconds: number
             resendInSeconds: number
-            /** Só no modo demonstração sem WhatsApp: o código aparece na própria tela de quem assina. */
             demoCode?: string
         }>(`${base(token)}/otp`, { method: 'POST' }),
     verifyOtp: (token: string, code: string) =>

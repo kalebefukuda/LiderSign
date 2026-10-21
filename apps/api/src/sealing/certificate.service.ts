@@ -5,10 +5,6 @@ import { join, resolve } from 'node:path'
 import forge from 'node-forge'
 import { env } from '../config/env'
 
-/**
- * Certificado que sela os PDFs em nome da plataforma.
- * Demo: autoassinado, gerado na primeira execução. Produção: e-CNPJ A1 vindo do cofre (ISO 27001 A.8.24).
- */
 @Injectable()
 export class CertificateService {
     private readonly logger = new Logger('Certificado')

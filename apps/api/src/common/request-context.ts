@@ -6,10 +6,6 @@ export type RequestContext = {
     userAgent: string | null
 }
 
-/**
- * IP do cliente. Usa req.ip, que respeita o "trust proxy" do main.ts: o X-Forwarded-For só é aceito
- * quando vem de um salto local (Docker, túnel, proxy da demo). Assim ninguém forja o IP de fora.
- */
 export function clientIp(req: Request): string | null {
     const ip = req.ip || req.socket?.remoteAddress || null
     return ip ? ip.replace(/^::ffff:/, '') : null

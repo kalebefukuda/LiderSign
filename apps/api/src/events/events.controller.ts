@@ -11,7 +11,6 @@ import { EventsService } from './events.service'
 export class EventsController {
     constructor(private readonly events: EventsService) {}
 
-    /** SSE com os eventos do escritório. Batimento a cada 15 s para manter a conexão viva em proxies. */
     @Sse()
     stream(@CurrentTenant() tenant: Tenant): Observable<MessageEvent> {
         const updates = this.events.stream$.pipe(

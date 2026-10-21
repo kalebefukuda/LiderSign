@@ -67,9 +67,7 @@ export function CopyButton({
                     await navigator.clipboard.writeText(value)
                     setCopied(true)
                     window.setTimeout(() => setCopied(false), 1600)
-                } catch {
-                    /* sem permissão de área de transferência: ignora */
-                }
+                } catch {}
             }}
             className={cn(
                 'inline-flex size-7 items-center justify-center rounded-md text-muted transition-colors hover:bg-surface hover:text-ink',

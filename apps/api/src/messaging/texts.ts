@@ -1,5 +1,3 @@
-/** Textos curtos, em linguagem simples: o público é leigo e lê no celular. */
-
 export function firstName(fullName: string): string {
     return fullName.trim().split(/\s+/)[0] ?? ''
 }

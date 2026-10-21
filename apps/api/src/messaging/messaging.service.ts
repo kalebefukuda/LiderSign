@@ -13,10 +13,6 @@ export type OutgoingMessage = {
     kind: MessageKind
     body: string
     url?: string | null
-    /**
-     * Segredos que só o signatário pode ver (código de confirmação, token do link).
-     * Vão para o WhatsApp, mas nunca para o banco, o painel do escritório ou o SSE.
-     */
     secrets?: string[]
 }
 
@@ -28,13 +24,11 @@ function redact(text: string, secrets: string[]): string {
 
 type ProviderResult = { status: MessageStatus; providerMessageId?: string; error?: string }
 
-/** Contrato de um provedor de WhatsApp. Trocar de provedor é implementar send(). */
 interface WhatsAppProvider {
     readonly name: 'simulator' | 'cloud_api'
     send(to: string, body: string): Promise<ProviderResult>
 }
 
-/** Não envia nada: a mensagem fica no banco e aparece no celular simulado da /demo. */
 class SimulatorProvider implements WhatsAppProvider {
     readonly name = 'simulator' as const
 
@@ -43,7 +37,6 @@ class SimulatorProvider implements WhatsAppProvider {
     }
 }
 
-/** WhatsApp Cloud API oficial da Meta (número de teste serve para a demo). */
 class CloudApiProvider implements WhatsAppProvider {
     readonly name = 'cloud_api' as const
 
@@ -90,10 +83,6 @@ export class MessagingService {
     private readonly provider: WhatsAppProvider =
         env().WHATSAPP_PROVIDER === 'cloud_api' ? new CloudApiProvider() : new SimulatorProvider()
 
-    /**
-     * Só na demo: conteúdo completo das mensagens, em memória, para o celular simulado mostrar
-     * o que o signatário veria no WhatsApp. Nunca persiste e some ao reiniciar.
-     */
     private readonly demoInbox = new Map<string, { body: string; url: string | null }>()
 
     constructor(
@@ -105,7 +94,6 @@ export class MessagingService {
         return this.provider.name
     }
 
-    /** Envia (ou simula), grava a mensagem e avisa o painel em tempo real. Nunca registra o conteúdo no log. */
     async send(message: OutgoingMessage) {
         const result = await this.provider.send(message.to, message.body)
         const secrets = message.secrets ?? []
@@ -134,13 +122,11 @@ export class MessagingService {
         return saved
     }
 
-    /** Celular simulado da demo: devolve a mensagem como o signatário a recebeu. */
     revealForDemo(message: MessageDto): MessageDto {
         const full = this.demoInbox.get(message.id)
         return full ? { ...message, body: full.body, url: full.url } : message
     }
 
-    /** Quantos códigos já foram enviados para o envelope (limite de reenvio). */
     countSent(envelopeId: string, kind: MessageKind) {
         return this.prisma.message.count({ where: { envelopeId, kind } })
     }

@@ -12,15 +12,12 @@ const booleanFromString = z
 const envSchema = z
     .object({
         DATABASE_URL: z.string().min(1, 'Informe DATABASE_URL'),
-        /** Porta do Nest. Em dev 4000 (o Vite fica na 3000); no Docker 3000. API_PORT vale como sinônimo. */
         PORT: z.coerce.number().int().positive().default(4000),
-        /** Build do React (Vite) servido pelo Nest. Sem a pasta, o Nest só serve a API. */
         WEB_DIST_DIR: z.preprocess(emptyToUndefined, z.string().optional()),
         PARTNER_API_KEY: z.string().min(16, 'PARTNER_API_KEY precisa ter pelo menos 16 caracteres'),
         WEB_PUBLIC_URL: z
             .url('WEB_PUBLIC_URL precisa ser uma URL')
             .transform((value) => value.replace(/\/+$/, '')),
-        /** Servidor de métricas do cloudflared (docker compose). Com ele, os links usam a URL HTTPS do túnel. */
         TUNNEL_METRICS_URL: z.preprocess(
             emptyToUndefined,
             z
@@ -67,16 +64,13 @@ export type Env = z.infer<typeof envSchema>
 
 let cached: Env | undefined
 
-/** Carrega o .env (sem sobrescrever variáveis já definidas) e valida. Falha cedo, com mensagem clara. */
 export function loadEnv(): Env {
     if (cached) return cached
     for (const candidate of [resolve(process.cwd(), '.env'), resolve(process.cwd(), '../../.env')]) {
         if (existsSync(candidate)) {
             try {
                 process.loadEnvFile(candidate)
-            } catch {
-                // arquivo ilegível: segue com o ambiente do processo
-            }
+            } catch {}
         }
     }
     const parsed = envSchema.safeParse({ ...process.env, PORT: process.env.PORT ?? process.env.API_PORT })

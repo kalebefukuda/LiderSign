@@ -6,7 +6,6 @@ import { errorMessage } from '@/lib/http'
 
 import { signingApi } from '../api'
 
-/** Reduz a foto no próprio celular (máx. 1024 px, JPEG): envio rápido e menos dado guardado. */
 async function compress(file: File): Promise<Blob> {
     const bitmap = await createImageBitmap(file).catch(() => null)
     if (!bitmap) return file

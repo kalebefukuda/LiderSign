@@ -1,10 +1,3 @@
-/**
- * DEMONSTRAÇÃO APENAS. Este módulo faz o papel do "back-end da LíderHub" na demo:
- * repassa as chamadas do navegador para a API do LíderSign colocando a chave de parceiro,
- * para que o navegador nunca veja a chave. É um proxy de parceiro sem autenticação:
- * só sobe com DEMO_MODE=true e NUNCA pode rodar em produção. Na vida real, quem faz isso
- * é o próprio back-end da LíderHub, atrás do login dela.
- */
 import { Logger } from '@nestjs/common'
 import type { NextFunction, Request, Response } from 'express'
 import { Readable } from 'node:stream'
@@ -23,10 +16,6 @@ export function partnerHeaders(clientIp?: string | null): Record<string, string>
     }
 }
 
-/**
- * Montado em /demo-host/v1: GET /demo-host/v1/templates -> GET /v1/templates com a chave de parceiro.
- * Repassa o corpo como fluxo (multipart funciona) e a resposta como fluxo (PDF e SSE sem buffer).
- */
 export function createDemoHostProxy(port: number) {
     const logger = new Logger('DemoHost')
 
@@ -43,7 +32,6 @@ export function createDemoHostProxy(port: number) {
         }
         const target = `http://127.0.0.1:${port}/v1${req.url}`
         const controller = new AbortController()
-        // Cliente desconectou (ex.: fechou a aba do SSE): encerra a chamada interna também
         res.on('close', () => controller.abort())
 
         const headers = new Headers(partnerHeaders(req.ip))
@@ -78,7 +66,6 @@ export function createDemoHostProxy(port: number) {
             return
         }
 
-        // Registro da integração: só ações (consultas de leitura e o reset da demo ficam de fora)
         if (hasBody && !path.startsWith('/demo')) {
             logCall({
                 direction: 'liderhub-to-lidersign',
@@ -112,6 +99,6 @@ export function createDemoHostProxy(port: number) {
             res.end()
         })
         body.pipe(res)
-        void next // a resposta é sempre tratada aqui
+        void next
     }
 }

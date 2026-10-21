@@ -10,11 +10,6 @@ export const ENVELOPE_STATUS_LABEL: Record<EnvelopeStatus, string> = {
     EXPIRED: 'Expirado',
 }
 
-/**
- * Nível de garantia escolhido no modelo, nunca a cada envio.
- * PADRAO: link pessoal no WhatsApp + CPF digitado pelo signatário + IP e dispositivo.
- * REFORCADO: PADRAO + código no WhatsApp + selfie (procurações e litígio de massa).
- */
 export const ASSURANCE_LEVELS = ['PADRAO', 'REFORCADO'] as const
 export type AssuranceLevel = (typeof ASSURANCE_LEVELS)[number]
 
@@ -65,7 +60,6 @@ export const WEBHOOK_EVENTS = [
 ] as const
 export type WebhookEvent = (typeof WEBHOOK_EVENTS)[number]
 
-/** Tipos de evento gravados na trilha de auditoria (append-only, hash encadeado). */
 export const AUDIT_EVENT_TYPES = [
     'ENVELOPE_CREATED',
     'DOCUMENT_GENERATED',

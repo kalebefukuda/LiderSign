@@ -17,7 +17,6 @@ import { PrismaService } from '../prisma/prisma.service'
 
 type FullEnvelope = Envelope & { tenant: Tenant; events: EnvelopeEvent[] }
 
-/** Recalcula a cadeia: cada evento precisa apontar para o hash do anterior e ter o próprio hash correto. */
 function chainIntact(events: EnvelopeEvent[]): boolean {
     let prev: string | null = null
     for (const event of events) {
@@ -29,7 +28,6 @@ function chainIntact(events: EnvelopeEvent[]): boolean {
     return true
 }
 
-/** Verificação pública: qualquer pessoa (juiz, parte contrária) confere sem login. Dados sempre mascarados. */
 @Injectable()
 export class VerificationService {
     constructor(private readonly prisma: PrismaService) {}
@@ -81,7 +79,6 @@ export class VerificationService {
         return this.toDto(envelope)
     }
 
-    /** Compara o SHA-256 do arquivo com o PDF selado. Um byte alterado = não confere. */
     async byFile(file: { buffer: Buffer } | undefined): Promise<FileCheckResponse> {
         if (!file?.buffer?.length) throw new UnprocessableEntityException('Envie o PDF no campo "file".')
         const sha256 = sha256Hex(file.buffer)
@@ -90,7 +87,6 @@ export class VerificationService {
             include: this.include,
         })
         if (signed) return { match: true, sha256, verification: this.toDto(signed) }
-        // É o original sem as assinaturas? Não confere, mas dá para apontar o envelope.
         const original = await this.prisma.envelope.findFirst({
             where: { originalSha256: sha256 },
             include: this.include,

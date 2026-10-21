@@ -2,7 +2,6 @@ import { Link } from 'react-router'
 
 import { cn } from '@/lib/cn'
 
-/** Marca geométrica do LíderSign: um traço de assinatura que termina em check. */
 export function LogoMark({ className, inverted }: { className?: string; inverted?: boolean }) {
     return (
         <svg viewBox="0 0 32 32" className={cn('size-7', className)} aria-hidden>

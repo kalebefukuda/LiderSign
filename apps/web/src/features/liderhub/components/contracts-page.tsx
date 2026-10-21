@@ -33,7 +33,6 @@ const FILTERS: { value: Filter; label: string; match: (envelope: EnvelopeDto) =>
     },
 ]
 
-/** Contratos dentro da LíderHub: a lista vem da API do LíderSign e os modelos aparecem embutidos. */
 export function ContractsPage({
     active,
     onOpenIntegrations,

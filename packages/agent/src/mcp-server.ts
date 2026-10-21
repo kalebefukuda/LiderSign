@@ -11,10 +11,6 @@ function packageVersion(): string {
     }
 }
 
-/**
- * Servidor MCP do LíderSign. Fala as duas eras do protocolo: a revisão 2026-07-28 (sem estado)
- * e a anterior, com handshake "initialize", para funcionar com qualquer cliente atual.
- */
 export function createLiderSignMcpServer(): MCPServer {
     return new MCPServer({
         id: 'lidersign',

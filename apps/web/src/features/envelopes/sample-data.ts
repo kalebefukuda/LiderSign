@@ -1,9 +1,5 @@
 import { todayLong } from '@/lib/format'
 
-/**
- * Cliente fictício que preenche o formulário de envio (BPC/LOAS). Nenhum dado real:
- * o CPF é um número de teste válido só no dígito verificador e o celular é inventado.
- */
 export const SAMPLE_SIGNER = {
     name: 'Maria Aparecida dos Santos',
     cpf: '529.982.247-25',
@@ -11,7 +7,6 @@ export const SAMPLE_SIGNER = {
     externalRef: 'lead-maria-aparecida-bpc',
 }
 
-/** Valores de exemplo para os campos dos modelos, por chave de variável. */
 export function sampleValues(): Record<string, string> {
     return {
         nome_cliente: SAMPLE_SIGNER.name,

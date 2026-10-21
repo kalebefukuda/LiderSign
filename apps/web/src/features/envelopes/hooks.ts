@@ -6,7 +6,6 @@ import { useLiveEvents } from '@/features/realtime'
 
 import { envelopesApi } from './api'
 
-/** Lista de envelopes do escritório, ao vivo (SSE) com polling de reserva. */
 export function useEnvelopes(enabled = true) {
     const [connectedOnce, setConnectedOnce] = React.useState(false)
     const resource = useResource<EnvelopeDto[]>(enabled ? envelopesApi.listUrl : null, {

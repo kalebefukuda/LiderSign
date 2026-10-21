@@ -1,9 +1,5 @@
 import type { CreateTemplateInput } from '@lidersign/shared'
 
-/**
- * Modelos de exemplo criados no "Ativar LíderSign": o escritório já começa com o que mais assina.
- * Textos fictícios e genéricos, para revisão do advogado responsável.
- */
 export const STARTER_TEMPLATES: CreateTemplateInput[] = [
     {
         name: 'Contrato de honorários · BPC/LOAS',

@@ -13,10 +13,6 @@ export type TimestampResult =
 const { asn1 } = forge
 const U = asn1.Class.UNIVERSAL
 
-/**
- * Cliente RFC 3161: pede a uma Autoridade de Carimbo do Tempo (ACT) a prova de que o hash existia naquele instante.
- * Confira com: openssl ts -verify -digest <sha256> -in carimbo.tsr -CAfile <cadeia da ACT>
- */
 @Injectable()
 export class TimestampService {
     get enabled(): boolean {
@@ -25,7 +21,7 @@ export class TimestampService {
 
     static buildRequest(sha256Hex: string): Buffer {
         const nonce = randomBytes(8)
-        nonce[0] &= 0x7f // inteiro positivo
+        nonce[0] &= 0x7f
         const request = asn1.create(U, asn1.Type.SEQUENCE, true, [
             asn1.create(U, asn1.Type.INTEGER, false, asn1.integerToDer(1).getBytes()),
             asn1.create(U, asn1.Type.SEQUENCE, true, [
@@ -46,7 +42,6 @@ export class TimestampService {
         return Buffer.from(asn1.toDer(request).getBytes(), 'binary')
     }
 
-    /** Lê a resposta: status concedido (0 ou 1), genTime e se o hash carimbado é o nosso. */
     static parseResponse(der: Buffer, expectedSha256Hex: string): { genTime: Date } {
         const response = asn1.fromDer(der.toString('binary'))
         const parts = response.value as forge.asn1.Asn1[]

@@ -6,12 +6,6 @@ import type {
     TemplateDto,
 } from '@lidersign/shared'
 
-/**
- * Cliente HTTP mínimo da API do LíderSign, usado pelas ferramentas do MCP.
- * Autentica como parceiro (LíderHub) e age em nome de um escritório (X-Tenant-Id).
- * As credenciais vêm só do ambiente: o modelo nunca escolhe nem vê a chave.
- */
-
 export class LiderSignApiError extends Error {
     constructor(
         message: string,
@@ -47,10 +41,6 @@ export function configFromEnv(env: NodeJS.ProcessEnv = process.env): LiderSignCl
     return { apiUrl: normalizeApiUrl(apiUrl!), partnerKey: partnerKey!, tenantId: tenantId! }
 }
 
-/**
- * Aceita a base com ou sem /v1: http://localhost:4000, http://localhost:3000/v1 ou .../v1/.
- * As rotas do cliente já incluem /v1, então a base fica sempre sem ele.
- */
 export function normalizeApiUrl(value: string): string {
     return value.trim().replace(/\/+$/, '').replace(/\/v1$/i, '')
 }

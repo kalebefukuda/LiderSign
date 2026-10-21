@@ -1,5 +1,4 @@
 #!/bin/sh
-# Sobe o LíderSign: aplica as migrações do banco e inicia o Nest (API + site na mesma porta).
 set -e
 
 cd /app

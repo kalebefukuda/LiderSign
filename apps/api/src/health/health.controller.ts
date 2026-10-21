@@ -22,7 +22,6 @@ export class HealthController {
         } catch {
             db = false
         }
-        // 503 sem banco: o healthcheck do Docker e o CI percebem a falha
         if (!db) res.status(503)
         return {
             ok: db,

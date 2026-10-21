@@ -25,7 +25,6 @@ const providers = [
     ExpirationService,
 ]
 
-/** Infraestrutura compartilhada por todos os módulos de domínio. */
 @Global()
 @Module({ providers, exports: providers })
 export class CoreModule {}

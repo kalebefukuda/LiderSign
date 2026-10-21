@@ -1,6 +1,5 @@
 import type { ApiErrorDto } from '@lidersign/shared'
 
-/** Erro com a mensagem que a API devolveu (já em português) e o status HTTP. */
 export class HttpError extends Error {
     constructor(
         public status: number,

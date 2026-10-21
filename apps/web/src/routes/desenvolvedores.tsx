@@ -3,7 +3,6 @@ import { SiteHeader } from '@/features/brand'
 import { IntegrationPage, SettingsPage } from '@/features/demo'
 import { useDocumentTitle } from '@/lib/use-document-title'
 
-/** Fora do produto: como a LíderHub integra, registro das chamadas, MCP e configuração da demo. */
 export default function DevelopersRoute() {
     useDocumentTitle('Para desenvolvedores')
     return (

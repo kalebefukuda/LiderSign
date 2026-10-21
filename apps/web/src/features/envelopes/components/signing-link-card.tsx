@@ -17,7 +17,6 @@ type HostStatus = { whatsappProvider: 'simulator' | 'cloud_api'; tenant: { name:
 
 type Props = { envelopeId: string; signerFirstName: string; documentTitle: string; phoneMasked: string }
 
-/** Próximo passo depois do envio: fazer o link chegar ao cliente. */
 export function SigningLinkCard({ envelopeId, signerFirstName, documentTitle, phoneMasked }: Props) {
     const [link, setLink] = React.useState<StoredLink | null>(() => recallLink(envelopeId))
     const [qr, setQr] = React.useState<string | null>(null)
@@ -73,7 +72,6 @@ export function SigningLinkCard({ envelopeId, signerFirstName, documentTitle, ph
         ? `Olá, ${signerFirstName}! ${office} enviou "${documentTitle}" para você assinar pelo celular. É rápido: ${url}`
         : ''
 
-    // Sem link guardado nesta aba: o envio foi pela LíderHub, na conversa. O painel só oferece um link novo.
     if (!url) {
         return (
             <section

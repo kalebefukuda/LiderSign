@@ -3,11 +3,6 @@ import * as React from 'react'
 
 import { EVENTS_URL } from '@/lib/endpoints'
 
-/**
- * Eventos ao vivo do LíderSign via SSE (pelo /demo-host, o back da LíderHub simulado).
- * Uma única conexão é compartilhada por todos os componentes da página.
- * Se o stream cair, `connected` vira false e as telas usam polling como reserva.
- */
 type Listener = (event: StreamEvent) => void
 type StatusListener = (connected: boolean) => void
 
@@ -35,9 +30,7 @@ function connect() {
             const parsed = JSON.parse(message.data) as StreamEvent
             if (parsed && typeof parsed === 'object' && 'type' in parsed)
                 listeners.forEach((listener) => listener(parsed))
-        } catch {
-            /* heartbeat ou payload desconhecido */
-        }
+        } catch {}
     }
     source.onerror = () => {
         source?.close()

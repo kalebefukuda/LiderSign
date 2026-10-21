@@ -1,8 +1,4 @@
 #!/usr/bin/env node
-/**
- * MCP por stdio: é assim que o Claude Code e o Claude Desktop sobem o servidor.
- * stdout é do protocolo; qualquer log vai para stderr.
- */
 import { createLiderSignMcpServer } from './mcp-server.js'
 
 console.log = (...args: unknown[]) => console.error(...args)

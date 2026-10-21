@@ -15,7 +15,6 @@ export class TenantsService {
         private readonly storage: StorageService,
     ) {}
 
-    /** "Ativar LíderSign": idempotente. Cria ou reativa o escritório e, se pedido, os modelos de exemplo. */
     async connect(input: ConnectTenantInput): Promise<ConnectTenantResponse> {
         const existing = await this.prisma.tenant.findUnique({ where: { externalId: input.externalId } })
         let webhookSecret: string | undefined
@@ -61,7 +60,6 @@ export class TenantsService {
         await this.prisma.tenant.update({ where: { id: tenant.id }, data: { active: false } })
     }
 
-    /** Apaga o escritório, os registros (cascade) e os arquivos. Usado só pelo reset da demo. */
     async destroy(externalId: string) {
         const tenant = await this.prisma.tenant.findUnique({ where: { externalId } })
         if (!tenant) return

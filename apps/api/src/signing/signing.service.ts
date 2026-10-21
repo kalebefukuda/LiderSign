@@ -37,15 +37,12 @@ import { WebhooksService } from '../webhooks/webhooks.service'
 const OTP_TTL_MS = 10 * 60 * 1000
 const OTP_RESEND_MS = 30 * 1000
 const OTP_MAX_ATTEMPTS = 5
-/** Teto de códigos por envelope: 5 códigos × 5 tentativas = 25 palpites em 1 milhão de combinações. */
 const OTP_MAX_SENDS = 5
 const OTP_FRESH_MS = 15 * 60 * 1000
 const MAX_SELFIE = 5 * 1024 * 1024
 const MAX_SIGNATURE = 300 * 1024
-/** Tentativas de CPF por link. Com 5 palpites, adivinhar um CPF é inviável; esgotou, o escritório gera outro link. */
 const IDENTITY_MAX_ATTEMPTS = 5
 
-/** Aceite por clique: o texto fica junto do botão "Assinar" e vai para a trilha e para a página de evidências. */
 export const CONSENT_TEXT =
     'Ao tocar em "Assinar", declaro que li o documento e concordo em assiná-lo eletronicamente.'
 
@@ -64,7 +61,6 @@ function selfieExtension(data: Buffer): 'jpg' | 'png' | 'webp' | null {
     return null
 }
 
-/** Jornada do signatário. Tudo por token; nada de login. */
 @Injectable()
 export class SigningService {
     constructor(
@@ -119,7 +115,6 @@ export class SigningService {
     }
 
     private toSession(envelope: Envelope & { tenant: Tenant }): SigningSessionDto {
-        // Antes do CPF, só o necessário para a pessoa se reconhecer: o conteúdo do documento fica de fora
         const identityConfirmed = Boolean(envelope.identityVerifiedAt)
         return {
             title: envelope.title,
@@ -130,7 +125,6 @@ export class SigningService {
             requiresOtp: this.requiresOtp(envelope),
             identityConfirmed,
             signer: {
-                // Antes do CPF, só o primeiro nome (minimização, LGPD art. 6º, III)
                 name: identityConfirmed
                     ? envelope.signerName
                     : (envelope.signerName.trim().split(/\s+/)[0] ?? ''),
@@ -181,7 +175,6 @@ export class SigningService {
         return this.storage.get(envelope.originalPath)
     }
 
-    /** O signatário digita o próprio CPF. Tentativas reservadas de forma atômica, como no código. */
     async confirmIdentity(token: string, cpf: string, ctx: RequestContext) {
         const envelope = await this.resolve(token)
         this.assertOpen(envelope)
@@ -284,8 +277,6 @@ export class SigningService {
             sentTo: maskPhone(envelope.signerPhone),
             expiresInSeconds: OTP_TTL_MS / 1000,
             resendInSeconds: OTP_RESEND_MS / 1000,
-            // Só na demonstração sem WhatsApp: o código vai para quem está assinando, na própria tela.
-            // Com o WhatsApp ligado (ou fora da demo), ele chega apenas pelo WhatsApp.
             ...(env().DEMO_MODE && this.messaging.providerName === 'simulator' ? { demoCode: code } : {}),
         }
     }
@@ -398,7 +389,6 @@ export class SigningService {
             consentText: CONSENT_TEXT,
             signedAt: signedAt.toISOString(),
         }
-        // Atualização condicional: um clique duplo não assina duas vezes
         const updated = await this.prisma.envelope.updateMany({
             where: { id: envelope.id, status: { in: ['SENT', 'VIEWED'] } },
             data: {

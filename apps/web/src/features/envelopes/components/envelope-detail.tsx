@@ -45,7 +45,6 @@ const MESSAGE_KIND_LABEL: Record<MessageKind, string> = {
 
 const FINAL_STATUSES = ['COMPLETED', 'CANCELED', 'EXPIRED']
 
-/** O advogado nunca vê o código que o cliente recebeu. */
 function hideOtp(body: string) {
     return body.replace(/\b\d{6}\b/g, '••••••')
 }
@@ -307,7 +306,6 @@ export function EnvelopeDetail({ id }: { id: string }) {
     )
 }
 
-/** Andamento em 4 passos, do jeito que o escritório pensa. */
 function Progress({ envelope }: { envelope: EnvelopeDetailDto }) {
     const stopped = envelope.status === 'CANCELED' || envelope.status === 'EXPIRED'
     const steps = [
@@ -357,7 +355,6 @@ function Notice({ icon, children }: { icon: React.ReactNode; children: React.Rea
     )
 }
 
-/** Para auditoria e para a TI: hashes, carimbo do tempo, mensagens e avisos para a LíderHub. */
 function TechnicalDetails({ data, id }: { data: EnvelopeDetailDto; id: string }) {
     return (
         <details className="group rounded-2xl border border-line">

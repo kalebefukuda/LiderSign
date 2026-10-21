@@ -9,10 +9,6 @@ import { WebhooksService } from '../webhooks/webhooks.service'
 const SWEEP_MS = 60_000
 const OPEN_STATUSES = ['SENT', 'VIEWED']
 
-/**
- * Expira os envelopes vencidos e avisa a LíderHub (webhook envelope.expired).
- * Roda a cada minuto e também sob demanda, quando alguém consulta um envelope.
- */
 @Injectable()
 export class ExpirationService implements OnModuleInit, OnModuleDestroy {
     private readonly logger = new Logger('Expiração')

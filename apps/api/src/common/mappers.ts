@@ -65,7 +65,6 @@ export function verificationUrlFor(code: string): string {
     return `${publicUrl()}/v/${code}`
 }
 
-/** signingUrl só existe quando o token acabou de ser gerado (criação e reenvio): no banco fica só o hash. */
 export function toEnvelopeDto(envelope: Envelope, signingToken?: string | null): EnvelopeDto {
     return {
         id: envelope.id,

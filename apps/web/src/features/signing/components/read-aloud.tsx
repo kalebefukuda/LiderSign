@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button'
 
 type Status = 'idle' | 'speaking' | 'paused'
 
-/** "Ouvir o contrato": leitura em voz alta pelo próprio celular (sem custo, sem servidor). */
 export function ReadAloud({ text, compact = false }: { text: string; compact?: boolean }) {
     const [supported, setSupported] = React.useState(false)
     const [status, setStatus] = React.useState<Status>('idle')
@@ -26,7 +25,6 @@ export function ReadAloud({ text, compact = false }: { text: string; compact?: b
         const voice =
             voices.find((item) => item.lang === 'pt-BR') ??
             voices.find((item) => item.lang.toLowerCase().startsWith('pt'))
-        // Parágrafos em fila: evita o corte de falas longas em alguns navegadores.
         const chunks = text
             .split(/\n{2,}/)
             .map((chunk) => chunk.trim())

@@ -43,7 +43,6 @@ const STATE_BADGE: Record<Exclude<ContractState, 'none'>, { label: string; class
     done: { label: 'Assinado', className: 'bg-emerald-50 text-emerald-700' },
 }
 
-/** Atendimento: lista de conversas, a conversa e os dados do contato com o contrato do LíderSign. */
 export function InboxPage({
     active,
     onOpenIntegrations,
@@ -59,7 +58,6 @@ export function InboxPage({
     const lead = LEADS.find((item) => item.id === leadId) ?? LEADS[0]
     const state = contractState(sent, detail.data)
 
-    // Envelope apagado (ex.: demonstração reiniciada): a conversa volta ao começo
     React.useEffect(() => {
         if (detail.error?.status === 404) {
             saveSent(null)
@@ -343,7 +341,6 @@ function SendContract({ lead, onSent }: { lead: Lead; onSent: (value: SentContra
         setError(null)
         setSending(true)
         try {
-            // A LíderHub preenche os campos com o que já sabe do contato
             const sample = sampleValues()
             const variables = Object.fromEntries(
                 template.variables.map((variable) => [
@@ -532,7 +529,6 @@ function SystemEvent({ at, children }: { at: string; children: React.ReactNode }
     )
 }
 
-/** Sem WhatsApp oficial nesta simulação: quem testa manda o link para o próprio WhatsApp. */
 function SimulationNote({ url, message, phone }: { url: string; message: string; phone: string }) {
     const [qr, setQr] = React.useState<string | null>(null)
     React.useEffect(() => {

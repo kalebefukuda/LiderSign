@@ -41,7 +41,6 @@ const AI_TIMEOUT_MS = 45_000
 export class TemplateImportService {
     private readonly logger = new Logger('Importação')
 
-    /** Confere o tipo real pelo conteúdo (magic bytes), não pela extensão. */
     private detect(file: UploadedFile): 'pdf' | 'docx' | 'text' {
         const head = file.buffer.subarray(0, 4)
         if (head.toString('latin1') === '%PDF') return 'pdf'
@@ -49,9 +48,7 @@ export class TemplateImportService {
         try {
             new TextDecoder('utf-8', { fatal: true }).decode(file.buffer)
             if (!file.buffer.includes(0)) return 'text'
-        } catch {
-            // não é texto
-        }
+        } catch {}
         throw new UnsupportedMediaTypeException('Envie um PDF, DOCX, TXT ou MD')
     }
 

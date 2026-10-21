@@ -3,21 +3,16 @@ import type { ConnectTenantResponse, MessageStatus, TenantDto, WebhookPayload } 
 import { DEMO_HOST_BASE, PARTNER_BASE } from '@/lib/endpoints'
 import { fetchJson } from '@/lib/http'
 
-/** Situação do escritório de demonstração, vista pelo "back da LíderHub". */
 export type DemoStatus = {
     active: boolean
     tenant: TenantDto | null
     templatesCount: number
     whatsappProvider: 'simulator' | 'cloud_api'
-    /** WhatsApp oficial com Phone Number ID e token preenchidos */
     whatsappConfigured: boolean
-    /** Endereço que vai nos links (túnel ou WEB_PUBLIC_URL) */
     webPublicUrl: string
-    /** Túnel HTTPS do docker compose no ar */
     tunnel: boolean
 }
 
-/** Webhook que a "LíderHub" recebeu do LíderSign, com o HMAC conferido. */
 export type ReceivedWebhook = {
     receivedAt: string
     verified: boolean
@@ -26,7 +21,6 @@ export type ReceivedWebhook = {
     reason: string | null
 }
 
-/** Uma linha do registro da integração (ações da LíderHub e webhooks de volta). */
 export type CallLogEntry = {
     at: string
     direction: 'liderhub-to-lidersign' | 'lidersign-to-liderhub'
@@ -39,7 +33,6 @@ export type CallLogEntry = {
 
 const STATUS_EVENT = 'lidersign:demo-status'
 
-/** Avisa o resto da tela (layout do painel, menus) que o escritório ligou ou desligou. */
 function announce<T>(promise: Promise<T>): Promise<T> {
     return promise.then((result) => {
         window.dispatchEvent(new Event(STATUS_EVENT))

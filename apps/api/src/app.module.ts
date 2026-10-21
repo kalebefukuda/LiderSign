@@ -51,21 +51,15 @@ export class SigningModule {}
 @Module({ controllers: [VerificationController], providers: [VerificationService] })
 export class VerificationModule {}
 
-/** Rotas de demonstração (simulador e reset). Só sobem com DEMO_MODE=true. */
 @Module({ imports: [TenantsModule], controllers: [DemoController] })
 export class DemoModule {}
 
-/**
- * DEMONSTRAÇÃO APENAS: o "back-end da LíderHub" simulado (ativar, status, receber webhooks).
- * O proxy de parceiro /demo-host/v1 é montado no main.ts. Só sobe com DEMO_MODE=true.
- */
 @Module({ controllers: [DemoHostController], providers: [DemoHostService] })
 export class DemoHostModule {}
 
 @Module({ controllers: [HealthController] })
 export class HealthModule {}
 
-/** Build do React (Vite). Em produção o Nest serve API e site na mesma origem. */
 function webStatic(): DynamicModule[] {
     const dist = env().WEB_DIST_DIR
         ? resolve(env().WEB_DIST_DIR as string)

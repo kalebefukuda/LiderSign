@@ -13,7 +13,6 @@ function renderSpans(spans: TemplateSpan[]) {
     )
 }
 
-/** Documento legível no celular: mantém títulos, negrito e listas do modelo. */
 export function DocumentText({ body }: { body: string }) {
     const blocks = React.useMemo(() => parseTemplate(body), [body])
 

@@ -11,7 +11,6 @@ const officeLinks = [
 ]
 
 export function SiteHeader({ className }: { className?: string }) {
-    // Para o cliente (endereço público), só a verificação
     const links = [...(isOfficeHost() ? officeLinks : []), { href: '/v', label: 'Verificar documento' }]
     return (
         <header className={cn('border-b border-line bg-white/90 backdrop-blur-sm', className)}>

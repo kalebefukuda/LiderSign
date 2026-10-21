@@ -7,7 +7,6 @@ import { MessagingService } from '../messaging/messaging.service'
 import { PrismaService } from '../prisma/prisma.service'
 import { TenantsService } from '../tenants/tenants.service'
 
-/** Só existe com DEMO_MODE=true: caixa do WhatsApp simulado e reset para gravar a demo de novo. */
 @Controller('v1/demo')
 @UseGuards(PartnerGuard)
 @SkipThrottle()
@@ -28,7 +27,6 @@ export class DemoController {
             orderBy: { createdAt: 'desc' },
             take: 50,
         })
-        // Celular simulado: mostra a mensagem como o signatário a recebeu (só existe com DEMO_MODE)
         return messages.reverse().map((message) => this.messaging.revealForDemo(toMessageDto(message)))
     }
 

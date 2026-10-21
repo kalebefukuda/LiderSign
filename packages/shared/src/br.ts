@@ -1,5 +1,3 @@
-/** Utilitários de dados brasileiros. Mascarar sempre que exibir (LGPD art. 6º, III). */
-
 export function onlyDigits(value: string): string {
     return (value ?? '').replace(/\D/g, '')
 }
@@ -22,14 +20,12 @@ export function formatCpf(value: string): string {
     return `${cpf.slice(0, 3)}.${cpf.slice(3, 6)}.${cpf.slice(6, 9)}-${cpf.slice(9)}`
 }
 
-/** ***.***.***-12 */
 export function maskCpf(value: string): string {
     const cpf = onlyDigits(value)
     if (cpf.length !== 11) return '***.***.***-**'
     return `***.***.***-${cpf.slice(9)}`
 }
 
-/** Normaliza para E.164 sem o "+": 55 + DDD + número. Aceita com ou sem 55. */
 export function normalizeBrPhone(value: string): string {
     const digits = onlyDigits(value)
     if (digits.length === 10 || digits.length === 11) return `55${digits}`
@@ -41,7 +37,6 @@ export function isValidBrPhone(value: string): boolean {
     return /^55\d{10,11}$/.test(phone)
 }
 
-/** (47) 9****-1234 */
 export function maskPhone(value: string): string {
     const phone = normalizeBrPhone(value)
     if (!/^55\d{10,11}$/.test(phone)) return '(**) *****-****'
@@ -61,7 +56,6 @@ export function formatPhone(value: string): string {
         : `(${ddd}) ${rest.slice(0, 4)}-${rest.slice(4)}`
 }
 
-/** "João da Silva Santos" -> "João S." (exibição pública) */
 export function maskName(value: string): string {
     const parts = (value ?? '').trim().split(/\s+/).filter(Boolean)
     if (parts.length === 0) return ''

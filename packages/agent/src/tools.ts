@@ -13,12 +13,6 @@ import {
 import { z } from 'zod'
 import { LiderSignApiError, LiderSignClient } from './lidersign-client.js'
 
-/**
- * As 4 ferramentas que o modal da ZapSign promete "em breve" (listar modelos, ver campos,
- * criar documento e ver status), prontas para o Assistente e os agentes da LíderHub.
- * Erros voltam como texto em português, para o agente explicar ao advogado o que fazer.
- */
-
 type ToolResult<T> = ({ ok: true } & T) | { ok: false; erro: string; detalhes?: string[] }
 
 let sharedClient: LiderSignClient | undefined
@@ -27,7 +21,6 @@ function client(): LiderSignClient {
     return sharedClient
 }
 
-/** Permite injetar um cliente (testes ou outro escritório). */
 export function setLiderSignClient(value: LiderSignClient | undefined): void {
     sharedClient = value
 }

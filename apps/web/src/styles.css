@@ -4,8 +4,6 @@
 @theme {
     --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
     --font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
-
-    /* Pele LíderHub: um acento azul, neutros fazem o trabalho pesado */
     --color-brand: #2463eb;
     --color-brand-hover: #1d4fd8;
     --color-brand-soft: #eef3ff;
@@ -15,17 +13,9 @@
     --color-line: #e6eaf2;
     --color-line-strong: #d5dbe7;
     --color-surface: #f7f9fc;
-    --color-navy: #0a0f1e;
-    --color-navy-2: #121a33;
-    --color-navy-line: #1f2946;
-
-    /* Celular simulado */
-    --color-chat: #efeae2;
-    --color-chat-link: #0f5bd8;
 
     --animate-enter: enter 220ms ease-out both;
     --animate-pop: pop 200ms ease-out both;
-    --animate-drop: drop 240ms ease-out both;
 
     @keyframes enter {
         from {
@@ -49,16 +39,6 @@
         }
     }
 
-    @keyframes drop {
-        from {
-            opacity: 0;
-            transform: translateY(-12px);
-        }
-        to {
-            opacity: 1;
-            transform: none;
-        }
-    }
 }
 
 @layer base {

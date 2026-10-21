@@ -8,14 +8,9 @@ import { defineConfig } from 'vite'
 const root = path.dirname(fileURLToPath(import.meta.url))
 const apiTarget = process.env.API_URL ?? 'http://localhost:4000'
 
-/**
- * Em desenvolvimento o Vite repassa a API para o Nest (mesma origem, sem CORS).
- * Em produção o próprio Nest serve este build (apps/web/dist): um processo, uma URL.
- */
 const proxied = {
     target: apiTarget,
     changeOrigin: false,
-    // SSE: nada de compressão nem buffer no meio do caminho
     configure: (proxy: { on: (event: string, handler: (...args: never[]) => void) => void }) => {
         proxy.on('proxyRes', ((proxyRes: { headers: Record<string, string> }) => {
             if (proxyRes.headers['content-type']?.includes('text/event-stream')) {
@@ -31,7 +26,6 @@ export default defineConfig({
     resolve: {
         alias: {
             '@': path.resolve(root, 'src'),
-            // Fonte TS do contrato: o Vite compila direto, sem depender do build CJS
             '@lidersign/shared': path.resolve(root, '../../packages/shared/src/index.ts'),
         },
     },

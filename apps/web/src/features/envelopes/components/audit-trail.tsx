@@ -11,7 +11,6 @@ const ACTOR_LABEL: Record<AuditEventDto['actor'], string> = {
     partner: 'LíderHub',
 }
 
-/** Histórico do envelope. Com `technical`, mostra também IP e o hash encadeado de cada evento. */
 export function AuditTrail({
     events,
     className,

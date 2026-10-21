@@ -11,7 +11,6 @@ import { errorMessage } from '@/lib/http'
 
 import { PageHeader } from './page-header'
 
-/** Tela de Integrações da LíderHub: o LíderSign liga com um clique, ao lado da ZapSign que pede token. */
 export function IntegrationsTab({
     status,
     onChanged,

@@ -1,7 +1,3 @@
-/**
- * DEMONSTRAÇÃO APENAS: rotas do "back-end da LíderHub" simulado (ativar, status e receber webhooks).
- * Só sobe com DEMO_MODE=true. Ver demo-host.proxy.ts.
- */
 import { BadGatewayException, Body, Controller, Get, Headers, HttpCode, Post, Req, Res } from '@nestjs/common'
 import { SkipThrottle } from '@nestjs/throttler'
 import type { Request, Response } from 'express'
@@ -18,7 +14,6 @@ export class DemoHostController {
         return this.host.status()
     }
 
-    /** "Ativar LíderSign" em 1 clique: a LíderHub cria a conta do escritório com a chave de parceiro. */
     @Post('activate')
     async activate(@Res({ passthrough: true }) res: Response) {
         try {
@@ -30,7 +25,6 @@ export class DemoHostController {
         }
     }
 
-    /** Desligar o switch: desativa só o escritório de demonstração. */
     @Post('deactivate')
     @HttpCode(204)
     async deactivate() {
@@ -41,7 +35,6 @@ export class DemoHostController {
         }
     }
 
-    /** Receptor de webhooks da "LíderHub". O corpo chega cru para validar o HMAC. */
     @Post('webhook')
     @HttpCode(200)
     async webhook(@Req() req: Request, @Headers('x-lidersign-signature') signature?: string) {
@@ -55,7 +48,6 @@ export class DemoHostController {
         return this.host.list()
     }
 
-    /** Registro da integração: ações da LíderHub no LíderSign e webhooks de volta. */
     @Get('calls')
     calls() {
         return listCalls()

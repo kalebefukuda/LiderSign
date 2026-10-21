@@ -12,10 +12,6 @@ const PROMISES = [
     'Ver status do documento',
 ]
 
-/**
- * Réplica da tela atual de conexão da ZapSign na LíderHub (V3). Serve para mostrar a dor:
- * token de API, ambiente e plano pago, tudo fora da plataforma.
- */
 export function ZapSignDialog({
     open,
     onOpenChange,

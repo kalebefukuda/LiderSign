@@ -2,21 +2,15 @@ import { z } from 'zod'
 import { isValidBrPhone, isValidCpf, normalizeBrPhone, onlyDigits } from './br'
 import { ASSURANCE_LEVELS, TEMPLATE_KINDS, VARIABLE_TYPES } from './enums'
 
-/* ---------- Parceiro (LíderHub) ---------- */
-
-/** "Ativar LíderSign": a LíderHub cria a conta do escritório com a chave de parceiro. Idempotente. */
 export const connectTenantSchema = z.object({
     externalId: z
         .string()
         .regex(/^[A-Za-z0-9_-]{3,64}$/, 'Use de 3 a 64 caracteres: letras, números, _ ou -'),
     name: z.string().trim().min(2).max(120),
     webhookUrl: z.url().max(500).optional(),
-    /** Cria os modelos de exemplo (honorários BPC/LOAS e procuração). */
     starterPack: z.boolean().default(true),
 })
 export type ConnectTenantInput = z.infer<typeof connectTenantSchema>
-
-/* ---------- Modelos ---------- */
 
 export const templateVariableSchema = z.object({
     key: z.string().regex(/^[a-z][a-z0-9_]{0,47}$/, 'Chave em snake_case, começando por letra'),
@@ -38,8 +32,6 @@ export type CreateTemplateInput = z.infer<typeof createTemplateSchema>
 export const updateTemplateSchema = createTemplateSchema.partial()
 export type UpdateTemplateInput = z.infer<typeof updateTemplateSchema>
 
-/* ---------- Envelopes ---------- */
-
 export const signerSchema = z.object({
     name: z.string().trim().min(3).max(120),
     cpf: z.string().transform(onlyDigits).refine(isValidCpf, 'CPF inválido'),
@@ -55,16 +47,11 @@ export const createEnvelopeSchema = z.object({
     templateId: z.string().min(1).max(64),
     variables: z.record(z.string().regex(/^[a-z][a-z0-9_]*$/), z.string().max(2_000)).default({}),
     signer: signerSchema,
-    /** Referência do lead/conversa na LíderHub, devolvida nos webhooks. */
     externalRef: z.string().max(120).optional(),
-    /** Envia o link pelo WhatsApp na hora. Com false, só devolve o link. */
     send: z.boolean().default(true),
 })
 export type CreateEnvelopeInput = z.input<typeof createEnvelopeSchema>
 
-/* ---------- Assinatura (público, via token) ---------- */
-
-/** O signatário digita o próprio CPF para abrir o documento. */
 export const confirmIdentitySchema = z.object({
     cpf: z
         .string()
@@ -88,7 +75,6 @@ export const completeSigningSchema = z
         signature: z.discriminatedUnion('type', [
             z.object({
                 type: z.literal('drawn'),
-                /** PNG em data URL, até ~300 KB */
                 imageDataUrl: z
                     .string()
                     .max(400_000)

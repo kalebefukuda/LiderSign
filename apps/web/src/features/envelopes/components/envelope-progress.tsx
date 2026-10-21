@@ -3,7 +3,6 @@ import type { EnvelopeDto } from '@lidersign/shared'
 import { cn } from '@/lib/cn'
 import { formatTime } from '@/lib/format'
 
-/** Linha do tempo compacta: Enviado → Visto → Assinado. */
 export function EnvelopeProgress({ envelope, className }: { envelope: EnvelopeDto; className?: string }) {
     const steps = [
         { label: 'Enviado', at: envelope.sentAt ?? envelope.createdAt },

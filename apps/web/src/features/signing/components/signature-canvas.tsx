@@ -4,7 +4,6 @@ import SignaturePad from 'signature_pad'
 
 export type SignatureCanvasHandle = { toDataUrl: () => string | null; isEmpty: () => boolean }
 
-/** Área para assinar com o dedo. Ajusta à densidade de pixels da tela e ao tamanho do celular. */
 export const SignatureCanvas = React.forwardRef<
     SignatureCanvasHandle,
     { onChange?: (empty: boolean) => void }

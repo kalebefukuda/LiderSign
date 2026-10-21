@@ -37,7 +37,6 @@ const mcpCommand = (origin: string) => `claude mcp add lidersign \\
   -e LIDERSIGN_TENANT_ID=escritorio-demo \\
   -- node packages/agent/dist/mcp-stdio.js`
 
-/** Como a LíderHub usa o LíderSign: os três passos, o registro das chamadas e o MCP. */
 export function IntegrationPage() {
     const command = mcpCommand(window.location.origin)
 

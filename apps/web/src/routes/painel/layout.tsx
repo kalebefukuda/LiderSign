@@ -9,10 +9,6 @@ import { Logo, PanelNav } from '@/features/brand'
 import { demoApi, onDemoStatusChange, type DemoStatus } from '@/features/demo'
 import { useResource } from '@/lib/use-resource'
 
-/**
- * Painel do LíderSign: o bastidor do escritório (documentos, modelos, PDFs). O envio do dia a dia
- * acontece na LíderHub; é ela também que ativa o LíderSign.
- */
 export default function PanelLayout() {
     const status = useResource<DemoStatus>(demoApi.statusUrl)
     const officeName = status.data?.tenant?.name ?? 'Escritório'
@@ -20,7 +16,6 @@ export default function PanelLayout() {
 
     React.useEffect(() => onDemoStatusChange(() => void reload()), [reload])
 
-    // Dentro da LíderHub (iframe na aba Contratos), só o conteúdo: o menu é o da LíderHub
     const embedded = typeof window !== 'undefined' && window.self !== window.top
 
     let content: React.ReactNode

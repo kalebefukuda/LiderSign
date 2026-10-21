@@ -10,7 +10,6 @@ import {
 import { toTemplateDto } from '../common/mappers'
 import { PrismaService } from '../prisma/prisma.service'
 
-/** Mantém variables em sincronia com o corpo: cria as que faltam, descarta as que não são usadas. */
 export function syncVariables(body: string, variables: TemplateVariable[]): TemplateVariable[] {
     const keys = extractVariableKeys(body)
     return keys.map(

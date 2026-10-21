@@ -1,8 +1,3 @@
-/**
- * DEMONSTRAÇÃO APENAS. Faz o papel do back-end da LíderHub: ativa o escritório com a chave de parceiro
- * e recebe os webhooks do LíderSign validando o HMAC, exatamente como um parceiro externo faria.
- * Só sobe com DEMO_MODE=true. Nunca usar em produção.
- */
 import { BadRequestException, ConflictException, Injectable, Logger } from '@nestjs/common'
 import type {
     ConnectTenantResponse,
@@ -36,11 +31,8 @@ export type DemoHostStatus = {
     tenant: TenantDto | null
     templatesCount: number
     whatsappProvider: 'simulator' | 'cloud_api'
-    /** Cloud API com Phone Number ID e token preenchidos */
     whatsappConfigured: boolean
-    /** Túnel HTTPS do docker compose no ar (links abrem em qualquer celular) */
     tunnel: boolean
-    /** Endereço que vai nos links (túnel ou WEB_PUBLIC_URL) */
     webPublicUrl: string
 }
 
@@ -61,7 +53,6 @@ export class DemoHostService {
         return `http://127.0.0.1:${env().PORT}`
     }
 
-    /** Chamada à API do LíderSign como parceiro (loopback). */
     private async call(path: string, init: RequestInit = {}) {
         return fetch(`${this.base}${path}`, {
             ...init,
@@ -84,7 +75,6 @@ export class DemoHostService {
         const json = (await res.json()) as ConnectTenantResponse
         if (!res.ok) throw new Error(`Falha ao ativar: HTTP ${res.status}`)
         if (json.created) {
-            // Escritório novo: segredo novo, histórico de webhooks e de chamadas zerado
             this.secret = json.webhookSecret ?? null
             this.received = []
             clearCalls()
@@ -138,7 +128,6 @@ export class DemoHostService {
         return { active: true, tenant, templatesCount: templates.length, ...base }
     }
 
-    /** Configurações › WhatsApp: manda uma mensagem de teste para conferir a conexão com a Meta. */
     async whatsappTest(
         phone: string,
     ): Promise<{ status: MessageStatus; error: string | null; provider: string }> {
@@ -190,7 +179,6 @@ export class DemoHostService {
         return { ok: true, reason: null }
     }
 
-    /** Recebe um webhook. Valida o HMAC; se o segredo em cache estiver velho (reset da demo), busca de novo. */
     async receive(rawBody: Buffer, signature: string | undefined): Promise<ReceivedWebhook> {
         const body = rawBody.toString('utf8')
         let verified = false

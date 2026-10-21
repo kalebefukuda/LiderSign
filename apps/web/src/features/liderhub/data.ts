@@ -10,7 +10,6 @@ export type Lead = {
     cpf: string
     city: string
     stage: string
-    /** Só a Maria tem o fluxo de contrato ligado; as outras conversas são de exemplo. */
     interactive: boolean
     messages: Message[]
 }
@@ -100,7 +99,5 @@ export function saveSent(value: SentContract | null) {
     try {
         if (value) sessionStorage.setItem(STORE_KEY, JSON.stringify(value))
         else sessionStorage.removeItem(STORE_KEY)
-    } catch {
-        // sem sessionStorage: a conversa só não sobrevive ao recarregar
-    }
+    } catch {}
 }

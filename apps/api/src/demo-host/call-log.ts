@@ -1,8 +1,3 @@
-/**
- * DEMONSTRAÇÃO APENAS. Registro em memória das chamadas entre a "LíderHub" e o LíderSign,
- * para a tela de integração mostrar o back funcionando. Só ações (sem as consultas de leitura).
- */
-
 export type CallDirection = 'liderhub-to-lidersign' | 'lidersign-to-liderhub'
 
 export type CallLogEntry = {

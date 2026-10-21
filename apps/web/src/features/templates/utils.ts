@@ -24,7 +24,6 @@ export function guessVariableType(key: string): VariableType {
     return 'text'
 }
 
-/** Mantém a lista de variáveis em sincronia com o corpo: novas entram, removidas saem. */
 export function syncVariables(body: string, current: TemplateVariable[]): TemplateVariable[] {
     return extractVariableKeys(body).map(
         (key) =>

@@ -26,7 +26,6 @@ async function bootstrap() {
     })
 
     // Em quem confiar no X-Forwarded-For (IP da evidência e limite de requisições).
-    // Padrão: só loopback. Atrás de um proxy ou túnel conhecido, TRUST_PROXY=1 (número de saltos).
     app.set('trust proxy', parseTrustProxy(process.env.TRUST_PROXY))
     app.disable('x-powered-by')
     app.use(
@@ -44,7 +43,6 @@ async function bootstrap() {
                     objectSrc: ["'none'"],
                     baseUri: ["'self'"],
                     formAction: ["'self'"],
-                    // Sem upgrade forçado: a demo também roda em http (localhost ou IP da rede local)
                     upgradeInsecureRequests: null,
                 },
             },
@@ -52,13 +50,10 @@ async function bootstrap() {
         }),
     )
 
-    // Painel e demo sem login: só no computador do escritório, nunca pelo endereço público
     app.use(officeOnly)
 
     if (env.DEMO_MODE) {
-        // Receptor de webhooks da "LíderHub": precisa do corpo cru para conferir o HMAC
         app.use('/demo-host/webhook', express.raw({ type: '*/*', limit: '1mb' }))
-        // Proxy de parceiro da demo: o corpo segue em fluxo (multipart, SSE), sem passar pelos parsers
         app.use('/demo-host/v1', createDemoHostProxy(env.PORT))
     }
     const json = express.json({ limit: '1mb' })

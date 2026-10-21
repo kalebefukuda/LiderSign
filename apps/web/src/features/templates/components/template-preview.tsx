@@ -30,7 +30,6 @@ function renderSpan(span: TemplateSpan, labels: Map<string, string>, index: numb
     )
 }
 
-/** Pré-visualização do modelo, com as variáveis destacadas como etiquetas. */
 export function TemplatePreview({
     body,
     variables = [],

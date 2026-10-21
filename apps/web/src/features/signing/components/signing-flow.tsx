@@ -189,7 +189,6 @@ export function SigningFlow({ token }: { token: string }) {
                         officeName={session.officeName}
                         title={session.title}
                         onConfirmed={() => {
-                            // Recarrega a sessão: agora ela traz o texto do documento
                             void load().then(() => go('read'))
                         }}
                     />
@@ -292,9 +291,7 @@ function DoneScreen({ token, initial }: { token: string; initial: SigningSession
             try {
                 const next = await signingApi.session(token)
                 setSession(next)
-            } catch {
-                /* tenta de novo no próximo ciclo */
-            }
+            } catch {}
             if (attempts >= 45) {
                 setWaitedTooLong(true)
                 window.clearInterval(id)

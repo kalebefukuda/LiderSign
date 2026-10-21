@@ -12,19 +12,11 @@ import {
 } from '@lidersign/shared'
 import { z } from 'zod'
 
-/**
- * Transforma um contrato de exemplo (texto extraído de PDF/DOCX) em um modelo reutilizável,
- * no formato Markdown enxuto do LíderSign com variáveis {{snake_case}}.
- * Usado pela API via import dinâmico, só quando existe ANTHROPIC_API_KEY.
- */
-
 export type ExtractTemplateInput = {
     text: string
     fileName?: string
     apiKey: string
-    /** Id do modelo Anthropic, ex.: claude-sonnet-5-5 */
     model?: string
-    /** Para testes ou outro provedor: substitui o modelo Anthropic. */
     modelOverride?: MastraModelConfig
     timeoutMs?: number
 }
@@ -40,7 +32,6 @@ export type ExtractedTemplate = {
 export const DEFAULT_TEMPLATE_MODEL = 'claude-sonnet-5-5'
 const MAX_INPUT_CHARS = 60_000
 
-/** Schema pedido ao modelo: só tipos simples, para funcionar com saída estruturada nativa. */
 export const extractionSchema = z.object({
     suggestedName: z.string().describe('Nome curto do modelo, ex.: Contrato de honorários BPC/LOAS'),
     kind: z.enum(TEMPLATE_KINDS).describe('Tipo do documento'),
@@ -153,21 +144,15 @@ function nameFromFile(fileName?: string): string {
     return base.length >= 3 ? base : 'Modelo importado'
 }
 
-/**
- * Garante as regras do modelo independente do que a IA devolveu:
- * chaves válidas e sem duplicata, toda variável do corpo declarada, nada sobrando, schema do LíderSign.
- */
 export function normalizeExtraction(raw: RawExtraction, fileName?: string): ExtractedTemplate {
     const warnings = raw.warnings
         .map((item) => item.trim())
         .filter(Boolean)
         .slice(0, 10)
 
-    // 1. Corrige chaves fora do padrão dentro do corpo: {{Nome do Cliente}} -> {{nome_do_cliente}}
     let body = raw.body.replace(/\r\n/g, '\n').trim()
     body = body.replace(/\{\{\s*([^{}]+?)\s*\}\}/g, (_, key: string) => `{{${slugifyKey(key) || 'campo'}}}`)
 
-    // 2. Normaliza as variáveis declaradas
     const declared = new Map<string, TemplateVariable>()
     for (const variable of raw.variables) {
         const key = slugifyKey(variable.key)
@@ -181,7 +166,6 @@ export function normalizeExtraction(raw: RawExtraction, fileName?: string): Extr
         })
     }
 
-    // 3. Toda variável usada precisa estar declarada; o que não é usado sai
     const used = extractVariableKeys(body)
     const variables: TemplateVariable[] = used.map((key) => {
         const found = declared.get(key)

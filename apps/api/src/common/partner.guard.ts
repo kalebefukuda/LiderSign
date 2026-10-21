@@ -23,7 +23,6 @@ function assertPartner(req: Request) {
     }
 }
 
-/** Só a LíderHub (chave de parceiro). Usado nas rotas /v1/partner. */
 @Injectable()
 export class PartnerGuard implements CanActivate {
     canActivate(context: ExecutionContext): boolean {
@@ -32,7 +31,6 @@ export class PartnerGuard implements CanActivate {
     }
 }
 
-/** Chave de parceiro + X-Tenant-Id de um escritório ativo. O escritório nunca vê token. */
 @Injectable()
 export class TenantGuard implements CanActivate {
     constructor(private readonly prisma: PrismaService) {}

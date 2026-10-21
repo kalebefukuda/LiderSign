@@ -3,13 +3,10 @@ import { createBrowserRouter, Navigate } from 'react-router'
 import { isOfficeHost } from './lib/url'
 import { RootLayout } from './routes/root-layout'
 
-/** Rotas do SPA. Páginas mais pesadas carregam sob demanda. */
 export const router = createBrowserRouter([
     {
         Component: RootLayout,
         children: [
-            // No computador do escritório, a demonstração começa pela LíderHub (é de lá que se usa o LíderSign).
-            // Pelo endereço público, quem chega é cliente: vai para a verificação.
             { index: true, element: <Navigate to={isOfficeHost() ? '/liderhub' : '/v'} replace /> },
             { path: 'demo', element: <Navigate to="/liderhub" replace /> },
             {

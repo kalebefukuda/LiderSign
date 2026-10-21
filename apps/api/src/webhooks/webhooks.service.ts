@@ -10,7 +10,6 @@ import { PrismaService } from '../prisma/prisma.service'
 const RETRY_DELAYS_MS = [0, 2_000, 5_000]
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
-/** Cabeçalho X-LiderSign-Signature: t=<unix>,v1=<hex>, com v1 = HMAC-SHA256(secret, "<t>.<corpo>"). */
 export function signWebhook(secret: string, body: string, timestamp = Math.floor(Date.now() / 1000)): string {
     return `t=${timestamp},v1=${hmacSha256Hex(secret, `${timestamp}.${body}`)}`
 }
@@ -24,7 +23,6 @@ export class WebhooksService {
         private readonly events: EventsService,
     ) {}
 
-    /** Proteção contra SSRF (A01:2025): só hosts da lista permitida recebem webhooks. */
     private isAllowed(url: string): boolean {
         try {
             const parsed = new URL(url)
@@ -35,7 +33,6 @@ export class WebhooksService {
         }
     }
 
-    /** Dispara em segundo plano. Não bloqueia quem chamou. */
     dispatch(tenant: Tenant, envelope: Envelope, event: WebhookEvent) {
         if (!tenant.webhookUrl) return
         void this.deliver(tenant, envelope, event).catch((error) =>

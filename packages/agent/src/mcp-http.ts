@@ -1,8 +1,4 @@
 #!/usr/bin/env node
-/**
- * MCP por HTTP (streamable), para clientes remotos e agentes da própria LíderHub.
- * Por padrão escuta só em 127.0.0.1. Com MCP_TOKEN definido, exige Authorization: Bearer <MCP_TOKEN>.
- */
 import { createHash, timingSafeEqual } from 'node:crypto'
 import http from 'node:http'
 import { createLiderSignMcpServer } from './mcp-server.js'

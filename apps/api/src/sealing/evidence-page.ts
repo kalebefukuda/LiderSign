@@ -24,12 +24,10 @@ export type EvidenceInput = {
     trail: { at: Date; label: string; hash: string }[]
 }
 
-/** "a1b2c3d4e5..." -> "a1b2c3d4 e5f6a7b8 ..." para caber e ser legível. */
 export function groupHex(hex: string, size = 8): string {
     return (hex.match(new RegExp(`.{1,${size}}`, 'g')) ?? []).join(' ')
 }
 
-/** Resume o User-Agent em "Chrome no Android" (o UA completo fica no JSON de evidências). */
 export function summarizeUserAgent(ua: string | null): string {
     if (!ua) return 'Não informado'
     const os = /iPhone|iPad/.test(ua)
@@ -69,7 +67,6 @@ const rowsLayout: TableLayout = {
     paddingBottom: () => 4,
 }
 
-/** Trilha mais densa: cabe numa página mesmo no nível Reforçado. */
 const trailLayout: TableLayout = { ...rowsLayout, paddingTop: () => 2.5, paddingBottom: () => 2.5 }
 
 function section(title: string): Content {
@@ -105,7 +102,6 @@ export function buildEvidenceDefinition(input: EvidenceInput): TDocumentDefiniti
             : {
                   text: input.signature.typedName,
                   italics: true,
-                  // Encolhe nomes longos para caber em uma linha no espaço da assinatura
                   fontSize: Math.max(
                       12,
                       Math.min(20, Math.floor(370 / Math.max(input.signature.typedName.length, 1))),

@@ -1,14 +1,3 @@
-/**
- * Formato dos modelos: Markdown enxuto + variáveis {{chave}}.
- *   # Título          -> h1
- *   ## Seção          -> h2
- *   - item            -> item de lista
- *   ---               -> separador
- *   **negrito**       -> ênfase em linha
- *   linha em branco   -> novo parágrafo
- * Simples de editar, de versionar e de a IA gerar.
- */
-
 export const VARIABLE_PATTERN = /\{\{\s*([a-z][a-z0-9_]*)\s*\}\}/g
 
 export type TemplateSpan = { text: string; bold: boolean }
@@ -79,7 +68,6 @@ export function parseTemplate(body: string): TemplateBlock[] {
     return blocks
 }
 
-/** Texto corrido, sem marcação. Usado no "Ouvir o contrato" e como entrada da IA. */
 export function toPlainText(body: string): string {
     return parseTemplate(body)
         .map((block) => {
@@ -91,13 +79,11 @@ export function toPlainText(body: string): string {
         .join('\n\n')
 }
 
-/** nome_cliente -> Nome cliente */
 export function humanizeKey(key: string): string {
     const text = key.replace(/_/g, ' ').trim()
     return text.charAt(0).toUpperCase() + text.slice(1)
 }
 
-/** "Nome do Cliente" -> nome_do_cliente */
 export function slugifyKey(label: string): string {
     return label
         .normalize('NFD')

@@ -7,10 +7,7 @@ import { PrismaService } from '../prisma/prisma.service'
 
 export type AuditActor = 'system' | 'signer' | 'partner'
 
-/**
- * JSON com chaves ordenadas. O Postgres (JSONB) reordena as chaves ao gravar,
- * então o hash precisa de uma forma canônica para a cadeia poder ser recalculada depois.
- */
+// O Postgres (JSONB) reordena as chaves: o hash usa JSON com chaves ordenadas
 export function canonicalJson(value: unknown): string {
     if (value === null || typeof value !== 'object') return JSON.stringify(value) ?? 'null'
     if (value instanceof Date) return JSON.stringify(value.toISOString())
@@ -21,13 +18,8 @@ export function canonicalJson(value: unknown): string {
     return `{${entries.map(([key, item]) => `${JSON.stringify(key)}:${canonicalJson(item)}`).join(',')}}`
 }
 
-/**
- * Trilha de auditoria append-only com hash encadeado (ISO 27001 A.8.15, LGPD art. 37).
- * hash = sha256(prevHash + type + JSON(data) + createdAt ISO). Alterar um evento quebra todos os seguintes.
- */
 @Injectable()
 export class AuditService {
-    /** Serializa as gravações por envelope para a cadeia não bifurcar. */
     private readonly locks = new Map<string, Promise<unknown>>()
 
     constructor(private readonly prisma: PrismaService) {}
@@ -53,7 +45,6 @@ export class AuditService {
                     select: { hash: true, createdAt: true },
                 })
                 let createdAt = new Date()
-                // garante ordem estrita mesmo com eventos no mesmo milissegundo
                 if (last && createdAt.getTime() <= last.createdAt.getTime()) {
                     createdAt = new Date(last.createdAt.getTime() + 1)
                 }
@@ -80,7 +71,6 @@ export class AuditService {
         return next
     }
 
-    /** Recalcula a cadeia inteira. true = íntegra. */
     async verifyChain(envelopeId: string): Promise<boolean> {
         const events = await this.prisma.envelopeEvent.findMany({
             where: { envelopeId },

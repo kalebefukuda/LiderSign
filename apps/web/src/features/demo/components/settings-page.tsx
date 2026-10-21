@@ -29,7 +29,6 @@ function Code({ children }: { children: string }) {
     )
 }
 
-/** Como as mensagens saem (WhatsApp) e como abrir os links no celular. */
 export function SettingsPage() {
     const status = useResource<DemoStatus>(demoApi.statusUrl)
     const [phone, setPhone] = React.useState('')

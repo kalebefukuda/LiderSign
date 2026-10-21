@@ -19,7 +19,6 @@ const REASON: Record<number, string> = {
     502: 'Bad Gateway',
 }
 
-/** Respostas de erro sempre no formato ApiErrorDto. Nada de stack trace para fora (A10:2025). */
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
     private readonly logger = new Logger('Erro')

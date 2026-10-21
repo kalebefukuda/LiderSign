@@ -10,7 +10,6 @@ type ResourceState<T> = {
     setData: React.Dispatch<React.SetStateAction<T | undefined>>
 }
 
-/** Busca simples com recarga manual e polling opcional (sem dependência externa). */
 export function useResource<T>(url: string | null, options: { refreshMs?: number } = {}): ResourceState<T> {
     const [data, setData] = React.useState<T | undefined>(undefined)
     const [error, setError] = React.useState<HttpError | null>(null)

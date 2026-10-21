@@ -12,10 +12,6 @@ import { SignatureCanvas, type SignatureCanvasHandle } from './signature-canvas'
 
 type Mode = 'typed' | 'drawn'
 
-/**
- * Uma tela só: o nome já vem como assinatura (dá para desenhar, se preferir) e o aceite
- * fica no próprio botão, como em qualquer "Ao continuar, você concorda".
- */
 export function SignStep({
     token,
     signerName,

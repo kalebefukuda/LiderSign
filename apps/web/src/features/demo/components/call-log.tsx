@@ -7,7 +7,6 @@ import { useResource } from '@/lib/use-resource'
 
 import { demoApi, type CallLogEntry } from '../api'
 
-/** O back funcionando: cada ação da LíderHub no LíderSign e cada webhook de volta, ao vivo. */
 export function CallLog() {
     const { data } = useResource<CallLogEntry[]>(demoApi.callsUrl, { refreshMs: 2000 })
     const entries = data ?? []

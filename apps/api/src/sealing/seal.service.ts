@@ -34,7 +34,6 @@ import {
 } from './pdf-render.service'
 import { TimestampService } from './timestamp.service'
 
-/** ~3,5 min de tentativas. Se ainda falhar, a selagem é retomada no próximo boot. */
 const RETRY_DELAYS_MS = [0, 3_000, 10_000, 30_000, 60_000, 120_000]
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -48,14 +47,12 @@ type Evidence = {
     signedAt: string
 }
 
-/** Helvetica padrão só cobre WinAnsi: remove o que não couber para o carimbo nunca quebrar. */
 function winAnsi(text: string): string {
     return text.replace(/[^\x20-\x7E\xA0-\xFF]/g, '')
 }
 
 type SignatureVisual = { type: 'drawn'; imageDataUrl: string } | { type: 'typed'; typedName: string }
 
-/** Desenha a assinatura na área reservada do bloco, com a data e o código logo acima. */
 async function drawSignature(
     doc: PDFDocument,
     anchor: SignatureAnchor,
@@ -101,10 +98,6 @@ function imageMime(data: Buffer): 'image/png' | 'image/jpeg' | 'image/webp' | nu
     return null
 }
 
-/**
- * Selagem: carimbo do tempo, rodapé em todas as páginas, página de evidências e selo PAdES.
- * Nunca entrega PDF sem selo: se algo falhar, o envelope fica em SIGNED e a selagem é refeita.
- */
 @Injectable()
 export class SealService implements OnApplicationBootstrap {
     private readonly logger = new Logger('Selagem')
@@ -121,7 +114,6 @@ export class SealService implements OnApplicationBootstrap {
         private readonly events: EventsService,
     ) {}
 
-    /** Retoma selagens interrompidas (ex.: reinício do servidor). */
     async onApplicationBootstrap() {
         void this.certificate
             .getP12()
@@ -133,7 +125,6 @@ export class SealService implements OnApplicationBootstrap {
         for (const { id } of stuck) this.start(id, null)
     }
 
-    /** Dispara em segundo plano. rawToken (só em memória) serve para mandar o link da cópia. */
     start(envelopeId: string, rawToken: string | null) {
         if (this.running.has(envelopeId)) return
         this.running.add(envelopeId)
@@ -196,12 +187,10 @@ export class SealService implements OnApplicationBootstrap {
         }
     }
 
-    /** true quando o PDF selado foi gravado agora. */
     async seal(envelopeId: string): Promise<boolean> {
         const current = await this.prisma.envelope.findUnique({ where: { id: envelopeId } })
         if (!current || current.status !== 'SIGNED') return false
 
-        // 1. Carimbo do tempo sobre o hash do original
         await this.stampTime(envelopeId)
 
         const envelope = await this.prisma.envelope.findUniqueOrThrow({
@@ -215,7 +204,6 @@ export class SealService implements OnApplicationBootstrap {
         const original = await this.storage.get(envelope.originalPath)
         const verifyUrl = verificationUrlFor(envelope.verificationCode)
 
-        // 2. Página de evidências
         const evidence = (envelope.evidence ?? {}) as unknown as Evidence
         let signature: { type: 'drawn'; imageDataUrl: string } | { type: 'typed'; typedName: string }
         if (envelope.signatureType === 'drawn' && envelope.signatureImagePath) {
@@ -291,10 +279,8 @@ export class SealService implements OnApplicationBootstrap {
             }),
         )
 
-        // 3. Junta original + evidências e carimba o rodapé em todas as páginas
         const doc = await PDFDocument.load(original)
 
-        // A assinatura no bloco do fim do documento (originais anteriores ao bloco não têm a marca e ficam como estão)
         if ((doc.getKeywords() ?? '').includes(SIGNATURE_BLOCK_KEYWORD)) {
             const anchor = await locateSignatureArea({
                 title: envelope.title,
@@ -341,7 +327,6 @@ export class SealService implements OnApplicationBootstrap {
         doc.setProducer('LíderSign')
         doc.setCreator('LíderSign')
 
-        // 4. Selo PAdES (ETSI.CAdES.detached) com o certificado da plataforma
         pdflibAddPlaceholder({
             pdfDoc: doc,
             reason: 'Selo de integridade LíderSign',
@@ -358,7 +343,6 @@ export class SealService implements OnApplicationBootstrap {
         })
         const signed = await signpdf.sign(prepared, signer)
 
-        // 5. Grava e registra
         const signedSha256 = sha256Hex(signed)
         const signedPath = StorageService.envelopeKey(envelope.tenantId, envelope.id, 'signed.pdf')
         await this.storage.put(signedPath, signed)
@@ -405,8 +389,6 @@ export class SealService implements OnApplicationBootstrap {
                 status: message.status,
             })
         } else {
-            // Selagem retomada após reinício: o token não fica guardado, então o aviso aponta
-            // para o mesmo link recebido antes (ele continua válido e mostra a cópia).
             const message = await this.messaging.send({
                 tenantId: envelope.tenantId,
                 envelopeId: envelope.id,

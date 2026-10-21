@@ -4,10 +4,6 @@ import { Skeleton } from '@/components/ui/primitives'
 
 type State = { kind: 'loading' } | { kind: 'ready'; pages: number } | { kind: 'error' }
 
-/**
- * As páginas do PDF que será assinado, do jeito que ele é: o mesmo arquivo que vai para o selo.
- * pdf.js carrega sob demanda, só nesta etapa.
- */
 export function PdfPages({ url, onError }: { url: string; onError?: () => void }) {
     const container = React.useRef<HTMLDivElement>(null)
     const [state, setState] = React.useState<State>({ kind: 'loading' })

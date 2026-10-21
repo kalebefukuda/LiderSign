@@ -7,11 +7,6 @@ import type {
 } from '@lidersign/shared'
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
 
-/**
- * O fluxo que a LíderHub precisa: ativar em um clique, gerar o contrato com os dados do lead,
- * o lead assinar pelo celular e o escritório receber o PDF selado, verificável e protegido contra alteração.
- */
-
 const SIGNER = { name: 'Maria Aparecida dos Santos', cpf: '52998224725', phone: '47999990000' }
 
 async function resetDemo(request: APIRequestContext) {
@@ -118,11 +113,9 @@ test('na LíderHub, ativar o LíderSign é um switch e o contrato sai pela conve
     await phone.getByRole('button', { name: 'Assinar', exact: true }).click()
     await expect(phone.getByRole('heading', { name: 'Pronto! Documento assinado' })).toBeVisible()
 
-    // O status volta para a conversa da LíderHub, com o PDF
     await expect(page.getByText('Maria assinou')).toBeVisible({ timeout: 20_000 })
     await expect(page.getByText('Contrato assinado.pdf')).toBeVisible({ timeout: 45_000 })
 
-    // Os contratos ficam dentro da LíderHub: lista com filtro e modelos embutidos
     await page
         .getByRole('navigation', { name: 'LíderHub' })
         .getByRole('button', { name: /Contratos/ })
@@ -135,7 +128,6 @@ test('na LíderHub, ativar o LíderSign é um switch e o contrato sai pela conve
         page.frameLocator('iframe[title="Modelos do LíderSign"]').getByRole('heading', { name: 'Modelos' }),
     ).toBeVisible()
 
-    // O painel do LíderSign é o bastidor: conexão, resumo e documentos
     await page.goto('/painel')
     await expect(page.getByText('Conectado à LíderHub')).toBeVisible()
     await expect(page.getByRole('navigation', { name: 'Painel' }).getByRole('link')).toHaveText([
@@ -144,7 +136,6 @@ test('na LíderHub, ativar o LíderSign é um switch e o contrato sai pela conve
         'Modelos',
     ])
 
-    // Envio avulso continua possível, com o link para mandar pelo WhatsApp
     await page.goto('/painel/enviar')
     await page.getByLabel('Celular (WhatsApp)').fill('(47) 98888-7777')
     await page.getByRole('button', { name: 'Enviar para assinatura' }).click()
@@ -173,7 +164,6 @@ test('lead assina pelo celular e o escritório recebe o PDF selado', async ({ br
     const envelope = await createEnvelope(request, 'CONTRATO')
     const token = new URL(envelope.signingUrl!).pathname.split('/').pop()!
 
-    // Sem o CPF, o link sozinho não mostra o documento
     const before = await (await request.get(`/v1/sign/${token}`)).json()
     expect(before.identityConfirmed).toBe(false)
     expect(before.body).toBe('')
@@ -191,7 +181,6 @@ test('lead assina pelo celular e o escritório recebe o PDF selado', async ({ br
     await expect(phone.getByLabel('Texto do documento')).toContainText(SIGNER.name)
     await phone.getByRole('button', { name: 'Continuar para assinar' }).click()
 
-    // O escritório nunca vê o token do link
     const officeView = JSON.stringify(
         await (await request.get(`/demo-host/v1/envelopes/${envelope.id}`)).json(),
     )
@@ -207,7 +196,6 @@ test('lead assina pelo celular e o escritório recebe o PDF selado', async ({ br
         timeout: 30_000,
     })
 
-    // O PDF selado confere na verificação pública; uma cópia alterada não confere.
     const signed = await (await request.get(`/demo-host/v1/envelopes/${envelope.id}/files/signed`)).body()
     expect(signed.subarray(0, 5).toString()).toBe('%PDF-')
 
@@ -223,7 +211,6 @@ test('lead assina pelo celular e o escritório recebe o PDF selado', async ({ br
     tampered[Math.floor(tampered.length / 2)] ^= 0xff
     expect((await check(tampered)).match).toBe(false)
 
-    // A LíderHub recebeu os webhooks com HMAC válido.
     await expect
         .poll(async () => {
             const received: { verified: boolean; payload: { event: string } }[] = await (
@@ -233,7 +220,6 @@ test('lead assina pelo celular e o escritório recebe o PDF selado', async ({ br
         })
         .toBe(true)
 
-    // A verificação pública responde em linguagem simples; o técnico fica recolhido.
     await phone.goto(`/v/${envelope.verificationCode}`)
     await expect(phone.getByRole('heading', { name: 'Documento válido' })).toBeVisible()
     await phone.getByText('Detalhes técnicos e trilha de auditoria').click()
@@ -246,7 +232,6 @@ test('procuração exige selfie no nível Reforçado', async ({ request }) => {
     expect(envelope.assuranceLevel).toBe('REFORCADO')
     const token = new URL(envelope.signingUrl!).pathname.split('/').pop()!
 
-    // No Reforçado, o código no WhatsApp vem depois do CPF
     expect((await request.post(`/v1/sign/${token}/otp`)).status()).toBe(409)
     expect((await request.post(`/v1/sign/${token}/identity`, { data: { cpf: CPF } })).ok()).toBeTruthy()
     await request.post(`/v1/sign/${token}/otp`)
@@ -255,7 +240,6 @@ test('procuração exige selfie no nível Reforçado', async ({ request }) => {
     })
     expect(verify.ok()).toBeTruthy()
 
-    // O proxy da demo não deixa passar rotas de parceiro (ex.: segredo do webhook)
     const secret = await request.get('/demo-host/v1/partner/tenants/escritorio-demo/webhook-secret')
     expect(secret.status()).toBe(404)
 

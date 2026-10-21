@@ -37,17 +37,12 @@ const SECTIONS: {
     { title: 'Conexões', items: [{ id: 'integracoes', label: 'Integrações', icon: Puzzle }] },
 ]
 
-/**
- * Simulação da LíderHub, no padrão visual dela, só para demonstrar a integração: é daqui que o
- * escritório usa o LíderSign no dia a dia. O aviso no topo deixa claro que é uma simulação.
- */
 export function LiderHubSim() {
     const status = useResource<DemoStatus>(demoApi.statusUrl)
     const [params, setParams] = useSearchParams()
     const [collapsed, setCollapsed] = React.useState(false)
     const active = Boolean(status.data?.active)
 
-    // A página inicial depende de o LíderSign já estar ativo; depois, só muda quando a pessoa clica
     const [initial, setInitial] = React.useState<Page | null>(null)
     React.useEffect(() => {
         if (status.data && !initial) setInitial(status.data.active ? 'atendimento' : 'integracoes')

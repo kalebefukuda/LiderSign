@@ -10,8 +10,6 @@ import type {
 } from './enums'
 import type { TemplateVariable } from './schemas'
 
-/** Respostas da API. Datas sempre em ISO 8601 (UTC). Dados pessoais sempre mascarados. */
-
 export type TenantDto = {
     id: string
     externalId: string
@@ -24,7 +22,6 @@ export type TenantDto = {
 export type ConnectTenantResponse = {
     tenant: TenantDto
     created: boolean
-    /** Só na criação. Usado para validar o HMAC dos webhooks. */
     webhookSecret?: string
 }
 
@@ -45,7 +42,6 @@ export type TemplateImportResponse = {
     kind: TemplateKind
     body: string
     variables: TemplateVariable[]
-    /** ai: Claude via Mastra. heuristic: regras locais (sem chave de IA). */
     engine: 'ai' | 'heuristic'
     warnings: string[]
 }
@@ -70,7 +66,6 @@ export type EnvelopeDto = {
     templateId: string
     externalRef: string | null
     signer: SignerDto
-    /** Só vem na criação e no reenvio (o banco guarda apenas o hash do token). Nos demais, null. */
     signingUrl: string | null
     verificationCode: string
     verificationUrl: string
@@ -129,23 +124,18 @@ export type EnvelopeDetailDto = EnvelopeDto & {
     webhookDeliveries: WebhookDeliveryDto[]
 }
 
-/** Sessão de assinatura vista pelo signatário (GET /v1/sign/:token). */
 export type SigningSessionDto = {
     title: string
     officeName: string
     status: EnvelopeStatus
     assuranceLevel: AssuranceLevel
     requiresSelfie: boolean
-    /** Código no WhatsApp: só no nível Reforçado. No Padrão, o link no WhatsApp + o CPF identificam quem assina. */
     requiresOtp: boolean
     signer: { name: string; cpfMasked: string; phoneMasked: string }
-    /** O signatário digitou o próprio CPF. Antes disso, o conteúdo do documento não é enviado. */
     identityConfirmed: boolean
     otpVerified: boolean
     selfieCaptured: boolean
-    /** Vazio até o CPF ser confirmado. */
     plainText: string
-    /** Texto do documento já preenchido, no formato dos modelos. Vazio até o CPF ser confirmado. */
     body: string
     expiresAt: string
     verificationCode: string
@@ -165,7 +155,6 @@ export type PublicVerificationDto = {
     signedSha256: string | null
     timestamp: TimestampDto
     trail: { label: string; at: string }[]
-    /** A cadeia de hashes da trilha foi recalculada e confere evento a evento. */
     trailIntact: boolean
 }
 
@@ -175,7 +164,6 @@ export type FileCheckResponse = {
     verification: PublicVerificationDto | null
 }
 
-/** Payload enviado aos webhooks. Cabeçalho: X-LiderSign-Signature: t=<unix>,v1=<hmac-sha256-hex> */
 export type WebhookPayload = {
     id: string
     event: WebhookEvent
@@ -188,7 +176,6 @@ export type WebhookPayload = {
     }
 }
 
-/** Eventos ao vivo (SSE) para o painel e para o simulador de WhatsApp. */
 export type StreamEvent =
     | { type: 'envelope.updated'; envelope: EnvelopeDto }
     | { type: 'message.created'; message: MessageDto }

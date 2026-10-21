@@ -38,7 +38,6 @@ test('normalizeExtraction recusa corpo curto demais', () => {
     assert.throws(() => normalizeExtraction({ ...RAW, body: 'curto' }), /validação/)
 })
 
-/** Modelo falso no contrato LanguageModelV2 do AI SDK: devolve o JSON pronto, sem rede. */
 function mockModel(json) {
     const text = JSON.stringify(json)
     const usage = { inputTokens: 10, outputTokens: 10, totalTokens: 20 }

@@ -6,7 +6,6 @@ import { PartnerGuard } from '../common/partner.guard'
 import { ZodPipe } from '../common/zod.pipe'
 import { TenantsService } from './tenants.service'
 
-/** Rotas da LíderHub como parceira. O escritório nunca vê chave nenhuma. */
 @Controller('v1/partner/tenants')
 @UseGuards(PartnerGuard)
 export class TenantsController {
@@ -27,7 +26,6 @@ export class TenantsController {
         return toTenantDto(await this.tenants.get(externalId))
     }
 
-    /** Para a LíderHub validar o HMAC dos webhooks quando precisar recuperar o segredo. */
     @Get(':externalId/webhook-secret')
     async webhookSecret(@Param('externalId') externalId: string) {
         const tenant = await this.tenants.get(externalId)

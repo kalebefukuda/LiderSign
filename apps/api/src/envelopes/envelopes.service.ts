@@ -56,7 +56,6 @@ export class EnvelopesService {
         private readonly expiration: ExpirationService,
     ) {}
 
-    /** Expira os vencidos antes de responder (além da varredura a cada minuto). */
     expireOverdue(where: Prisma.EnvelopeWhereInput = {}) {
         return this.expiration.expireOverdue(where)
     }
@@ -197,7 +196,6 @@ export class EnvelopesService {
         }
     }
 
-    /** Reenvia com um token novo (o antigo deixa de valer). */
     async resend(tenant: Tenant, id: string) {
         await this.expireOverdue({ id, tenantId: tenant.id })
         const envelope = await this.findOwned(tenant, id)

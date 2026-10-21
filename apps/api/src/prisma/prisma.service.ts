@@ -3,7 +3,6 @@ import { PrismaPg } from '@prisma/adapter-pg'
 import { PrismaClient } from '@prisma/client'
 import { env } from '../config/env'
 
-/** Cliente sem engine Rust (engineType = "client"): as consultas saem pelo driver pg. */
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
     constructor() {

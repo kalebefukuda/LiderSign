@@ -14,7 +14,6 @@ const TIMESTAMP_LABEL = {
     SKIPPED: 'Não utilizado nesta instalação',
 } as const
 
-/** Resposta direta primeiro (vale ou não vale, quem e quando); o técnico fica recolhido. */
 export function VerificationResult({
     data,
     children,

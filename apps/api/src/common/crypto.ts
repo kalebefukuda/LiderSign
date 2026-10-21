@@ -8,7 +8,6 @@ export function hmacSha256Hex(secret: string, data: string): string {
     return createHmac('sha256', secret).update(data).digest('hex')
 }
 
-/** Comparação em tempo constante, inclusive para tamanhos diferentes (compara os digests). */
 export function safeEqual(a: string, b: string): boolean {
     const da = createHash('sha256').update(a).digest()
     const db = createHash('sha256').update(b).digest()
@@ -25,14 +24,12 @@ export function randomHex(bytes = 32): string {
 
 const CROCKFORD = '0123456789ABCDEFGHJKMNPQRSTVWXYZ'
 
-/** XXXX-XXXX em base32 Crockford (sem I, L, O, U). */
 export function verificationCode(): string {
     let code = ''
     for (let i = 0; i < 8; i++) code += CROCKFORD[randomInt(0, CROCKFORD.length)]
     return `${code.slice(0, 4)}-${code.slice(4)}`
 }
 
-/** Normaliza o que o usuário digitar: minúsculas, sem hífen, O→0, I/L→1. */
 export function normalizeVerificationCode(input: string): string | null {
     const clean = input
         .toUpperCase()

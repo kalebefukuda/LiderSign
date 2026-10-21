@@ -1,6 +1,5 @@
 import type * as React from 'react'
 
-/** Cabeçalho de página no padrão da LíderHub: título, descrição e uma ação à direita. */
 export function PageHeader({
     title,
     description,

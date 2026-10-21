@@ -47,7 +47,6 @@ export class TemplatesController {
         return this.templates.create(tenant, body)
     }
 
-    /** Lê um contrato de exemplo e devolve um modelo com variáveis. Não salva: o advogado revisa antes. */
     @Post('import')
     @HttpCode(200)
     @UseInterceptors(FileInterceptor('file', { limits: { fileSize: MAX_UPLOAD, files: 1 } }))

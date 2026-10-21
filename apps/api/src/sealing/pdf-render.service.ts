@@ -3,7 +3,6 @@ import { parseTemplate, type TemplateBlock, type TemplateSpan } from '@lidersign
 import PdfPrinter from 'pdfmake'
 import type { Content, TDocumentDefinitions } from 'pdfmake/interfaces'
 
-// Fontes Roboto embutidas no próprio pdfmake (sem download em build).
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const vfs = require('pdfmake/build/vfs_fonts') as Record<string, string>
 
@@ -22,14 +21,12 @@ export const INK = '#1F2937'
 export const MUTED = '#6B7280'
 export const RULE = '#E5E7EB'
 export const ACCENT = '#2463EB'
-/** Largura útil de uma página A4 com margens de 56 pt. */
 export const CONTENT_WIDTH = 595.28 - 56 * 2
 
 function spansToText(spans: TemplateSpan[]) {
     return spans.map((span) => ({ text: span.text, bold: span.bold }))
 }
 
-/** Converte o Markdown enxuto do modelo em conteúdo do pdfmake. */
 export function blocksToContent(blocks: TemplateBlock[]): Content[] {
     const content: Content[] = []
     let list: Content[] = []
@@ -80,17 +77,13 @@ export const baseStyles: TDocumentDefinitions['styles'] = {
     header: { fontSize: 8, color: MUTED },
 }
 
-/** Quem assina, como aparece no bloco de assinatura do fim do documento. */
 export type DocumentSigner = { name: string; cpfMasked: string; role: string }
 
 export type DocumentInput = { title: string; officeName: string; body: string; signer: DocumentSigner }
 
-/** Marca no PDF original: ele tem o bloco de assinatura (documentos antigos não têm). */
 export const SIGNATURE_BLOCK_KEYWORD = 'lidersign:signature-block:v1'
 
-/** Espaço reservado para a assinatura, em pontos. */
 export const SIGNATURE_AREA = { width: 240, height: 56 }
-/** Altura total do bloco (rótulo + área + linha + nome + papel + nota): se não couber, vai inteiro para a próxima página. */
 const SIGNATURE_BLOCK_HEIGHT = 128
 
 const SIGNATURE_BLOCK_ID = 'lidersign-signature-block'
@@ -105,7 +98,7 @@ export function roleForKind(kind: string): string {
 }
 
 function signatureBlock(signer: DocumentSigner): Content {
-    // O pdfmake aceita "id" em qualquer nó (e o repassa ao pageBreakBefore), mas os tipos só o declaram em texto
+    // Os tipos do pdfmake só declaram "id" em texto, mas ele vale em qualquer nó
     const block = {
         id: SIGNATURE_BLOCK_ID,
         margin: [0, 32, 0, 0],
@@ -159,10 +152,6 @@ function signatureBlock(signer: DocumentSigner): Content {
     return block as unknown as Content
 }
 
-/**
- * Definição do PDF original. O bloco de assinatura nunca se divide entre páginas, e a posição da área
- * reservada é informada em onAnchor: a selagem desenha a assinatura exatamente ali.
- */
 function documentDefinition(
     input: DocumentInput,
     onAnchor?: (anchor: SignatureAnchor) => void,
@@ -206,7 +195,6 @@ function documentDefinition(
     }
 }
 
-/** Refaz o layout do original (determinístico) só para achar onde fica a área de assinatura. */
 export async function locateSignatureArea(input: DocumentInput): Promise<SignatureAnchor | null> {
     let anchor: SignatureAnchor | null = null
     await renderPdf(documentDefinition(input, (found) => (anchor = found)))
@@ -215,7 +203,6 @@ export async function locateSignatureArea(input: DocumentInput): Promise<Signatu
 
 @Injectable()
 export class PdfRenderService {
-    /** PDF original: é o que o signatário lê e o que tem o hash registrado. */
     renderDocument(input: DocumentInput): Promise<Buffer> {
         return renderPdf(documentDefinition(input))
     }

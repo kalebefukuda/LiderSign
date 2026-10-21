@@ -3,10 +3,6 @@ import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { dirname, join, normalize, resolve, sep } from 'node:path'
 import { env } from '../config/env'
 
-/**
- * Armazenamento de arquivos. Hoje em disco local (volume do Docker).
- * A interface é pequena de propósito: trocar por S3 ou Supabase Storage é implementar estes 3 métodos.
- */
 export interface FileStorage {
     put(key: string, data: Buffer): Promise<void>
     get(key: string): Promise<Buffer>
@@ -17,7 +13,7 @@ export interface FileStorage {
 export class StorageService implements FileStorage {
     private readonly root = resolve(env().STORAGE_DIR)
 
-    /** Impede path traversal: a chave sempre resolve dentro da raiz. */
+    // Impede path traversal
     private pathFor(key: string): string {
         const full = resolve(this.root, normalize(key))
         if (full !== this.root && !full.startsWith(this.root + sep)) {
